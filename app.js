@@ -55,15 +55,19 @@ const authenticateToken = (request, response, next) => {
 
 initializeDBAndServer();
 const userSchema = new mongoose.Schema({
-  UserId:String,
-  following: [String],
-  followedBy:[String]
+  UserId:String
+
   });
   
   const TagSchema=tag = new mongoose.Schema({
-     id:String
+     tag:String
+  },{timestamps:true});
+
+  const followingDataSchema= new mongoose.Schema({
+followerId:String,followingId:String
   });
-  const Tag = mongoose.model('Tag', TagSchema);
+const following=mongoose.model("following",followingDataSchema)
+ const Tag = mongoose.model('Tag', TagSchema);
 
 const postSchema=new mongoose.Schema({
   PostId :String,
@@ -81,10 +85,9 @@ const postSchema=new mongoose.Schema({
       }
     ],
     sharedCount:Number
-    // List<Tags> tags;  // can be null
   
 },{
-  timestamps: true, // Add createdAt and updatedAt fields
+  timestamps: true, 
 });  
 const User = mongoose.model("User", userSchema);
 const Post=mongoose.model("Post",postSchema)
@@ -95,11 +98,13 @@ app.post("/api/posts/", async (req, res) => {
  const {PostId,title,description,postedBy,imgUrl,tags}=req.body;
  const tagObjectIds = await Promise.all(
   tags.map(async (tagName) => {
-    const existingTag = await Tag.findOne({ id: tagName });
+    const existingTag = await Tag.findOne({ tag: tagName });
     if (existingTag) {
+      console.log("exists")
       return existingTag._id;
     } else {
-      const newTag = new Tag({ id: tagName });
+      console.log("efefefe")
+      const newTag = new Tag({ tag: tagName });
       await newTag.save();
       return newTag._id;
     }
@@ -112,10 +117,10 @@ app.post("/api/posts/", async (req, res) => {
 try{const result=await newPost.save();
   res.status(200)
   res.send({"msg":"posted successfuly"})
-  console.log(result)
+  // console.log(result)
 
 }catch(e){
-    console.log(e)
+    // console.log(e)
   }
 
 });
@@ -179,6 +184,64 @@ app.get("/api/recent", async (req, res) => {
   }
 });
 
+
+app.post("/api/follow",async (req,res)=>{
+const {followerId,followingId}=req.body
+try{
+  const newFollower=new following({followerId,followingId})
+const result= await newFollower.save()
+res.status(200).send({message:"follower added successfully"})
+console.log(result)
+}catch(e){
+  res.status(500).send({error:e})
+}
+})
+
+app.get("/api/following",async(req,res)=>{
+  const {userId,limit,start}=req.query
+  try{
+    const followerIds = await following.find({ followerId: userId })
+    .distinct('followingId');
+  console.log(followerIds)
+  const posts = await Post.find({
+    postedBy: { $in: followerIds },
+  })
+  .sort({ createdAt: -1 }).skip(Number(start))
+  .limit(Number(limit))
+  .select({
+    _id: 0, 
+    createdAt: 0,
+    updatedAt: 0, 
+    __v: 0
+  });
+  res.status(200).send(posts)
+  console.log(posts)
+  }
+  catch(e){
+    res.status(500).send({error:e})
+
+  }
+})
+
+
+app.get("/api/tags/", async (req, res) => {
+  const {date}=req.query//asuming date in in string not date object
+  const datefromString=new Date(date)
+  console.log(date)
+  try{
+    const result=await Tag.find({ createdAt: { $gt: datefromString } }).select({
+      _id: 0, 
+      createdAt: 0,
+      updatedAt: 0, 
+      __v: 0, 
+    });
+    console.log(result)
+    res.status(200).send(result)
+  }catch(e){
+res.status(500).send(e)
+  }
+    
+});
 
 app.get("/",async(req,res)=>{
     res.send("ok")
