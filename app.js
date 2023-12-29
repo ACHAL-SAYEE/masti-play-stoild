@@ -114,8 +114,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/posts/", async (req, res) => {
-  const {title, description, postedBy, imgUrl, tags } = req.body;
-  const postId=generateUniqueId()
+  const { title, description, postedBy, imgUrl, tags } = req.body;
+  const postId = generateUniqueId()
   const tagObjectIds = await Promise.all(
     tags.map(async (tagName) => {
       const existingTag = await Tag.findOne({ tag: tagName });
@@ -131,7 +131,7 @@ app.post("/api/posts/", async (req, res) => {
     })
   );
   const newPost = new Post({
-    PostId:postId, title, description, postedBy, imgUrl, tags: tagObjectIds, sharedCount: 0, commentsCount: 0, likesCount: 0
+    PostId: postId, title, description, postedBy, imgUrl, tags: tagObjectIds, sharedCount: 0, commentsCount: 0, likesCount: 0
 
   });
   try {
@@ -270,14 +270,34 @@ app.get("/", async (req, res) => {
 })
 
 app.post("/api/search-with-tags", async (req, res) => {
-  const { tags, limit, start } = req.body
+  const { tags, limit, start, userId } = req.body
+  console.log(userId)
   try {
-    const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 }) //tags.map(tag => );
+    if (userId == null) {
+     console.log("triggered 1") 
+      const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 }) 
 
-    const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
-    .skip(Number(start))
-    .limit(Number(limit)).select({ _id: 0, __v: 0 })
-    res.send(result)
+      const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
+        .skip(Number(start))
+        .limit(Number(limit)).select({ _id: 0, __v: 0 })
+      res.send(result)
+    }
+    else if (tags==null || tags.length === 0) {
+      console.log("triggered 2")
+      const result = await Post.find({ "postedBy": userId })
+      .skip(Number(start))
+      .limit(Number(limit)).select({ _id: 0, __v: 0 })
+      res.send(result)
+    }
+    else if(userId!=null && tags.length>0){
+      console.log("triggered 3")
+      const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 }) 
+
+      const result = await Post.find({ "tags": { "$in": tagObjectIds } ,"postedBy":userId}).populate('tags').sort({ createdAt: -1 })
+        .skip(Number(start))
+        .limit(Number(limit)).select({ _id: 0, __v: 0 })
+      res.send(result)
+    }
   }
   catch (e) {
     console.log(e)
@@ -316,7 +336,7 @@ app.post("/api/like", async (req, res) => {
         likedBy: userId,
         postId
       })
-      const updatesLikesCount=await Post.updateOne({PostId:postId},{$inc:{likesCount:1}})
+      const updatesLikesCount = await Post.updateOne({ PostId: postId }, { $inc: { likesCount: 1 } })
       await newLike.save()
       res.send("post liked")
     }
@@ -325,8 +345,7 @@ app.post("/api/like", async (req, res) => {
         likedBy: userId,
         postId
       })
-      const updatesLikesCount=await Post.updateOne({PostId:postId},{$inc:{likesCount:-1}})
-     
+      const updatesLikesCount = await Post.updateOne({ PostId: postId }, { $inc: { likesCount: -1 } })
       console.log(unlikeResult)
       res.send("post unliked")
     }
@@ -337,4 +356,5 @@ app.post("/api/like", async (req, res) => {
   }
 
 });
+
 
