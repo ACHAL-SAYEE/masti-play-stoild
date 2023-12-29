@@ -1,3 +1,6 @@
+const unirest = require('unirest');
+// const bodyParser = require('body-parser');
+// app.use(bodyParser.json());
 require("dotenv").config();
 const PORT = process.env.PORT || 4000;
 const express = require("express");
@@ -8,11 +11,10 @@ const { v4: uuidv4 } = require("uuid");
 const app = express();
 const path = require("path");
 const bcrypt = require("bcrypt");
-const { generateUniqueId } = require('./utils');
+const { generateUniqueId, generateUserId } = require('./utils');
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
-
 
 const initializeDBAndServer = async () => {
   try {
@@ -46,7 +48,7 @@ const authenticateToken = (request, response, next) => {
         response.status(401);
         response.send("Invalid JWT Token");
       } else {
-        request.phoneNo = payload.phoneNo;
+        request.UserId = payload.UserId;
         next();
       }
     });
@@ -54,9 +56,37 @@ const authenticateToken = (request, response, next) => {
 };
 
 initializeDBAndServer();
-const userSchema = new mongoose.Schema({
-  UserId: String
 
+const userSchema = new mongoose.Schema({
+  UserId: String,
+  email: String,
+  password: String,
+  password: {
+    type: String,
+    default: null,
+  },
+  name: String,
+  email: String,
+  photo: {
+    type: String,
+    default: null,
+  },
+  phoneNumber: {
+    type: String,
+    default: null,
+  },
+  dob: {
+    type: Date,
+    default: null,
+  },
+  country: {
+    type: String,
+    default: null,
+  },
+  frame: {
+    type: String,
+    default: null,
+  },
 });
 
 const TagSchema = tag = new mongoose.Schema({
@@ -77,11 +107,6 @@ const likesInfo = new mongoose.Schema({
   likedBy: String,
   postId: String
 })
-
-
-const following = mongoose.model("following", followingDataSchema)
-const Tag = mongoose.model('Tag', TagSchema);
-const LikesInfo = mongoose.model("LikesInfo", likesInfo)
 const postSchema = new mongoose.Schema({
   PostId: String,
   title: String,
@@ -104,16 +129,143 @@ const postSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
+const following = mongoose.model("following", followingDataSchema)
+const Tag = mongoose.model('Tag', TagSchema);
+const LikesInfo = mongoose.model("LikesInfo", likesInfo)
+
 const User = mongoose.model("User", userSchema);
 const Post = mongoose.model("Post", postSchema)
 const Comment = mongoose.model("Comment", CommentSchema)
+
+
+const otpMap = {};
+
+app.post('/otp', (req, res) => {
+  const req1 = unirest('GET', 'https://www.fast2sms.com/dev/bulkV2');
+  const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+
+  otpMap[req.headers.phone] = { otp, timestamp: Date.now() };
+  console.log("otpMap", otpMap);
+
+  req1.query({
+    authorization: 'BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2',
+    variables_values: otp.toString(),
+    route: 'otp',
+    numbers: req.headers.phone,
+  });
+  console.log("OTP Sending request sent!");
+
+  req1.headers({
+    'cache-control': 'no-cache',
+  });
+
+  req1.end(function (res1) {
+    if (res1.error) {
+      console.log("Error: ", res1.error);
+      res.status(500).send(res1.error);
+    } else {
+      console.log("successful");
+      const obj = {
+        return: res1.body.return,
+        request_id: res1.body.request_id,
+        message: res1.body.message,
+        // otp: otp.toString(),
+      };
+      res.status(200).json(obj);
+    }
+  });
+});
+
+app.post('/verify-otp', (req, res) => {
+  console.log("Verifying otp");
+  const phone = req.headers.phone;
+  const otp = req.headers.otp;
+  // const expectedOtp = '123456';
+  console.log(`phone = ${phone}`);
+  console.log(`otpMap = `, otpMap);
+  if (otpMap[phone] != null) {
+    const storedData = otpMap[phone]['otp'];
+    console.log(`storedData = ${storedData}`);
+    console.log(`typeof storedData = ${typeof storedData}`);
+    console.log(`otp = ${otp}`);
+    console.log(`typeof otp = ${typeof otp}`);
+    const { storedOtp, timestamp } = storedData;
+    // if (storedData.toString().isEqual(otp)) {
+    if (parseInt(otp, 10) == storedData) { //  && Date.now() - timestamp < 600000
+
+      // 300000 milliseconds (5 minutes) is the validity window for the OTP
+      res.status(200).json({ message: 'OTP verification successful' });
+    } else {
+      res.status(401).json({ message: 'Invalid OTP or OTP expired' });
+    }
+  } else {
+    res.status(404).json({ message: 'Phone number not found' });
+  }
+});
+
+
+app.post("/api/register", async (req, res) => {
+
+  const { email, password, name, gender, dob, country, frame, photo, phoneNumber } = req.body
+
+  const hashedPassword = await bcrypt.hash(password, 10);
+  const result = await User.find({ email })
+  if (result.length === 0) {
+    if (password.length < 8) {
+      res.status(400).send("password is too short .minimum length of password shoud be 8")
+      return
+    }
+    let randomNumber = generateUserId()
+    console.log(randomNumber)
+    const existingUserWithId = await User.find({ UserId: randomNumber })
+    if (existingUserWithId.length > 0) {
+      isUserIdMatched = true
+      while (isUserIdMatched) {
+        randomNumber = generateUserId()
+        const existingUserWithId = await User.find({ UserId: randomNumber })
+        isUserIdMatched = existingUserWithId.length > 0
+      }
+    }
+    const newUser = new User({ UserId: `${randomNumber}`, email, password: hashedPassword, name, gender, dob, country, frame, photo, phoneNumber })
+    await newUser.save()
+    res.status(200).send("user created successfully")
+
+  }
+  else {
+    res.status(400).send("User already exists")
+  }
+})
+
+app.post("/api/login", async (req, res) => {
+  const { email, password } = req.body
+  const result = await User.findOne({ email })
+  console.log(result)
+  if (result.length === 0) {
+
+    res.status(400).send("Invalid user")
+  }
+  else {
+    const isPasswordMatched = await bcrypt.compare(password, result.password);
+    if (isPasswordMatched === true) {
+      const payload = {
+        UserId: result.UserId
+      };
+      const jwtToken = jwt.sign(payload, "MY_SECRET_TOKEN");
+      res.send({ jwtToken });
+    } else {
+      res.status(400);
+      res.send("Invalid Password");
+    }
+  }
+})
 
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.post("/api/posts/", async (req, res) => {
+app.post("/api/posts/",authenticateToken, async (req, res) => {
   const { title, description, postedBy, imgUrl, tags } = req.body;
   const postId = generateUniqueId()
   const tagObjectIds = await Promise.all(
@@ -145,7 +297,7 @@ app.post("/api/posts/", async (req, res) => {
   }
 });
 
-app.put("/api/posts/share", async (req, res) => {
+app.put("/api/posts/share",authenticateToken, async (req, res) => {
   const { postId } = req.body
   try {
 
@@ -164,7 +316,7 @@ app.put("/api/posts/share", async (req, res) => {
   }
 });
 
-app.get("/api/hot", async (req, res) => {
+app.get("/api/hot",authenticateToken, async (req, res) => {
   const { limit, start } = req.query
   try {
 
@@ -185,7 +337,7 @@ app.get("/api/hot", async (req, res) => {
   }
 });
 
-app.get("/api/recent", async (req, res) => {
+app.get("/api/recent",authenticateToken, async (req, res) => {
   console.log("req.query", req.query);
   const { limit, start } = req.query
   try {
@@ -206,9 +358,10 @@ app.get("/api/recent", async (req, res) => {
   }
 });
 
-
-app.post("/api/follow", async (req, res) => {
-  const { followerId, followingId } = req.body
+//no need to send userId it comes from  header through jwtloken
+app.post("/api/follow", authenticateToken,async (req, res) => {
+  const {  followingId } = req.body
+  const followerId=req.UserId
   try {
     const newFollower = new following({ followerId, followingId })
     const result = await newFollower.save()
@@ -219,8 +372,10 @@ app.post("/api/follow", async (req, res) => {
   }
 })
 
-app.get("/api/following", async (req, res) => {
-  const { userId, limit, start } = req.query
+//no need to send userId it comes from  header through jwtloken
+app.get("/api/following",authenticateToken, async (req, res) => {
+  const userId=req.UserId
+  const {limit, start} = req.query
   try {
     const followerIds = await following.find({ followerId: userId })
       .distinct('followingId');
@@ -246,7 +401,7 @@ app.get("/api/following", async (req, res) => {
 })
 
 
-app.get("/api/tags/", async (req, res) => {
+app.get("/api/tags/",authenticateToken,async (req, res) => {
   const { date } = req.query//asuming date in in string not date object
   const datefromString = new Date(date)
   console.log(date)
@@ -265,35 +420,34 @@ app.get("/api/tags/", async (req, res) => {
 
 });
 
-app.get("/", async (req, res) => {
-  res.send("ok")
-})
-
-app.post("/api/search-with-tags", async (req, res) => {
-  const { tags, limit, start, userId } = req.body
+//no need to send userId it comes from  header through jwtloken
+app.post("/api/search-with-tags", authenticateToken,async (req, res) => {
+  //
+  const { tags, limit, start } = req.body
+  const userId=req.UserId
   console.log(userId)
   try {
     if (userId == null) {
-     console.log("triggered 1") 
-      const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 }) 
+      console.log("triggered 1")
+      const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
       const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
       res.send(result)
     }
-    else if (tags==null || tags.length === 0) {
+    else if (tags == null || tags.length === 0) {
       console.log("triggered 2")
       const result = await Post.find({ "postedBy": userId })
-      .skip(Number(start))
-      .limit(Number(limit)).select({ _id: 0, __v: 0 })
+        .skip(Number(start))
+        .limit(Number(limit)).select({ _id: 0, __v: 0 })
       res.send(result)
     }
-    else if(userId!=null && tags.length>0){
+    else if (userId != null && tags.length > 0) {
       console.log("triggered 3")
-      const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 }) 
+      const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
-      const result = await Post.find({ "tags": { "$in": tagObjectIds } ,"postedBy":userId}).populate('tags').sort({ createdAt: -1 })
+      const result = await Post.find({ "tags": { "$in": tagObjectIds }, "postedBy": userId }).populate('tags').sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
       res.send(result)
@@ -306,9 +460,11 @@ app.post("/api/search-with-tags", async (req, res) => {
 
 })
 
+//no need to send userId it comes from  header through jwtloken
+app.post("/api/comment",authenticateToken, async (req, res) => {
 
-app.post("/api/comment", async (req, res) => {
-  const { postId, userId, comment } = req.body;
+  const { postId, comment } = req.body;
+  const userId=req.UserId
   try {
     const NewComment = new Comment({ postId, userId, comment })
     await NewComment.save()
@@ -324,8 +480,11 @@ app.post("/api/comment", async (req, res) => {
   }
 });
 
-app.post("/api/like", async (req, res) => {
-  const { postId, userId } = req.body;
+
+//no need to send userId it comes from  header through jwtloken
+app.post("/api/like", authenticateToken,async (req, res) => {
+  const userId=req.UserId
+  const { postId } = req.body;
   try {
     const likedStatus = await LikesInfo.find({
       likedBy: userId,

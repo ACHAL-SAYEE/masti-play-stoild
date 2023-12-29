@@ -11,6 +11,7 @@
     "js-cookie": "^3.0.5",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.3.2",
+    "unirest": "^0.6.0",
     "uuid": "^9.0.0"
   },
   "scripts": {
