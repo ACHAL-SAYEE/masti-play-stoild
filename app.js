@@ -8,7 +8,7 @@ const { v4: uuidv4 } = require("uuid");
 const app = express();
 const path = require("path");
 const bcrypt = require("bcrypt");
-
+const { generateUniqueId } = require('./utils');
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
@@ -114,7 +114,8 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/posts/", async (req, res) => {
-  const { PostId, title, description, postedBy, imgUrl, tags } = req.body;
+  const {title, description, postedBy, imgUrl, tags } = req.body;
+  const postId=generateUniqueId()
   const tagObjectIds = await Promise.all(
     tags.map(async (tagName) => {
       const existingTag = await Tag.findOne({ tag: tagName });
@@ -130,7 +131,7 @@ app.post("/api/posts/", async (req, res) => {
     })
   );
   const newPost = new Post({
-    PostId, title, description, postedBy, imgUrl, tags: tagObjectIds, sharedCount: 0, commentsCount: 0, likesCount: 0
+    PostId:postId, title, description, postedBy, imgUrl, tags: tagObjectIds, sharedCount: 0, commentsCount: 0, likesCount: 0
 
   });
   try {
@@ -273,10 +274,13 @@ app.post("/api/search-with-tags", async (req, res) => {
   try {
     const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 }) //tags.map(tag => );
 
-    const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').select({ _id: 0, __v: 0 })// Populate the tags field to get the details from the 'Tag' collection
-    req.send(result)
+    const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
+    .skip(Number(start))
+    .limit(Number(limit)).select({ _id: 0, __v: 0 })
+    res.send(result)
   }
   catch (e) {
+    console.log(e)
     res.status(500).send("internal server error")
   }
 
