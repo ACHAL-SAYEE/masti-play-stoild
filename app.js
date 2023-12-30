@@ -55,6 +55,8 @@ const authenticateToken = (request, response, next) => {
   }
 };
 
+
+
 initializeDBAndServer();
 
 const userSchema = new mongoose.Schema({
@@ -87,13 +89,15 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  beansCount: { type: Number, default: 0 },
+  diamondsCount: { type: Number, default: 0 }
 });
 
 const TagSchema = tag = new mongoose.Schema({
   tag: String,
   usedCount: {
     type: Number,
-    default: 0, 
+    default: 0,
   },
 }, { timestamps: true });
 
@@ -133,6 +137,15 @@ const postSchema = new mongoose.Schema({
 }, {
   timestamps: true,
 });
+
+const TransactionHistory = new mongoose.Schema({
+  diamondsSent: Number,
+  beansSent: Number,
+  game: String,
+  sentUserId: String
+}, {
+  timestamps: true,
+})
 
 const following = mongoose.model("following", followingDataSchema)
 const Tag = mongoose.model('Tag', TagSchema);
@@ -277,7 +290,7 @@ app.post("/api/posts/", async (req, res) => {
       const existingTag = await Tag.findOne({ tag: tagName });
       if (existingTag) {
         // console.log("exists")
-        const result=await Tag.updateOne({tag:tagName},{$inc:{usedCount:1}});
+        const result = await Tag.updateOne({ tag: tagName }, { $inc: { usedCount: 1 } });
         return existingTag._id;
       } else {
         // console.log("efefefe")
@@ -364,7 +377,7 @@ app.get("/api/recent", async (req, res) => {
 });
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/follow",async (req, res) => {
+app.post("/api/follow", async (req, res) => {
   const { followerId, followingId } = req.body
   // const followerId=req.UserId
   try {
@@ -380,7 +393,7 @@ app.post("/api/follow",async (req, res) => {
 //no need to send userId it comes from  header through jwtloken
 app.get("/api/following", async (req, res) => {
   // const userId=req.UserId
-  const {limit, start,userId} = req.query
+  const { limit, start, userId } = req.query
   try {
     const followerIds = await following.find({ followerId: userId })
       .distinct('followingId');
@@ -406,12 +419,12 @@ app.get("/api/following", async (req, res) => {
 })
 
 
-app.get("/api/tags/",async (req, res) => {
+app.get("/api/tags/", async (req, res) => {
   const { date } = req.query
   const datefromString = new Date(date)
   console.log(date)
   try {
-    const result = await Tag.find({ createdAt: { $gt: datefromString } }).sort({usedCount:-1}).select({
+    const result = await Tag.find({ createdAt: { $gt: datefromString } }).sort({ usedCount: -1 }).select({
       _id: 0,
       // createdAt: 0,
       // updatedAt: 0,
@@ -426,9 +439,9 @@ app.get("/api/tags/",async (req, res) => {
 });
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/search-with-tags",async (req, res) => {
+app.post("/api/search-with-tags", async (req, res) => {
   //
-  const {userId, tags, limit, start } = req.body
+  const { userId, tags, limit, start } = req.body
   // const userId=req.UserId
   console.log(userId)
   try {
@@ -465,7 +478,7 @@ app.post("/api/search-with-tags",async (req, res) => {
 //no need to send userId it comes from  header through jwtloken
 app.post("/api/comment", async (req, res) => {
 
-  const { postId, comment,userId } = req.body;
+  const { postId, comment, userId } = req.body;
   // const userId=req.UserId
   try {
     const NewComment = new Comment({ postId, userId, comment })
@@ -484,9 +497,9 @@ app.post("/api/comment", async (req, res) => {
 
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/like",async (req, res) => {
+app.post("/api/like", async (req, res) => {
   // const userId=req.UserId
-  const { postId ,userId} = req.body;
+  const { postId, userId } = req.body;
   try {
     const likedStatus = await LikesInfo.find({
       likedBy: userId,
@@ -519,3 +532,53 @@ app.post("/api/like",async (req, res) => {
 });
 
 
+app.get("/api/users/following", async (req, res) => {
+  const { userId, limit, start } = req.body
+  try {
+    const result = await following.find({ followerId: userId }).skip(Number(start)).limit(Number(limit)).select({ followingId: 1, _id: 0 })
+    res.send(result)
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+
+});
+
+
+app.get("/api/users/followers", async (req, res) => {
+  const { userId, limit, start } = req.body
+  try {
+    const result = await following.find({ followingId: userId }).skip(Number(start)).limit(Number(limit)).select({ followerId: 1, _id: 0 })
+    res.send(result)
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+
+});
+
+// get /api/doesFollow (followedBy, followed) -> returns true if followedBy follows followedBy
+app.get("/api/users/doesFollow", async (req, res) => {
+  const { followedBy, followed } = req.body
+  try {
+    const result = await following.find({ followerId: followedBy, followingId: followed })
+    if (result.length === 0) {
+      res.send(false)
+    }
+    else {
+      res.send(true)
+    }
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+
+})
+
+
+// app.post("/api/beans",async(req,res)=>{
+// const {}
+// })
