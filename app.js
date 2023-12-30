@@ -339,7 +339,7 @@ app.put("/api/posts/share", async (req, res) => {
 });
 
 app.get("/api/hot", async (req, res) => {
-  const { limit, start } = req.query
+  const { userId, limit, start } = req.query
   try {
 
     const posts = await Post.find()
@@ -353,15 +353,36 @@ app.get("/api/hot", async (req, res) => {
         // updatedAt: 0,
         __v: 0,
       });
-    res.status(200).send(posts);
+    let hasLiked, hasCommented, doesFollow;
+    const updatedPosts = await Promise.all(posts.map(async post => {
+      console.log(post)
+      const likedResult = await LikesInfo.findOne({ likedBy: userId });
+      const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
+      const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
+      if (likedResult === null) { hasLiked = false } else { hasLiked = true }
+      if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
+      if (followResult === null) { doesFollow = false } else { doesFollow = true }
+      const plainPost = post.toObject();
+      return { ...plainPost, hasCommented, hasLiked, doesFollow }
+    }))
+    // console.log(posts)
+
+    console.log(updatedPosts)
+    res.status(200).send(updatedPosts);
   } catch (error) {
     res.status(500).send({ message: 'Internal Server Error.' });
   }
 });
 
+// hasLiked - a Boolean representing whether the current user has liked the post or not (true if yes, else false)
+// hasCommented - a Boolean representing whether the current user has commented the post or not (true if yes, else false)
+// doesFollow - do I follow the userId of the post or not
+
+
+
 app.get("/api/recent", async (req, res) => {
   console.log("req.query", req.query);
-  const { limit, start } = req.query
+  const { limit, start,userId } = req.query
   try {
 
     const posts = await Post.find()
@@ -374,7 +395,18 @@ app.get("/api/recent", async (req, res) => {
         // updatedAt: 0,
         __v: 0,
       });
-    res.status(200).send(posts);
+      const updatedPosts = await Promise.all(posts.map(async post => {
+        console.log(post)
+        const likedResult = await LikesInfo.findOne({ likedBy: userId });
+        const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
+        const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
+        if (likedResult === null) { hasLiked = false } else { hasLiked = true }
+        if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
+        if (followResult === null) { doesFollow = false } else { doesFollow = true }
+        const plainPost = post.toObject();
+        return { ...plainPost, hasCommented, hasLiked, doesFollow }
+      }))
+    res.status(200).send(updatedPosts);
   } catch (error) {
     res.status(500).send({ message: 'Internal Server Error.' });
   }
@@ -413,7 +445,18 @@ app.get("/api/following", async (req, res) => {
         // updatedAt: 0,
         __v: 0
       });
-    res.status(200).send(posts)
+      const updatedPosts = await Promise.all(posts.map(async post => {
+        console.log(post)
+        const likedResult = await LikesInfo.findOne({ likedBy: userId });
+        const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
+        const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
+        if (likedResult === null) { hasLiked = false } else { hasLiked = true }
+        if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
+        if (followResult === null) { doesFollow = false } else { doesFollow = true }
+        const plainPost = post.toObject();
+        return { ...plainPost, hasCommented, hasLiked, doesFollow }
+      }))
+    res.status(200).send(updatedPosts)
     console.log(posts)
   }
   catch (e) {
@@ -563,7 +606,6 @@ app.get("/api/users/followers", async (req, res) => {
 
 });
 
-// get /api/doesFollow (followedBy, followed) -> returns true if followedBy follows followedBy
 app.get("/api/users/doesFollow", async (req, res) => {
   const { followedBy, followed } = req.body
   try {
@@ -585,6 +627,7 @@ app.get("/api/users/doesFollow", async (req, res) => {
 
 app.post("/api/beansDiamonds", async (req, res) => {
   const { userId, beans, diamonds, game, paymentType, sentby } = req.body
+  console.log(userId)
   try {
     const transaction = new TransactionHistory({ diamondsAdded: diamonds, beansAdded: beans, sentby, game, sentTo: userId, paymentType })
     const result = await User.updateOne({ UserId: userId }, { $inc: { diamondsCount: diamonds == undefined ? 0 : diamonds, beansCount: beans == undefined ? 0 : beans } })
@@ -630,10 +673,10 @@ app.get("/api/users", async (req, res) => {
 
 app.get("/api/convert", async (req, res) => {
   const { diamonds, beans, userId } = req.query
-  console.log(typeof(diamonds))
-  console.log(typeof(beans))
+  console.log(typeof (diamonds))
+  console.log(typeof (beans))
 
-  console.log(typeof(userId))
+  console.log(userId)
 
   try {
     if (diamonds == null) {
@@ -660,3 +703,4 @@ app.get("/api/convert", async (req, res) => {
   }
 })
 
+app.g
