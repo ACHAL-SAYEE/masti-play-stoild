@@ -138,15 +138,19 @@ const postSchema = new mongoose.Schema({
   timestamps: true,
 });
 
-const TransactionHistory = new mongoose.Schema({
-  diamondsSent: Number,
-  beansSent: Number,
+const TransactionHistorySchema = new mongoose.Schema({
+
+  paymentType: String,
+  beansAdded: { type: Number, default: 0 },
+  diamondsAdded: { type: Number, default: 0 },
   game: String,
-  sentUserId: String
+  sentby: { type: String, default: null },
+  sentTo: String
 }, {
   timestamps: true,
 })
 
+const TransactionHistory = mongoose.model("TransactionHistory", TransactionHistorySchema)
 const following = mongoose.model("following", followingDataSchema)
 const Tag = mongoose.model('Tag', TagSchema);
 const LikesInfo = mongoose.model("LikesInfo", likesInfo)
@@ -157,7 +161,7 @@ const Comment = mongoose.model("Comment", CommentSchema)
 
 
 const otpMap = {};
-
+const beansToDiamondsRate = 0.5
 app.post('/otp', (req, res) => {
   const req1 = unirest('GET', 'https://www.fast2sms.com/dev/bulkV2');
   const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
@@ -579,6 +583,80 @@ app.get("/api/users/doesFollow", async (req, res) => {
 })
 
 
-// app.post("/api/beans",async(req,res)=>{
-// const {}
-// })
+app.post("/api/beansDiamonds", async (req, res) => {
+  const { userId, beans, diamonds, game, paymentType, sentby } = req.body
+  try {
+    const transaction = new TransactionHistory({ diamondsAdded: diamonds, beansAdded: beans, sentby, game, sentTo: userId, paymentType })
+    const result = await User.updateOne({ UserId: userId }, { $inc: { diamondsCount: diamonds == undefined ? 0 : diamonds, beansCount: beans == undefined ? 0 : beans } })
+    await transaction.save()
+    console.log(result)
+    res.send("credited successfully")
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
+app.get("/api/beans-history", async (req, res) => {
+  const { userId, start, limit } = req.query
+  try {
+
+    const result = await TransactionHistory.find({ sentTo: userId }).skip(start).limit(limit).select({ _id: 0, __v: 0, diamondsAdded: 0, updatedAt: 0, sentTo: 0 })
+
+    console.log(result)
+    res.send(result)
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
+app.get("/api/users", async (req, res) => {
+  const { userId } = req.query
+  try {
+
+    const result = await User.findOne({ UserId: userId }).select({ _id: 0, __v: 0 })
+
+    console.log(result)
+    res.send(result)
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
+app.get("/api/convert", async (req, res) => {
+  const { diamonds, beans, userId } = req.query
+  console.log(typeof(diamonds))
+  console.log(typeof(beans))
+
+  console.log(typeof(userId))
+
+  try {
+    if (diamonds == null) {
+      console.log("entered2")
+      const DiamondsToAdd = beans * beansToDiamondsRate
+      const result2 = await User.updateOne({ UserId: userId }, { $inc: { diamondsCount: DiamondsToAdd, beansCount: -beans } })
+      const result = await User.findOne({ UserId: userId }).select({ _id: 0, __v: 0 })
+      console.log(result)
+      res.send(result)
+    }
+    else {
+      console.log("entered")
+      const BeansToAdd = diamonds / beansToDiamondsRate
+      const result2 = await User.updateOne({ UserId: userId }, { $inc: { diamondsCount: -diamonds, beansCount: BeansToAdd } })
+      const result = await User.findOne({ UserId: userId }).select({ _id: 0, __v: 0 })
+      console.log(result)
+      res.send(result)
+    }
+
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
