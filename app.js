@@ -90,7 +90,11 @@ const userSchema = new mongoose.Schema({
     default: null,
   },
   beansCount: { type: Number, default: 0 },
-  diamondsCount: { type: Number, default: 0 }
+  diamondsCount: { type: Number, default: 0 },
+  followersCount: { type: Number, default: 0 },
+  followingCount: { type: Number, default: 0 },
+  friends: { type: Number, default: 0 },
+
 });
 
 const TagSchema = tag = new mongoose.Schema({
@@ -382,7 +386,7 @@ app.get("/api/hot", async (req, res) => {
 
 app.get("/api/recent", async (req, res) => {
   console.log("req.query", req.query);
-  const { limit, start,userId } = req.query
+  const { limit, start, userId } = req.query
   try {
 
     const posts = await Post.find()
@@ -395,17 +399,17 @@ app.get("/api/recent", async (req, res) => {
         // updatedAt: 0,
         __v: 0,
       });
-      const updatedPosts = await Promise.all(posts.map(async post => {
-        console.log(post)
-        const likedResult = await LikesInfo.findOne({ likedBy: userId });
-        const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
-        const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
-        if (likedResult === null) { hasLiked = false } else { hasLiked = true }
-        if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
-        if (followResult === null) { doesFollow = false } else { doesFollow = true }
-        const plainPost = post.toObject();
-        return { ...plainPost, hasCommented, hasLiked, doesFollow }
-      }))
+    const updatedPosts = await Promise.all(posts.map(async post => {
+      console.log(post)
+      const likedResult = await LikesInfo.findOne({ likedBy: userId });
+      const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
+      const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
+      if (likedResult === null) { hasLiked = false } else { hasLiked = true }
+      if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
+      if (followResult === null) { doesFollow = false } else { doesFollow = true }
+      const plainPost = post.toObject();
+      return { ...plainPost, hasCommented, hasLiked, doesFollow }
+    }))
     res.status(200).send(updatedPosts);
   } catch (error) {
     res.status(500).send({ message: 'Internal Server Error.' });
@@ -417,10 +421,37 @@ app.post("/api/follow", async (req, res) => {
   const { followerId, followingId } = req.body
   // const followerId=req.UserId
   try {
-    const newFollower = new following({ followerId, followingId })
-    const result = await newFollower.save()
-    res.status(200).send({ message: "follower added successfully" })
-    console.log(result)
+    const followStatus = await following.find({
+      followerId, followingId
+    })
+    if (followStatus.length === 0) {
+      const newFollower = new following({ followerId, followingId })
+      const result = await newFollower.save()
+      const bidirection = await following.findOne({ followerId: followingId, followingId: followerId })
+      if (bidirection !== null) {
+        const updateFriend = await User.updateMany({userId:{$in:[followerId,followingId]}},{ $inc: { friends: 1 }})
+      }
+
+      const updatefollowerUser = await User.updateOne({ userId: followerId }, { $inc: { followingCount: 1 } })
+      const updatefollowingUser = await User.updateOne({ userId: followingId }, { $inc: { followersCount: 1 } })
+      res.status(200).send({ message: "follower added successfully" })
+      console.log(result)
+    }
+    else {
+      const bidirection = await following.findOne({ followerId: followingId, followingId: followerId })
+      if (bidirection !== null) {
+        const updateFriend = await User.updateMany({userId:{$in:[followerId,followingId]}},{ $inc: { friends: -1 }})
+      }
+      const unfollowResult = await following.deleteOne({
+        followerId, followingId
+      })
+      const updatefollowerUser = await User.updateOne({ userId: followerId }, { $inc: { followingCount: -1 } })
+      const updatefollowingUser = await User.updateOne({ userId: followingId }, { $inc: { followersCount: -1 } })
+      console.log(unlikeResult)
+      res.send("post unliked")
+
+    }
+
   } catch (e) {
     res.status(500).send({ error: e })
   }
@@ -445,17 +476,17 @@ app.get("/api/following", async (req, res) => {
         // updatedAt: 0,
         __v: 0
       });
-      const updatedPosts = await Promise.all(posts.map(async post => {
-        console.log(post)
-        const likedResult = await LikesInfo.findOne({ likedBy: userId });
-        const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
-        const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
-        if (likedResult === null) { hasLiked = false } else { hasLiked = true }
-        if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
-        if (followResult === null) { doesFollow = false } else { doesFollow = true }
-        const plainPost = post.toObject();
-        return { ...plainPost, hasCommented, hasLiked, doesFollow }
-      }))
+    const updatedPosts = await Promise.all(posts.map(async post => {
+      console.log(post)
+      const likedResult = await LikesInfo.findOne({ likedBy: userId });
+      const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
+      const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
+      if (likedResult === null) { hasLiked = false } else { hasLiked = true }
+      if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
+      if (followResult === null) { doesFollow = false } else { doesFollow = true }
+      const plainPost = post.toObject();
+      return { ...plainPost, hasCommented, hasLiked, doesFollow }
+    }))
     res.status(200).send(updatedPosts)
     console.log(posts)
   }
