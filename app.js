@@ -90,7 +90,11 @@ const userSchema = new mongoose.Schema({
 });
 
 const TagSchema = tag = new mongoose.Schema({
-  tag: String
+  tag: String,
+  usedCount: {
+    type: Number,
+    default: 0, 
+  },
 }, { timestamps: true });
 
 const followingDataSchema = new mongoose.Schema({
@@ -273,6 +277,7 @@ app.post("/api/posts/",authenticateToken, async (req, res) => {
       const existingTag = await Tag.findOne({ tag: tagName });
       if (existingTag) {
         // console.log("exists")
+        const result=await Tag.updateOne({tag:tagName},{$inc:{usedCount:1}});
         return existingTag._id;
       } else {
         // console.log("efefefe")
@@ -402,11 +407,11 @@ app.get("/api/following",authenticateToken, async (req, res) => {
 
 
 app.get("/api/tags/",authenticateToken,async (req, res) => {
-  const { date } = req.query//asuming date in in string not date object
+  const { date } = req.query
   const datefromString = new Date(date)
   console.log(date)
   try {
-    const result = await Tag.find({ createdAt: { $gt: datefromString } }).select({
+    const result = await Tag.find({ createdAt: { $gt: datefromString } }).sort({usedCount:-1}).select({
       _id: 0,
       // createdAt: 0,
       // updatedAt: 0,
@@ -428,7 +433,6 @@ app.post("/api/search-with-tags", authenticateToken,async (req, res) => {
   console.log(userId)
   try {
     if (userId == null) {
-      console.log("triggered 1")
       const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
       const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
@@ -437,14 +441,12 @@ app.post("/api/search-with-tags", authenticateToken,async (req, res) => {
       res.send(result)
     }
     else if (tags == null || tags.length === 0) {
-      console.log("triggered 2")
       const result = await Post.find({ "postedBy": userId })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
       res.send(result)
     }
     else if (userId != null && tags.length > 0) {
-      console.log("triggered 3")
       const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
       const result = await Post.find({ "tags": { "$in": tagObjectIds }, "postedBy": userId }).populate('tags').sort({ createdAt: -1 })
