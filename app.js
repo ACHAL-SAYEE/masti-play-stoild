@@ -269,7 +269,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.post("/api/posts/",authenticateToken, async (req, res) => {
+app.post("/api/posts/", async (req, res) => {
   const { title, description, postedBy, imgUrl, tags } = req.body;
   const postId = generateUniqueId()
   const tagObjectIds = await Promise.all(
@@ -302,7 +302,7 @@ app.post("/api/posts/",authenticateToken, async (req, res) => {
   }
 });
 
-app.put("/api/posts/share",authenticateToken, async (req, res) => {
+app.put("/api/posts/share", async (req, res) => {
   const { postId } = req.body
   try {
 
@@ -321,7 +321,7 @@ app.put("/api/posts/share",authenticateToken, async (req, res) => {
   }
 });
 
-app.get("/api/hot",authenticateToken, async (req, res) => {
+app.get("/api/hot", async (req, res) => {
   const { limit, start } = req.query
   try {
 
@@ -342,7 +342,7 @@ app.get("/api/hot",authenticateToken, async (req, res) => {
   }
 });
 
-app.get("/api/recent",authenticateToken, async (req, res) => {
+app.get("/api/recent", async (req, res) => {
   console.log("req.query", req.query);
   const { limit, start } = req.query
   try {
@@ -364,9 +364,9 @@ app.get("/api/recent",authenticateToken, async (req, res) => {
 });
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/follow", authenticateToken,async (req, res) => {
-  const {  followingId } = req.body
-  const followerId=req.UserId
+app.post("/api/follow",async (req, res) => {
+  const { followerId, followingId } = req.body
+  // const followerId=req.UserId
   try {
     const newFollower = new following({ followerId, followingId })
     const result = await newFollower.save()
@@ -378,9 +378,9 @@ app.post("/api/follow", authenticateToken,async (req, res) => {
 })
 
 //no need to send userId it comes from  header through jwtloken
-app.get("/api/following",authenticateToken, async (req, res) => {
-  const userId=req.UserId
-  const {limit, start} = req.query
+app.get("/api/following", async (req, res) => {
+  // const userId=req.UserId
+  const {limit, start,userId} = req.query
   try {
     const followerIds = await following.find({ followerId: userId })
       .distinct('followingId');
@@ -406,7 +406,7 @@ app.get("/api/following",authenticateToken, async (req, res) => {
 })
 
 
-app.get("/api/tags/",authenticateToken,async (req, res) => {
+app.get("/api/tags/",async (req, res) => {
   const { date } = req.query
   const datefromString = new Date(date)
   console.log(date)
@@ -426,10 +426,10 @@ app.get("/api/tags/",authenticateToken,async (req, res) => {
 });
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/search-with-tags", authenticateToken,async (req, res) => {
+app.post("/api/search-with-tags",async (req, res) => {
   //
-  const { tags, limit, start } = req.body
-  const userId=req.UserId
+  const {userId, tags, limit, start } = req.body
+  // const userId=req.UserId
   console.log(userId)
   try {
     if (userId == null) {
@@ -463,10 +463,10 @@ app.post("/api/search-with-tags", authenticateToken,async (req, res) => {
 })
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/comment",authenticateToken, async (req, res) => {
+app.post("/api/comment", async (req, res) => {
 
-  const { postId, comment } = req.body;
-  const userId=req.UserId
+  const { postId, comment,userId } = req.body;
+  // const userId=req.UserId
   try {
     const NewComment = new Comment({ postId, userId, comment })
     await NewComment.save()
@@ -484,9 +484,9 @@ app.post("/api/comment",authenticateToken, async (req, res) => {
 
 
 //no need to send userId it comes from  header through jwtloken
-app.post("/api/like", authenticateToken,async (req, res) => {
-  const userId=req.UserId
-  const { postId } = req.body;
+app.post("/api/like",async (req, res) => {
+  // const userId=req.UserId
+  const { postId ,userId} = req.body;
   try {
     const likedStatus = await LikesInfo.find({
       likedBy: userId,
