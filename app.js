@@ -16,6 +16,23 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
 
+const admin = require('firebase-admin');
+const serviceAccount = require(__dirname + "/mastiplay-31ca8-firebase-adminsdk-7chw1-9d85969a11.json");
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: "https://mastiplay-31ca8-default-rtdb.firebaseio.com"
+});
+
+const db = admin.firestore();
+const usersCollection = db.collection('users');
+
+
+
+
+
+
+
 const initializeDBAndServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URL, {
@@ -343,7 +360,9 @@ app.put("/api/posts/share", async (req, res) => {
 });
 
 app.get("/api/hot", async (req, res) => {
+
   const { userId, limit, start } = req.query
+  // console.log(userId)
   try {
 
     const posts = await Post.find()
@@ -358,11 +377,11 @@ app.get("/api/hot", async (req, res) => {
         __v: 0,
       });
     let hasLiked, hasCommented, doesFollow;
-    console.log("posts",posts)
-    
+    console.log("posts", posts)
+
     const updatedPosts = await Promise.all(posts.map(async post => {
       console.log(post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId:post.PostId });
+      const likedResult = await LikesInfo.findOne({ likedBy: userId, postId: post.PostId });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -373,7 +392,7 @@ app.get("/api/hot", async (req, res) => {
     }))
     // console.log(posts)
 
-    console.log("updatedPosts",updatedPosts)
+    console.log("updatedPosts", updatedPosts)
     res.status(200).send(updatedPosts);
   } catch (error) {
     res.status(500).send({ message: 'Internal Server Error.' });
@@ -398,7 +417,7 @@ app.get("/api/recent", async (req, res) => {
       });
     const updatedPosts = await Promise.all(posts.map(async post => {
       console.log(post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId:post.PostId });
+      const likedResult = await LikesInfo.findOne({ likedBy: userId, postId: post.PostId });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -413,11 +432,36 @@ app.get("/api/recent", async (req, res) => {
   }
 });
 
-//no need to send userId it comes from  header through jwtloken
 app.post("/api/follow", async (req, res) => {
   const { followerId, followingId } = req.body
   // const followerId=req.UserId
   try {
+
+    const currentUser = await User.find({ UserId: followerId })
+    if (currentUser.length === 0) {
+      console.log("entered")
+      const query = usersCollection.where('id', '==', followerId);
+      const snapshot = await query.get()
+      
+        const data = snapshot.docs[0].data();
+      const { id, ...newUserData } = data;
+
+      const newUser =new User({ ...newUserData, UserId: id }) 
+      await newUser.save()
+    }
+    const toFollowUser = await User.find({ UserId: followingId })
+    if (toFollowUser.length === 0) {
+      const query = usersCollection.where('id', '==', followingId);
+      const snapshot = await query.get()
+      
+        const data = snapshot.docs[0].data();
+
+      const { id, ...newUserData } = data;
+
+      const newUser =new User({ ...newUserData, UserId: id }) 
+      await newUser.save()
+
+    }
     const followStatus = await following.find({
       followerId, followingId
     })
@@ -426,35 +470,34 @@ app.post("/api/follow", async (req, res) => {
       const result = await newFollower.save()
       const bidirection = await following.findOne({ followerId: followingId, followingId: followerId })
       if (bidirection !== null) {
-        const updateFriend = await User.updateMany({userId:{$in:[followerId,followingId]}},{ $inc: { friends: 1 }})
+        const updateFriend = await User.updateMany({ UserId: { $in: [followerId, followingId] } }, { $inc: { friends: 1 } })
       }
 
-      const updatefollowerUser = await User.updateOne({ userId: followerId }, { $inc: { followingCount: 1 } })
-      const updatefollowingUser = await User.updateOne({ userId: followingId }, { $inc: { followersCount: 1 } })
-      res.status(200).send({ message: "follower added successfully" })
+      const updatefollowerUser = await User.updateOne({ UserId: followerId }, { $inc: { followingCount: 1 } })
+      const updatefollowingUser = await User.updateOne({ UserId: followingId }, { $inc: { followersCount: 1 } })
+      res.status(200).send("following" )
       console.log(result)
     }
     else {
       const bidirection = await following.findOne({ followerId: followingId, followingId: followerId })
       if (bidirection !== null) {
-        const updateFriend = await User.updateMany({userId:{$in:[followerId,followingId]}},{ $inc: { friends: -1 }})
+        const updateFriend = await User.updateMany({ UserId: { $in: [followerId, followingId] } }, { $inc: { friends: -1 } })
       }
       const unfollowResult = await following.deleteOne({
         followerId, followingId
       })
-      const updatefollowerUser = await User.updateOne({ userId: followerId }, { $inc: { followingCount: -1 } })
-      const updatefollowingUser = await User.updateOne({ userId: followingId }, { $inc: { followersCount: -1 } })
-      console.log(unlikeResult)
-      res.send("post unliked")
+      const updatefollowerUser = await User.updateOne({ UserId: followerId }, { $inc: { followingCount: -1 } })
+      const updatefollowingUser = await User.updateOne({ UserId: followingId }, { $inc: { followersCount: -1 } })
+      res.send("unfollowing")
 
     }
 
   } catch (e) {
+    console.log(e)
     res.status(500).send({ error: e })
   }
 })
 
-//no need to send userId it comes from  header through jwtloken
 app.get("/api/following", async (req, res) => {
   // const userId=req.UserId
   const { limit, start, userId } = req.query
@@ -513,7 +556,6 @@ app.get("/api/tags/", async (req, res) => {
 
 });
 
-//no need to send userId it comes from  header through jwtloken
 app.post("/api/search-with-tags", async (req, res) => {
   //
   const { userId, tags, limit, start } = req.body
@@ -550,7 +592,6 @@ app.post("/api/search-with-tags", async (req, res) => {
 
 })
 
-//no need to send userId it comes from  header through jwtloken
 app.post("/api/comment", async (req, res) => {
 
   const { postId, comment, userId } = req.body;
@@ -673,7 +714,7 @@ app.get("/api/beans-history", async (req, res) => {
   const { userId, start, limit } = req.query
   try {
 
-    const result = await TransactionHistory.find({ sentTo: userId,diamondsAdded: 0}).skip(start).limit(limit).select({ _id: 0, __v: 0, diamondsAdded: 0, updatedAt: 0, sentTo: 0 })
+    const result = await TransactionHistory.find({ sentTo: userId, diamondsAdded: 0 }).skip(start).limit(limit).select({ _id: 0, __v: 0, diamondsAdded: 0, updatedAt: 0, sentTo: 0 })
 
     console.log(result)
     res.send(result)
@@ -688,7 +729,7 @@ app.get("/api/diamonds-history", async (req, res) => {
   const { userId, start, limit } = req.query
   try {
 
-    const result = await TransactionHistory.find({ sentTo: userId,beansAdded: 0}).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
+    const result = await TransactionHistory.find({ sentTo: userId, beansAdded: 0 }).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
 
     console.log(result)
     res.send(result)
@@ -746,4 +787,3 @@ app.get("/api/convert", async (req, res) => {
   }
 })
 
-app.g
