@@ -502,7 +502,7 @@ app.get("/api/following", async (req, res) => {
   // const userId=req.UserId
   const { limit, start, userId } = req.query
   try {
-    const followerIds = await following.find({ followerId: userId })
+    const followerIds = await following.find({ followerId: userId})
       .distinct('followingId');
     console.log(followerIds)
     const posts = await Post.find({
@@ -518,7 +518,7 @@ app.get("/api/following", async (req, res) => {
       });
     const updatedPosts = await Promise.all(posts.map(async post => {
       console.log(post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId });
+      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId: post.PostId  });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -559,31 +559,44 @@ app.get("/api/tags/", async (req, res) => {
 app.post("/api/search-with-tags", async (req, res) => {
   //
   const { userId, tags, limit, start } = req.body
+  let posts;
   // const userId=req.UserId
   console.log(userId)
   try {
     if (userId == null) {
       const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
-      const result = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
+       posts = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
-      res.send(result)
+       
     }
     else if (tags == null || tags.length === 0) {
-      const result = await Post.find({ "postedBy": userId })
+       posts = await Post.find({ "postedBy": userId })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
-      res.send(result)
+        
     }
     else if (userId != null && tags.length > 0) {
       const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
-      const result = await Post.find({ "tags": { "$in": tagObjectIds }, "postedBy": userId }).populate('tags').sort({ createdAt: -1 })
+       posts = await Post.find({ "tags": { "$in": tagObjectIds }, "postedBy": userId }).populate('tags').sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
-      res.send(result)
+       
     }
+    const updatedPosts = await Promise.all(posts.map(async post => {
+      console.log("post",post)
+      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId: post.PostId  });
+      const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
+      const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
+      if (likedResult === null) { hasLiked = false } else { hasLiked = true }
+      if (CommentResult === null) { hasCommented = false } else { hasCommented = true }
+      if (followResult === null) { doesFollow = false } else { doesFollow = true }
+      const plainPost = post.toObject();
+      return { ...plainPost, hasCommented, hasLiked, doesFollow }
+    }))
+    res.status(200).send(updatedPosts)
   }
   catch (e) {
     console.log(e)
