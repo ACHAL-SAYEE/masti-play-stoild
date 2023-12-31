@@ -156,9 +156,10 @@ const TransactionHistorySchema = new mongoose.Schema({
   paymentType: String,
   beansAdded: { type: Number, default: 0 },
   diamondsAdded: { type: Number, default: 0 },
-  game: String,
-  sentby: { type: String, default: null },
+  game: { type: String, default: null },
+  sentby: String,
   sentTo: String
+  // sentTo: { type: String, default: null }
 }, {
   timestamps: true,
 })
@@ -451,31 +452,6 @@ app.post("/api/follow", async (req, res) => {
   // const followerId=req.UserId
   try {
 
-    // const currentUser = await User.find({ UserId: followerId })
-    // if (currentUser.length === 0) {
-    //   console.log("entered")
-    //   const query = usersCollection.where('id', '==', followerId);
-    //   const snapshot = await query.get()
-
-    //   const data = snapshot.docs[0].data();
-    //   const { id, ...newUserData } = data;
-
-    //   const newUser = new User({ ...newUserData, UserId: id })
-    //   await newUser.save()
-    // }
-    // const toFollowUser = await User.find({ UserId: followingId })
-    // if (toFollowUser.length === 0) {
-    //   const query = usersCollection.where('id', '==', followingId);
-    //   const snapshot = await query.get()
-
-    //   const data = snapshot.docs[0].data();
-
-    //   const { id, ...newUserData } = data;
-
-    //   const newUser = new User({ ...newUserData, UserId: id })
-    //   await newUser.save()
-
-    // }
     const followStatus = await following.find({
       followerId, followingId
     })
@@ -719,14 +695,29 @@ app.get("/api/users/doesFollow", async (req, res) => {
 
 
 app.post("/api/beansDiamonds", async (req, res) => {
-  const { userId, beans, diamonds, game, paymentType, sentby } = req.body
+  const { userId, beans, diamonds, game, paymentType, sentby, sentTo } = req.body
   console.log(userId)
   try {
-    const transaction = new TransactionHistory({ diamondsAdded: diamonds, beansAdded: beans, sentby, game, sentTo: userId, paymentType })
+    let transaction
+    //recharge
+    if (paymentType !== null && sentTo === userId) {
+      transaction = new TransactionHistory({ diamondsAdded: diamonds, beansAdded: beans, sentby, sentTo: userId, paymentType })
+
+    }
+    //outcome
+    else if (game !== null && sentTo == userId && sentby == userId) {
+      transaction = new TransactionHistory({ diamondsAdded: diamonds, beansAdded: beans, sentby: userId, sentTo: userId, game })
+    }
+    //income
+    else if (game != null && sentTo == userId) {
+      transaction = new TransactionHistory({ diamondsAdded: diamonds, beansAdded: beans, sentby: userId, game, })
+
+    }
+    await transaction.save()
     const result = await User.updateOne({ UserId: userId }, { $inc: { diamondsCount: diamonds == undefined ? 0 : diamonds, beansCount: beans == undefined ? 0 : beans } })
     await transaction.save()
     console.log(result)
-    res.send("credited successfully")
+    res.send("transaction done")
   }
   catch (e) {
     console.log(e)
@@ -750,11 +741,15 @@ app.get("/api/beans-history", async (req, res) => {
 })
 
 app.get("/api/diamonds-history", async (req, res) => {
-  const { userId, start, limit } = req.query
+  const { userId, start, limit, mode } = req.query
+  let result;
   try {
-
-    const result = await TransactionHistory.find({ sentTo: userId, beansAdded: 0 }).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
-
+    if (mode === "income")
+      result = await TransactionHistory.find({ sentTo: userId, paymentType: null, beansAdded: 0 }).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
+    else if (mode == "recharge")
+      result = await TransactionHistory.find({ sentTo: userId, game: null, beansAdded: 0 }).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
+    else
+      result = await TransactionHistory.find({ sentTo: userId, game: null, sentby: null, beansAdded: 0 }).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
     console.log(result)
     res.send(result)
   }
