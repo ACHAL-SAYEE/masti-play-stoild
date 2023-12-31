@@ -16,23 +16,6 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
 
-const admin = require('firebase-admin');
-const serviceAccount = require(__dirname + "/mastiplay-31ca8-firebase-adminsdk-7chw1-9d85969a11.json");
-
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-  databaseURL: "https://mastiplay-31ca8-default-rtdb.firebaseio.com"
-});
-
-const db = admin.firestore();
-const usersCollection = db.collection('users');
-
-
-
-
-
-
-
 const initializeDBAndServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URL, {
@@ -71,7 +54,6 @@ const authenticateToken = (request, response, next) => {
     });
   }
 };
-
 
 
 initializeDBAndServer();
@@ -313,8 +295,6 @@ app.post("/api/user", async (req, res) => {
   }
 })
 
-
-
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body
   const result = await User.findOne({ email })
@@ -337,7 +317,6 @@ app.post("/api/login", async (req, res) => {
     }
   }
 })
-
 
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
@@ -435,7 +414,6 @@ app.get("/api/hot", async (req, res) => {
   }
 });
 
-
 app.get("/api/recent", async (req, res) => {
   console.log("req.query", req.query);
   const { limit, start, userId } = req.query
@@ -473,31 +451,31 @@ app.post("/api/follow", async (req, res) => {
   // const followerId=req.UserId
   try {
 
-    const currentUser = await User.find({ UserId: followerId })
-    if (currentUser.length === 0) {
-      console.log("entered")
-      const query = usersCollection.where('id', '==', followerId);
-      const snapshot = await query.get()
+    // const currentUser = await User.find({ UserId: followerId })
+    // if (currentUser.length === 0) {
+    //   console.log("entered")
+    //   const query = usersCollection.where('id', '==', followerId);
+    //   const snapshot = await query.get()
 
-      const data = snapshot.docs[0].data();
-      const { id, ...newUserData } = data;
+    //   const data = snapshot.docs[0].data();
+    //   const { id, ...newUserData } = data;
 
-      const newUser = new User({ ...newUserData, UserId: id })
-      await newUser.save()
-    }
-    const toFollowUser = await User.find({ UserId: followingId })
-    if (toFollowUser.length === 0) {
-      const query = usersCollection.where('id', '==', followingId);
-      const snapshot = await query.get()
+    //   const newUser = new User({ ...newUserData, UserId: id })
+    //   await newUser.save()
+    // }
+    // const toFollowUser = await User.find({ UserId: followingId })
+    // if (toFollowUser.length === 0) {
+    //   const query = usersCollection.where('id', '==', followingId);
+    //   const snapshot = await query.get()
 
-      const data = snapshot.docs[0].data();
+    //   const data = snapshot.docs[0].data();
 
-      const { id, ...newUserData } = data;
+    //   const { id, ...newUserData } = data;
 
-      const newUser = new User({ ...newUserData, UserId: id })
-      await newUser.save()
+    //   const newUser = new User({ ...newUserData, UserId: id })
+    //   await newUser.save()
 
-    }
+    // }
     const followStatus = await following.find({
       followerId, followingId
     })
@@ -571,7 +549,6 @@ app.get("/api/following", async (req, res) => {
 
   }
 })
-
 
 app.get("/api/tags/", async (req, res) => {
   const { date } = req.query
@@ -660,7 +637,6 @@ app.post("/api/comment", async (req, res) => {
   }
 });
 
-
 //no need to send userId it comes from  header through jwtloken
 app.post("/api/like", async (req, res) => {
   // const userId=req.UserId
@@ -709,7 +685,6 @@ app.get("/api/users/following", async (req, res) => {
   }
 
 });
-
 
 app.get("/api/users/followers", async (req, res) => {
   const { userId, limit, start } = req.body
