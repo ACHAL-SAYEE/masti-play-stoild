@@ -78,12 +78,7 @@ initializeDBAndServer();
 
 const userSchema = new mongoose.Schema({
   UserId: String,
-  email: String,
-  password: String,
-  password: {
-    type: String,
-    default: null,
-  },
+  AgentId: { type: String, default: null },
   name: String,
   email: String,
   photo: {
@@ -94,6 +89,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  gender: Number,
   dob: {
     type: Date,
     default: null,
@@ -103,6 +99,10 @@ const userSchema = new mongoose.Schema({
     default: null,
   },
   frame: {
+    type: String,
+    default: null,
+  },
+  password: {
     type: String,
     default: null,
   },
@@ -159,6 +159,16 @@ const postSchema = new mongoose.Schema({
   timestamps: true,
 });
 
+const agentSchema = new mongoose.Schema({
+  AgentId: String,
+  resellerOf: { type: String, default: null },
+  beansCount: Number,
+  diamondsCount: Number,
+  paymentMethods: [String],
+  status: { type: String, default: null }
+})
+
+
 const TransactionHistorySchema = new mongoose.Schema({
 
   paymentType: String,
@@ -179,7 +189,7 @@ const LikesInfo = mongoose.model("LikesInfo", likesInfo)
 const User = mongoose.model("User", userSchema);
 const Post = mongoose.model("Post", postSchema)
 const Comment = mongoose.model("Comment", CommentSchema)
-
+const Agent = mongoose.model("Agent", agentSchema)
 
 const otpMap = {};
 const beansToDiamondsRate = 0.5
@@ -278,6 +288,32 @@ app.post("/api/register", async (req, res) => {
     res.status(400).send("User already exists")
   }
 })
+
+app.post("/api/user", async (req, res) => {
+  const { email, password, name, gender, dob, country, frame, photo, phoneNumber } = req.body
+  try {
+    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+    let randomNumber = generateUserId()
+    const existingUserWithId = await User.find({ UserId: randomNumber })
+    if (existingUserWithId.length > 0) {
+      isUserIdMatched = true
+      while (isUserIdMatched) {
+        randomNumber = generateUserId()
+        const existingUserWithId = await User.find({ UserId: randomNumber })
+        isUserIdMatched = existingUserWithId.length > 0
+      }
+    }
+    const newUser = new User({ UserId: `${randomNumber}`, email, password: hashedPassword, name, gender, dob: new Date(dob), country, frame, photo, phoneNumber })
+    await newUser.save()
+    res.status(200).send("user created successfully")
+
+  } catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
+
 
 app.post("/api/login", async (req, res) => {
   const { email, password } = req.body
@@ -442,23 +478,23 @@ app.post("/api/follow", async (req, res) => {
       console.log("entered")
       const query = usersCollection.where('id', '==', followerId);
       const snapshot = await query.get()
-      
-        const data = snapshot.docs[0].data();
+
+      const data = snapshot.docs[0].data();
       const { id, ...newUserData } = data;
 
-      const newUser =new User({ ...newUserData, UserId: id }) 
+      const newUser = new User({ ...newUserData, UserId: id })
       await newUser.save()
     }
     const toFollowUser = await User.find({ UserId: followingId })
     if (toFollowUser.length === 0) {
       const query = usersCollection.where('id', '==', followingId);
       const snapshot = await query.get()
-      
-        const data = snapshot.docs[0].data();
+
+      const data = snapshot.docs[0].data();
 
       const { id, ...newUserData } = data;
 
-      const newUser =new User({ ...newUserData, UserId: id }) 
+      const newUser = new User({ ...newUserData, UserId: id })
       await newUser.save()
 
     }
@@ -475,7 +511,7 @@ app.post("/api/follow", async (req, res) => {
 
       const updatefollowerUser = await User.updateOne({ UserId: followerId }, { $inc: { followingCount: 1 } })
       const updatefollowingUser = await User.updateOne({ UserId: followingId }, { $inc: { followersCount: 1 } })
-      res.status(200).send("following" )
+      res.status(200).send("following")
       console.log(result)
     }
     else {
@@ -502,7 +538,7 @@ app.get("/api/following", async (req, res) => {
   // const userId=req.UserId
   const { limit, start, userId } = req.query
   try {
-    const followerIds = await following.find({ followerId: userId})
+    const followerIds = await following.find({ followerId: userId })
       .distinct('followingId');
     console.log(followerIds)
     const posts = await Post.find({
@@ -518,7 +554,7 @@ app.get("/api/following", async (req, res) => {
       });
     const updatedPosts = await Promise.all(posts.map(async post => {
       console.log(post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId: post.PostId  });
+      const likedResult = await LikesInfo.findOne({ likedBy: userId, postId: post.PostId });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -566,28 +602,28 @@ app.post("/api/search-with-tags", async (req, res) => {
     if (userId == null) {
       const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
-       posts = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
+      posts = await Post.find({ "tags": { "$in": tagObjectIds } }).populate('tags').sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
-       
+
     }
     else if (tags == null || tags.length === 0) {
-       posts = await Post.find({ "postedBy": userId })
+      posts = await Post.find({ "postedBy": userId })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
-        
+
     }
     else if (userId != null && tags.length > 0) {
       const tagObjectIds = await Tag.find({ tag: { "$in": tags } }).select({ _id: 1 })
 
-       posts = await Post.find({ "tags": { "$in": tagObjectIds }, "postedBy": userId }).populate('tags').sort({ createdAt: -1 })
+      posts = await Post.find({ "tags": { "$in": tagObjectIds }, "postedBy": userId }).populate('tags').sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit)).select({ _id: 0, __v: 0 })
-       
+
     }
     const updatedPosts = await Promise.all(posts.map(async post => {
-      console.log("post",post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId: post.PostId  });
+      console.log("post", post)
+      const likedResult = await LikesInfo.findOne({ likedBy: userId, postId: post.PostId });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -800,3 +836,37 @@ app.get("/api/convert", async (req, res) => {
   }
 })
 
+app.post("/api/agent", async (req, res) => {
+  const { resellerOf, paymentMethods, status, userId } = req.body
+  console.log(paymentMethods)
+  try {
+    const origUser = await User.findOneAndUpdate({ UserId: userId }, { AgentId: `A${userId}` })
+    console.log(origUser)
+    const newAgent = new Agent({ resellerOf, paymentMethods, status, diamondsCount: origUser.diamondsCount, beansCount: origUser.beansCount, resellerOf, AgentId: `A${userId}` })
+
+    await newAgent.save()
+    res.send("agent created")
+  } catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
+app.get("/api/agent", async (req, res) => {
+  const { userId } = req.query
+  let agentData
+  try {
+    const existingUser = await User.findOne({ UserId: userId }).select({ _id: 0, __v: 0, AgentId: 0 }).lean()
+    if (existingUser.AgentId) {
+      res.send(existingUser)
+    }
+    else {
+      agentData = await Agent.findOne({ AgentId: `A${userId}` }).select({ _id: 0, __v: 0, diamondsCount: 0, beansCount: 0 })
+    }
+    res.send({ ...existingUser, agentData })
+  } catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+
+})
