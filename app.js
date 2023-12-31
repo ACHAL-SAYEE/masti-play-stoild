@@ -358,9 +358,11 @@ app.get("/api/hot", async (req, res) => {
         __v: 0,
       });
     let hasLiked, hasCommented, doesFollow;
+    console.log("posts",posts)
+    
     const updatedPosts = await Promise.all(posts.map(async post => {
       console.log(post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId });
+      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId:post.PostId });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -371,17 +373,12 @@ app.get("/api/hot", async (req, res) => {
     }))
     // console.log(posts)
 
-    console.log(updatedPosts)
+    console.log("updatedPosts",updatedPosts)
     res.status(200).send(updatedPosts);
   } catch (error) {
     res.status(500).send({ message: 'Internal Server Error.' });
   }
 });
-
-// hasLiked - a Boolean representing whether the current user has liked the post or not (true if yes, else false)
-// hasCommented - a Boolean representing whether the current user has commented the post or not (true if yes, else false)
-// doesFollow - do I follow the userId of the post or not
-
 
 
 app.get("/api/recent", async (req, res) => {
@@ -401,7 +398,7 @@ app.get("/api/recent", async (req, res) => {
       });
     const updatedPosts = await Promise.all(posts.map(async post => {
       console.log(post)
-      const likedResult = await LikesInfo.findOne({ likedBy: userId });
+      const likedResult = await LikesInfo.findOne({ likedBy: userId,postId:post.PostId });
       const CommentResult = await Comment.findOne({ userId, postId: post.PostId });
       const followResult = await following.findOne({ followerId: userId, followingId: post.postedBy })
       if (likedResult === null) { hasLiked = false } else { hasLiked = true }
@@ -676,7 +673,22 @@ app.get("/api/beans-history", async (req, res) => {
   const { userId, start, limit } = req.query
   try {
 
-    const result = await TransactionHistory.find({ sentTo: userId }).skip(start).limit(limit).select({ _id: 0, __v: 0, diamondsAdded: 0, updatedAt: 0, sentTo: 0 })
+    const result = await TransactionHistory.find({ sentTo: userId,diamondsAdded: 0}).skip(start).limit(limit).select({ _id: 0, __v: 0, diamondsAdded: 0, updatedAt: 0, sentTo: 0 })
+
+    console.log(result)
+    res.send(result)
+  }
+  catch (e) {
+    console.log(e)
+    res.status(500).send("internal server error")
+  }
+})
+
+app.get("/api/diamonds-history", async (req, res) => {
+  const { userId, start, limit } = req.query
+  try {
+
+    const result = await TransactionHistory.find({ sentTo: userId,beansAdded: 0}).skip(start).limit(limit).select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 })
 
     console.log(result)
     res.send(result)
