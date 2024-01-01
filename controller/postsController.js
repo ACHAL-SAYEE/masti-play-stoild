@@ -1,11 +1,11 @@
 const {
-    User,
-    following,
-    Tag,
-    LikesInfo,
-    Post,
-    Comment,
-  } = require("../models/models");
+  User,
+  following,
+  Tag,
+  LikesInfo,
+  Post,
+  Comment,
+} = require("../models/models");
 
 class PostApis {
   async storePost(req, res) {
@@ -143,6 +143,7 @@ class PostApis {
           // updatedAt: 0,
           __v: 0,
         });
+      let hasLiked, hasCommented, doesFollow;
       const updatedPosts = await Promise.all(
         posts.map(async (post) => {
           console.log(post);
@@ -179,6 +180,7 @@ class PostApis {
       );
       res.status(200).send(updatedPosts);
     } catch (error) {
+      console.log(error);
       res.status(500).send({ message: "Internal Server Error." });
     }
   }
@@ -421,7 +423,7 @@ class PostApis {
     }
   }
 
-  async likePost (req, res)  {
+  async likePost(req, res) {
     // const userId=req.UserId
     const { postId, userId } = req.body;
     try {
@@ -457,14 +459,14 @@ class PostApis {
       res.status(500).send("internal server error");
     }
   }
-  async getFollowingUsers (req, res) {
+  async getFollowingUsers(req, res) {
     const { userId, limit, start } = req.body;
     try {
       const result = await following
         .find({ followerId: userId })
         .skip(Number(start))
         .limit(Number(limit))
-        .select({ followingId: 1, _id: 0 ,__v:0});
+        .select({ followingId: 1, _id: 0, __v: 0 });
       res.send(result);
     } catch (e) {
       console.log(e);
@@ -472,14 +474,14 @@ class PostApis {
     }
   }
 
-  async getFollowersOfUser (req, res)  {
+  async getFollowersOfUser(req, res) {
     const { userId, limit, start } = req.body;
     try {
       const result = await following
         .find({ followingId: userId })
         .skip(Number(start))
         .limit(Number(limit))
-        .select({ followerId: 1, _id: 0 ,__v:0});
+        .select({ followerId: 1, _id: 0, __v: 0 });
       res.send(result);
     } catch (e) {
       console.log(e);
@@ -487,7 +489,7 @@ class PostApis {
     }
   }
 
-  async doesFollow (req, res) {
+  async doesFollow(req, res) {
     const { followedBy, followed } = req.body;
     try {
       const result = await following.find({
@@ -505,7 +507,139 @@ class PostApis {
     }
   }
 
+  async getFollowersData(req, res) {
+    const { userId, limit, start } = req.query;
+    try {
+      let FollowersData = await following.aggregate([
+        { $match: { followingId: userId } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "followerId",
+            foreignField: "UserId",
+            as: "userData",
+          },
+        },
+        {
+          $unwind: "$userData",
+        },
+        {
+          $skip: Number(start),
+        },
+        {
+          $limit: Number(limit),
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0,
+            followerId: 0,
+            followingId: 0,
+            "userData._id": 0,
+            "userData.__v": 0,
+          },
+        },
+      ]);
+      FollowersData = FollowersData.map((follower) => follower.userData);
+      //   console.log(FollowersData);
+      res.send(FollowersData);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async getFollowingData(req, res) {
+    const { userId, limit, start } = req.query;
+    try {
+      let FollowingData = await following.aggregate([
+        { $match: { followerId: userId } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "followingId",
+            foreignField: "UserId",
+            as: "userData",
+          },
+        },
+        {
+          $unwind: "$userData",
+        },
+        {
+          $skip: Number(start),
+        },
+        {
+          $limit: Number(limit),
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0,
+            followerId: 0,
+            followingId: 0,
+            "userData._id": 0,
+            "userData.__v": 0,
+          },
+        },
+      ]);
+    //   console.log("FollowingData",FollowingData);
+      FollowingData = FollowingData.map((follower) => follower.userData);
+        console.log(FollowingData);
+      res.send(FollowingData);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+async getFriendsData(req,res){
+    const { userId, limit, start } = req.query;
+    try {
+      let FollowingData = await following.aggregate([
+        { $match:{$or: [{ followerId: userId },{followingId:userId}]} },
+        { $match: { followingId: userId } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "followerId",
+            foreignField: "UserId",
+            as: "userData",
+          },
+        },
+        {
+          $unwind: "$userData",
+        },
+        {
+          $skip: Number(start),
+        },
+        {
+          $limit: Number(limit),
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0,
+            followerId: 0,
+            followingId: 0,
+            "userData._id": 0,
+            "userData.__v": 0,
+          },
+        },
+      ]);
+    //   console.log("FollowingData",FollowingData);
+      FollowingData = FollowingData.map((follower) => follower.userData);
+        console.log(FollowingData);
+      res.send(FollowingData);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
 }
+
+
+}
+
+
 
 const postsController = new PostApis();
 module.exports = postsController;

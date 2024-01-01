@@ -277,3 +277,10 @@ app.get("/api/agent", gamesController.getAgentData);
 app.get("/api/agent/all",gamesController.getAllAgents)
 
 app.get("/api/agent/resellers",gamesController.getResellers)
+
+app.get("/api/followers",postsController.getFollowersData)
+
+app.get("/api/following-users",postsController.getFollowingData)
+
+app.get("/api/friends",postsController.getFriendsData)
+
