@@ -597,11 +597,11 @@ async getFriendsData(req,res){
     try {
       let FollowingData = await following.aggregate([
         { $match:{$or: [{ followerId: userId },{followingId:userId}]} },
-        { $match: { followingId: userId } },
+        { $match: { followerId: userId } },
         {
           $lookup: {
             from: "users",
-            localField: "followerId",
+            localField: "followingId",
             foreignField: "UserId",
             as: "userData",
           },
