@@ -1,5 +1,17 @@
 const { User, TransactionHistory, Agent } = require("../models/models");
 
+async function queryBeansTransactionHistory(query, start, limit, selectFields) {
+  try {
+    return await TransactionHistory.find(query)
+      .skip(start)
+      .limit(limit)
+      .select(selectFields);
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
+}
+
 class games {
   async postData(req, res) {
     const { userId, beans, diamonds, game, paymentType, sentby, sentTo } =
@@ -56,21 +68,47 @@ class games {
   }
 
   async getBeansHistory(req, res) {
-    const { userId, start, limit } = req.query;
-    try {
-      const result = await TransactionHistory.find({
-        sentTo: userId,
-        diamondsAdded: 0,
-      })
-        .skip(start)
-        .limit(limit)
-        .select({ _id: 0, __v: 0, diamondsAdded: 0, updatedAt: 0, sentTo: 0 });
+    const { userId, start, limit, mode } = req.query;
 
+    let query = {};
+    let selectFields = {
+      _id: 0,
+      __v: 0,
+      diamondsAdded: 0,
+      updatedAt: 0,
+      sentTo: 0,
+    };
+
+    switch (mode) {
+      case "income":
+        query = { sentTo: userId, paymentType: null, beansAdded: { $gt: 0 } };
+        break;
+      case "cashout":
+        query = { amount: { $gt: 0 }, sentTo: userId, beans: { $lt: 0 } };
+        break;
+      case "agent-transfer":
+        query = {
+          sentTo: { $regex: /^Ain/ },
+          sentby: userId,
+          beansAdded: { $gt: 0 },
+        };
+        break;
+      default:
+        query = { beansAdded: { $lt: 0 }, diamondsAdded: { $gt: 0 } };
+        break;
+    }
+
+    try {
+      const result = await queryBeansTransactionHistory(
+        query,
+        start,
+        limit,
+        selectFields
+      );
       console.log(result);
       res.send(result);
     } catch (e) {
-      console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send("Internal server error");
     }
   }
 
@@ -82,7 +120,7 @@ class games {
         result = await TransactionHistory.find({
           sentTo: userId,
           paymentType: null,
-          beansAdded: 0,
+          diamondsAdded: { $gt: 0 },
         })
           .skip(start)
           .limit(limit)
@@ -91,7 +129,7 @@ class games {
         result = await TransactionHistory.find({
           sentTo: userId,
           game: null,
-          beansAdded: 0,
+          diamondsAdded: { $gt: 0 },
         })
           .skip(start)
           .limit(limit)
@@ -99,9 +137,9 @@ class games {
       else
         result = await TransactionHistory.find({
           // sentTo: userId,
-          game: null,
+          paymentType: null,
           sentby: userId,
-          beansAdded: 0,
+          diamondsAdded: { $lt: 0 },
         })
           .skip(start)
           .limit(limit)
@@ -236,11 +274,6 @@ class games {
           $unwind: "$AgentData",
         },
         {
-          $match: {
-            AgentData: { $ne: [] },
-          },
-        },
-        {
           $skip: Number(start),
         },
         {
@@ -254,15 +287,17 @@ class games {
       res.status(500).send("internal server error");
     }
   }
-//   A39928770
+  //   A39928770
   async getResellers(req, res) {
     const { userId } = req.query;
     try {
-      let rellersofUser = await Agent.find({ resellerOf: `A${userId}` }).select({
-        AgentId: 1,
-      });
-      rellersofUser=rellersofUser.map(reseller=>reseller.AgentId)
-      console.log(rellersofUser)
+      let rellersofUser = await Agent.find({ resellerOf: `A${userId}` }).select(
+        {
+          AgentId: 1,
+        }
+      );
+      rellersofUser = rellersofUser.map((reseller) => reseller.AgentId);
+      console.log(rellersofUser);
       const result = await User.aggregate([
         {
           $match: {
@@ -279,11 +314,6 @@ class games {
         },
         {
           $unwind: "$AgentData",
-        },
-        {
-          $match: {
-            AgentData: { $ne: [] },
-          },
         },
       ]);
       res.send(result);

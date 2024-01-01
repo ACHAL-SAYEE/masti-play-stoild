@@ -94,7 +94,7 @@ const agentSchema = new mongoose.Schema({
 
 
 const TransactionHistorySchema = new mongoose.Schema({
-
+    amount: { type: Number, default: 0 },
     paymentType: String,
     beansAdded: { type: Number, default: 0 },
     diamondsAdded: { type: Number, default: 0 },
