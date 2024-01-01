@@ -162,7 +162,7 @@ class games {
     }
 
     try {
-      const result = await queryDiamondsHistory(
+      const result = await queryDiamondsTransactionHistory(
         query,
         start,
         limit,
@@ -310,7 +310,6 @@ class games {
       res.status(500).send("internal server error");
     }
   }
-  //   A39928770
   async getResellers(req, res) {
     const { userId } = req.query;
     try {
