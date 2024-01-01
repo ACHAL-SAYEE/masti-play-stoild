@@ -12,6 +12,23 @@ async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   }
 }
 
+async function queryDiamondsTransactionHistory(
+  query,
+  start,
+  limit,
+  selectFields
+) {
+  try {
+    return await TransactionHistory.find(query)
+      .skip(start)
+      .limit(limit)
+      .select(selectFields);
+  } catch (e) {
+    console.log(e);
+    throw e;
+  }
+}
+
 class games {
   async postData(req, res) {
     const { userId, beans, diamonds, game, paymentType, sentby, sentTo } =
@@ -114,41 +131,47 @@ class games {
 
   async getDiamondsHistory(req, res) {
     const { userId, start, limit, mode } = req.query;
-    let result;
-    try {
-      if (mode === "income")
-        result = await TransactionHistory.find({
+
+    let query = {};
+    let selectFields = {
+      _id: 0,
+      __v: 0,
+      beansAdded: 0,
+      updatedAt: 0,
+      sentTo: 0,
+    };
+
+    switch (mode) {
+      case "income":
+        query = {
           sentTo: userId,
           paymentType: null,
           diamondsAdded: { $gt: 0 },
-        })
-          .skip(start)
-          .limit(limit)
-          .select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 });
-      else if (mode == "recharge")
-        result = await TransactionHistory.find({
-          sentTo: userId,
-          game: null,
-          diamondsAdded: { $gt: 0 },
-        })
-          .skip(start)
-          .limit(limit)
-          .select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 });
-      else
-        result = await TransactionHistory.find({
-          // sentTo: userId,
+        };
+        break;
+      case "recharge":
+        query = { sentTo: userId, game: null, diamondsAdded: { $gt: 0 } };
+        break;
+      default:
+        query = {
           paymentType: null,
           sentby: userId,
           diamondsAdded: { $lt: 0 },
-        })
-          .skip(start)
-          .limit(limit)
-          .select({ _id: 0, __v: 0, beansAdded: 0, updatedAt: 0, sentTo: 0 });
+        };
+        break;
+    }
+
+    try {
+      const result = await queryDiamondsHistory(
+        query,
+        start,
+        limit,
+        selectFields
+      );
       console.log(result);
       res.send(result);
     } catch (e) {
-      console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send("Internal server error");
     }
   }
 
