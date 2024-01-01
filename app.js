@@ -1,37 +1,23 @@
 const unirest = require('unirest');
+const PORT = process.env.PORT || 4000;
 // const bodyParser = require('body-parser');
 // app.use(bodyParser.json());
+const { User, following,Tag,LikesInfo,TransactionHistory,Post,Comment,Agent } = require("./models/models");
 require("dotenv").config();
-const PORT = process.env.PORT || 4000;
 const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
-const mongoose = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 const path = require("path");
 const bcrypt = require("bcrypt");
 const { generateUniqueId, generateUserId } = require('./utils');
+const initializeDB=require("./InitialiseDb/index")
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
 
-const initializeDBAndServer = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URL, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
 
-
-    app.listen(PORT, () => {
-      console.log("Server running on port 3007");
-    });
-  } catch (e) {
-    console.log(`DB Error: ${e.message}`);
-    process.exit(1);
-  }
-};
 
 const authenticateToken = (request, response, next) => {
   let iChatJwtToken;
@@ -56,123 +42,10 @@ const authenticateToken = (request, response, next) => {
 };
 
 
-initializeDBAndServer();
-
-const userSchema = new mongoose.Schema({
-  UserId: String,
-  AgentId: { type: String, default: null },
-  name: String,
-  email: String,
-  photo: {
-    type: String,
-    default: null,
-  },
-  phoneNumber: {
-    type: String,
-    default: null,
-  },
-  gender: Number,
-  dob: {
-    type: Date,
-    default: null,
-  },
-  country: {
-    type: String,
-    default: null,
-  },
-  frame: {
-    type: String,
-    default: null,
-  },
-  password: {
-    type: String,
-    default: null,
-  },
-  beansCount: { type: Number, default: 0 },
-  diamondsCount: { type: Number, default: 0 },
-  followersCount: { type: Number, default: 0 },
-  followingCount: { type: Number, default: 0 },
-  friends: { type: Number, default: 0 },
-
+initializeDB();
+app.listen(PORT, () => {
+  console.log("Server running on port 3007");
 });
-
-const TagSchema = tag = new mongoose.Schema({
-  tag: String,
-  usedCount: {
-    type: Number,
-    default: 0,
-  },
-}, { timestamps: true });
-
-const followingDataSchema = new mongoose.Schema({
-  followerId: String, followingId: String
-});
-
-const CommentSchema = new mongoose.Schema({
-  userId: String,
-  postId: String,
-  comment: String
-})
-
-const likesInfo = new mongoose.Schema({
-  likedBy: String,
-  postId: String
-})
-const postSchema = new mongoose.Schema({
-  PostId: String,
-  title: String,
-  description: String,
-  postedBy: String,
-  imgUrl: {
-    type: String,
-    default: null
-  },
-  tags: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Tag'
-    }
-  ],
-  sharedCount: Number,
-  commentsCount: Number,
-  likesCount: Number
-
-}, {
-  timestamps: true,
-});
-
-const agentSchema = new mongoose.Schema({
-  AgentId: String,
-  resellerOf: { type: String, default: null },
-  beansCount: Number,
-  diamondsCount: Number,
-  paymentMethods: [String],
-  status: { type: String, default: null }
-})
-
-
-const TransactionHistorySchema = new mongoose.Schema({
-
-  paymentType: String,
-  beansAdded: { type: Number, default: 0 },
-  diamondsAdded: { type: Number, default: 0 },
-  game: { type: String, default: null },
-  sentby: String,
-  sentTo: String
-  // sentTo: { type: String, default: null }
-}, {
-  timestamps: true,
-})
-
-const TransactionHistory = mongoose.model("TransactionHistory", TransactionHistorySchema)
-const following = mongoose.model("following", followingDataSchema)
-const Tag = mongoose.model('Tag', TagSchema);
-const LikesInfo = mongoose.model("LikesInfo", likesInfo)
-
-const User = mongoose.model("User", userSchema);
-const Post = mongoose.model("Post", postSchema)
-const Comment = mongoose.model("Comment", CommentSchema)
-const Agent = mongoose.model("Agent", agentSchema)
 
 const otpMap = {};
 const beansToDiamondsRate = 0.5
