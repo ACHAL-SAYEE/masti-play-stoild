@@ -582,9 +582,9 @@ class PostApis {
           },
         },
       ]);
-    //   console.log("FollowingData",FollowingData);
+      //   console.log("FollowingData",FollowingData);
       FollowingData = FollowingData.map((follower) => follower.userData);
-        console.log(FollowingData);
+      console.log(FollowingData);
       res.send(FollowingData);
     } catch (e) {
       console.log(e);
@@ -592,12 +592,19 @@ class PostApis {
     }
   }
 
-async getFriendsData(req,res){
+  async getFriendsData(req, res) {
     const { userId, limit, start } = req.query;
     try {
       let FollowingData = await following.aggregate([
-        { $match:{$or: [{ followerId: userId },{followingId:userId}]} },
-        { $match: { followerId: userId } },
+        {
+          $match: {
+            $and: [
+              { $or: [{ followerId: userId }, { followingId: userId }] },
+              { followerId: userId },
+            ],
+          },
+        },
+        // { $match: { followerId: userId } },
         {
           $lookup: {
             from: "users",
@@ -626,20 +633,16 @@ async getFriendsData(req,res){
           },
         },
       ]);
-    //   console.log("FollowingData",FollowingData);
+      //   console.log("FollowingData",FollowingData);
       FollowingData = FollowingData.map((follower) => follower.userData);
-        console.log(FollowingData);
+      console.log(FollowingData);
       res.send(FollowingData);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
     }
+  }
 }
-
-
-}
-
-
 
 const postsController = new PostApis();
 module.exports = postsController;
