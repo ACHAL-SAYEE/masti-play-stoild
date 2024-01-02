@@ -35,6 +35,7 @@ const userSchema = new mongoose.Schema({
   followersCount: { type: Number, default: 0 },
   followingCount: { type: Number, default: 0 },
   friends: { type: Number, default: 0 },
+  role: { type: String, default: "user" },
 });
 
 const TagSchema = (tag = new mongoose.Schema(
@@ -133,7 +134,11 @@ const AgencyOwnershipSchema = new mongoose.Schema({
 });
 
 const AgencyDataSchema = new mongoose.Schema({
+  ownerId: String,
   AgencyId: String,
+  name: String,
+  diamondsCount: Number,
+  beansCount: Number,
 });
 
 const following = mongoose.model("following", followingDataSchema);
@@ -153,7 +158,7 @@ const agencyParticipant = mongoose.model(
   "agencyParticipant",
   agencyParticipantsSchema
 );
-const AgencyData =  mongoose.model("AgencyData", AgencyDataSchema);
+const AgencyData = mongoose.model("AgencyData", AgencyDataSchema);
 
 exports.User = User;
 exports.following = following;
@@ -166,4 +171,4 @@ exports.Agent = Agent;
 exports.Role = Role;
 exports.agencyParticipant = agencyParticipant;
 exports.AgencyOwnership = AgencyOwnership;
-exports.AgencyData=AgencyData;
+exports.AgencyData = AgencyData;

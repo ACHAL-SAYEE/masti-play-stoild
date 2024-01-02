@@ -299,3 +299,5 @@ app.post("/api/change-role", gamesController.ChangeUserRole);
 app.post("/api/agency-joining", gamesController.joinAgency);
 
 app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
+
+app.put("/api/send-gift",gamesController.sendGift)

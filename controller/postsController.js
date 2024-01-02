@@ -266,6 +266,8 @@ class PostApis {
           // updatedAt: 0,
           __v: 0,
         });
+      let hasLiked, hasCommented, doesFollow;
+
       const updatedPosts = await Promise.all(
         posts.map(async (post) => {
           console.log(post);
@@ -303,6 +305,7 @@ class PostApis {
       res.status(200).send(updatedPosts);
       console.log(posts);
     } catch (e) {
+      console.log(e);
       res.status(500).send({ error: e });
     }
   }
@@ -364,6 +367,8 @@ class PostApis {
           .limit(Number(limit))
           .select({ _id: 0, __v: 0 });
       }
+      let hasLiked, hasCommented, doesFollow;
+
       const updatedPosts = await Promise.all(
         posts.map(async (post) => {
           console.log("post", post);
