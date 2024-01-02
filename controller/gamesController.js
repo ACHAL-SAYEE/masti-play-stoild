@@ -8,6 +8,8 @@ const {
   AgencyData,
 } = require("../models/models");
 
+const { generateUniqueId, generateUserId } = require("../utils");
+
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
     return await TransactionHistory.find(query)
@@ -289,7 +291,7 @@ class games {
         } else {
           const AgencyIdInfo = await agencyParticipant.find({ userId });
           const joinedAgencyData = await AgencyData.findOne({
-            agencyId: AgencyIdInfo.agencyId,
+            AgencyId: AgencyIdInfo.agencyId,
           });
           res.send({ ...existingUser, joinedAgencyData, agentData });
         }
@@ -391,17 +393,41 @@ class games {
   }
 
   async makeAgencyOwner(req, res) {
-    const { userId, agencyId } = req.body;
+    const { userId, agencyId, name } = req.body;
+    console.log("userId, agencyId, name", userId, agencyId, name);
+    let randomNumber ;
     try {
       if (agencyId == null) {
-        await AgencyData.create({ agencyId });
+         randomNumber = generateUserId();
+        const existingUserWithId = await AgencyData.find({
+          AgencyId: randomNumber,
+        });
+        if (existingUserWithId.length > 0) {
+          isUserIdMatched = true;
+          while (isUserIdMatched) {
+            randomNumber = generateUserId();
+            const existingUserWithId = await AgencyData.find({
+              AgencyId: randomNumber,
+            });
+            isUserIdMatched = existingUserWithId.length > 0;
+          }
+        }
+        const newAgencyData = new AgencyData({
+          AgencyId: randomNumber,
+          ownerId: userId,
+          name,
+        });
+        await newAgencyData.save();
       }
       // const newOwner = new AgencyOwnership({ userId, agencyId });
       // await newOwner.save();
       const agencyData = await AgencyData.findOneAndUpdate(
-        { agencyId },
+        { AgencyId: agencyId == null ? randomNumber : agencyId },
         { ownerId: userId }
-      ).lean();
+      )
+        .select({ _id: 0, __v: 0 })
+        .lean();
+      console.log("agencyData", agencyData);
       res.send({ ...agencyData, ownerId: userId });
     } catch (e) {
       console.log(e);
