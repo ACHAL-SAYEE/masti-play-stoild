@@ -1,4 +1,12 @@
-const { User, TransactionHistory, Agent } = require("../models/models");
+const {
+  User,
+  TransactionHistory,
+  Agent,
+  Role,
+  agencyParticipant,
+  AgencyOwnership,
+  AgencyData,
+} = require("../models/models");
 
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
@@ -339,6 +347,45 @@ class games {
         },
       ]);
       res.send(result);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async ChangeUserRole(req, res) {
+    const { userId, role } = req.body;
+    try {
+      const newRole = new Role({ userId, role });
+      await newRole.save();
+      res.send("role changed successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async joinAgency(req, res) {
+    const { userId, agencyId } = req.body;
+    try {
+      const newAgent = new agencyParticipant({ userId, agencyId });
+      await newAgent.save();
+      res.send("joined agency successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async makeAgencyOwner(req, res) {
+    const { userId, agencyId } = req.body;
+    try {
+      if (agencyId == null) {
+        await AgencyData.create({ agencyId });
+      }
+      const newOwner = new AgencyOwnership({ userId, agencyId });
+      await newOwner.save();
+      res.send("ownership changed successfully");
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");

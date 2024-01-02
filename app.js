@@ -18,7 +18,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
 const postsController = require("./controller/postsController");
-const gamesController=require("./controller/gamesController");
+const gamesController = require("./controller/gamesController");
+const { User } = require("./models/models");
 const authenticateToken = (request, response, next) => {
   let iChatJwtToken;
   const authHeader = request.headers["authorization"];
@@ -51,14 +52,15 @@ const beansToDiamondsRate = 0.5;
 app.post("/otp", (req, res) => {
   const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
   const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
-
+  console.log(req.headers);
   otpMap[req.headers.phone] = { otp, timestamp: Date.now() };
   console.log("otpMap", otpMap);
 
   req1.query({
     authorization:
       "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
-    variables_values: otp.toString(),
+    // variables_values: otp.toString(),
+    message: `your otp from achal is ${otp.toString()}`,
     route: "otp",
     numbers: req.headers.phone,
   });
@@ -179,18 +181,26 @@ app.post("/api/user", async (req, res) => {
   } = req.body;
   try {
     const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
-    let randomNumber = generateUserId();
-    const existingUserWithId = await User.find({ UserId: randomNumber });
-    if (existingUserWithId.length > 0) {
-      isUserIdMatched = true;
-      while (isUserIdMatched) {
-        randomNumber = generateUserId();
-        const existingUserWithId = await User.find({ UserId: randomNumber });
-        isUserIdMatched = existingUserWithId.length > 0;
-      }
+
+    // let randomNumber = generateUserId();
+    // const existingUserWithId = await User.find({ UserId: randomNumber });
+    // if (existingUserWithId.length > 0) {
+    //   isUserIdMatched = true;
+    //   while (isUserIdMatched) {
+    //     randomNumber = generateUserId();
+    //     const existingUserWithId = await User.find({ UserId: randomNumber });
+    //     isUserIdMatched = existingUserWithId.length > 0;
+    //   }
+    // }
+    let newUserId;
+    const ExistingUsers = await User.find({});
+    if (ExistingUsers.length === 0) {
+      newUserId = 20240000;
+    } else {
+      newUserId = ExistingUsers[ExistingUsers.length - 1].UserId + 1;
     }
     const newUser = new User({
-      UserId: `${randomNumber}`,
+      UserId: `${newUserId}`,
       email,
       password: hashedPassword,
       name,
@@ -238,11 +248,11 @@ app.post("/api/posts/", postsController.storePost);
 
 app.put("/api/posts/share", postsController.sharePost);
 
-app.get("/api/hot",postsController.getHotPosts);
+app.get("/api/hot", postsController.getHotPosts);
 
 app.get("/api/recent", postsController.getRecentPosts);
 
-app.post("/api/follow",postsController.followUser);
+app.post("/api/follow", postsController.followUser);
 
 app.get("/api/following", postsController.getPostsOfFollowingUsers);
 
@@ -250,7 +260,7 @@ app.get("/api/tags/", postsController.getTagsAfterDate);
 
 app.post("/api/search-with-tags", postsController.getPostsContaingTags);
 
-app.post("/api/comment",postsController.commentPost);
+app.post("/api/comment", postsController.commentPost);
 
 app.post("/api/like", postsController.likePost);
 
@@ -260,11 +270,17 @@ app.get("/api/users/followers", postsController.getFollowersOfUser);
 
 app.get("/api/users/doesFollow", postsController.doesFollow);
 
+app.get("/api/followers", postsController.getFollowersData);
+
+app.get("/api/following-users", postsController.getFollowingData);
+
+app.get("/api/friends", postsController.getFriendsData);
+
 app.post("/api/beansDiamonds", gamesController.postData);
 
 app.get("/api/beans-history", gamesController.getBeansHistory);
 
-app.get("/api/diamonds-history",gamesController.getDiamondsHistory);
+app.get("/api/diamonds-history", gamesController.getDiamondsHistory);
 
 app.get("/api/users", gamesController.getUsers);
 
@@ -274,13 +290,12 @@ app.post("/api/agent", gamesController.postAgent);
 
 app.get("/api/agent", gamesController.getAgentData);
 
-app.get("/api/agent/all",gamesController.getAllAgents)
+app.get("/api/agent/all", gamesController.getAllAgents);
 
-app.get("/api/agent/resellers",gamesController.getResellers)
+app.get("/api/agent/resellers", gamesController.getResellers);
 
-app.get("/api/followers",postsController.getFollowersData)
+app.post("/api/change-role", gamesController.ChangeUserRole);
 
-app.get("/api/following-users",postsController.getFollowingData)
+app.post("/api/agency-joining", gamesController.joinAgency);
 
-app.get("/api/friends",postsController.getFriendsData)
-
+app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
