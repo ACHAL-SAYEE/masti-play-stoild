@@ -395,10 +395,10 @@ class games {
   async makeAgencyOwner(req, res) {
     const { userId, agencyId, name } = req.body;
     console.log("userId, agencyId, name", userId, agencyId, name);
-    let randomNumber ;
+    let randomNumber;
     try {
       if (agencyId == null) {
-         randomNumber = generateUserId();
+        randomNumber = generateUserId();
         const existingUserWithId = await AgencyData.find({
           AgencyId: randomNumber,
         });
@@ -458,6 +458,29 @@ class games {
         { beansCount: { $inc: Number(diamondsSent) / 10 } }
       );
       await res.send("gift sent successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async recharge(req, res) {
+    const { userId, agentId, diamonds } = req.body;
+    try {
+      const agentData = await Agent.findOne({ AgentId: agentId });
+      if (agentData.diamondsCount < diamonds) {
+        res.status(400).send("insufficient balance");
+      } else {
+        await Agent.updateOne(
+          { AgentId: agentId },
+          { $inc: { diamondsCount: -1 * diamonds } }
+        );
+        await User.updateOne(
+          { UserId: userId },
+          { $inc: { diamondsCount: diamonds } }
+        );
+        res.send("recharged successfully");
+      }
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");

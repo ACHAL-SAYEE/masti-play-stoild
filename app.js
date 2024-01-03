@@ -301,3 +301,11 @@ app.post("/api/agency-joining", gamesController.joinAgency);
 app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
 
 app.put("/api/send-gift",gamesController.sendGift)
+
+app.put("/api/agent-recharge",gamesController.recharge)
+
+// body{
+//   userId,// whose recharge is to be done
+//   agentId, // who is doing the recharge
+//   diamonds,  // diamonds to be transferred
+//   }
