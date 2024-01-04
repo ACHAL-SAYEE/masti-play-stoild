@@ -2,9 +2,7 @@ const {
   User,
   TransactionHistory,
   Agent,
-  Role,
   agencyParticipant,
-  AgencyOwnership,
   AgencyData,
 } = require("../models/models");
 
@@ -192,9 +190,12 @@ class games {
         _id: 0,
         __v: 0,
       });
-
-      console.log(result);
-      res.send(result);
+      if (result === null) {
+        res.status(400).send("user not found");
+      } else {
+        console.log(result);
+        res.send(result);
+      }
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -480,6 +481,39 @@ class games {
           { $inc: { diamondsCount: diamonds } }
         );
         res.send("recharged successfully");
+      }
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async getAllAgencies(req, res) {
+    const { limit, start } = req.query;
+    try {
+      const agencyData = await AgencyData.find({})
+        .skip(Number(start))
+        .limit(Number(limit))
+        .select({
+          _id: 0,
+          __v: 0,
+        });
+      res.send(agencyData);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async makeAgent(req, res) {
+    const { userId } = req.body;
+    try {
+      const isAgencyowner = await AgencyData.findOne({ ownerId: userId });
+      if (isAgencyowner) {
+        res.status(400).send("you aleady own a agency");
+      } else {
+        await User.updateOne({ UserId: userId }, { role: "agent" });
+        const newAgent = new Agent({ AgentId: `A${userId}` });
       }
     } catch (e) {
       console.log(e);
