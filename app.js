@@ -44,7 +44,7 @@ const authenticateToken = (request, response, next) => {
 
 initializeDB();
 app.listen(PORT, () => {
-  console.log("Server running on port 3007");
+  console.log(`Server running on port ${PORT}`);
 });
 
 const beansToDiamondsRate = 0.5;

@@ -92,7 +92,6 @@ const postSchema = new mongoose.Schema(
 const agentSchema = new mongoose.Schema({
   AgentId: String,
   resellerOf: { type: String, default: null },
-  beansCount: Number,
   diamondsCount: Number,
   paymentMethods: [String],
   status: { type: String, default: null },

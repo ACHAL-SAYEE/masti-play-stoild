@@ -256,9 +256,7 @@ class games {
         resellerOf,
         paymentMethods,
         status,
-        diamondsCount: origUser.diamondsCount,
-        beansCount: origUser.beansCount,
-        resellerOf,
+        diamondsCount: 0,
         AgentId: `A${userId}`,
       });
 
