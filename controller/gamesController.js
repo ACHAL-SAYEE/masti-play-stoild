@@ -6,7 +6,10 @@ const {
   AgencyData,
 } = require("../models/models");
 
-const { generateUniqueId, generateUserId } = require("../utils");
+// const { bettingInfoArray, bettingWheelValues } = require("../app");
+// const { generateUniqueId, generateUserId } = require("../utils");
+const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
+const bettingInfoArray = [];
 
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
@@ -244,6 +247,7 @@ class games {
   }
 
   async postAgent(req, res) {
+    console.log("called make user");
     const { resellerOf, paymentMethods, status, userId } = req.body;
     console.log(paymentMethods);
     try {
@@ -251,6 +255,10 @@ class games {
         { UserId: userId },
         { AgentId: `A${userId}` }
       );
+      if (origUser.AgentId) {
+        res.status(400).send("user is already an agent");
+        return;
+      }
       console.log(origUser);
       const newAgent = new Agent({
         resellerOf,
@@ -261,7 +269,7 @@ class games {
       });
 
       await newAgent.save();
-      res.send("agent created");
+      res.send(newAgent);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -269,7 +277,10 @@ class games {
   }
 
   async getAgentData(req, res) {
+    console.log("called agent data");
+
     const { userId } = req.query;
+    console.log(userId);
     let agentData, ownedAgencyData;
     try {
       const existingUser = await User.findOne({ UserId: userId })
@@ -517,6 +528,102 @@ class games {
       console.log(e);
       res.status(500).send("internal server error");
     }
+  }
+
+  async getAgencyDataOfUser(req, res) {
+    const { userId } = req.query;
+    try {
+      const agencyJoined = await agencyParticipant.findOne({ userId });
+      if (agencyJoined) {
+        const AgencyData1 = await AgencyData.findOne({
+          AgencyId: agencyJoined.agencyId,
+        });
+        res.send(AgencyData1);
+      } else {
+        const agencyOwned = await AgencyData.findOne({ ownerId: userId });
+        if (agencyOwned) {
+          res.send(agencyOwned);
+        } else {
+          res
+            .status(400)
+            .send("user did not joined any agency or own an agency");
+        }
+      }
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async storeBettingInfo(req, res) {
+    const { userId, wheelNo, amount } = req.body;
+    bettingInfoArray.push({ userId, wheelNo, amount });
+    await User.updateOne(
+      { UserId: userId },
+      { $inc: { diamondsCount: -1 * amount } }
+    );
+    res.send("betted successfully");
+  }
+
+  async getBettingResults(req, res) {
+    const totalbettAmount = bettingInfoArray.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+    const amountToconsider = totalbettAmount * 0.9;
+    const transformedData = bettingInfoArray.reduce((result, current) => {
+      // Find the existing entry for the current wheelNo
+      const existingEntry = result.find(
+        (entry) => entry.wheelNo === current.wheelNo
+      );
+
+      if (existingEntry) {
+        // If the entry exists, update the userids and total amount
+        if (!existingEntry.userids.includes(current.userId)) {
+          existingEntry.userids.push(current.userId);
+        }
+        existingEntry.totalAmount += current.amount;
+      } else {
+        // If the entry doesn't exist, create a new one
+        result.push({
+          userids: [current.userId],
+          wheelNo: current.wheelNo,
+          totalAmount: current.amount,
+        });
+      }
+
+      return result;
+    }, []);
+    const newtransformedData = transformedData.map((data, index) => ({
+      userids: data.userids,
+      wheelNo: data.wheelNo,
+      totalAmount: data.totalAmount,
+      betreturnvalue: bettingWheelValues[index] * data.totalAmount,
+    }));
+
+    newtransformedData.sort((a, b) => a.betreturnvalue - b.betreturnvalue);
+
+    let nearestEntry;
+    let minDifference = Infinity;
+
+    newtransformedData.forEach((entry) => {
+      const difference = Math.abs(entry.betreturnvalue - amountToconsider);
+
+      if (difference < minDifference) {
+        minDifference = difference;
+        nearestEntry = entry;
+      }
+    });
+    const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
+    bettingInfoArray.forEach((betItem) => {
+      if (betItem.userId in nearestEntry.userids) {
+        User.updateOne(
+          { UserId: betItem.userId },
+          { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
+        );
+      }
+    });
+    res.send({ winners: nearestEntry.userids });
   }
 }
 

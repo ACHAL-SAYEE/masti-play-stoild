@@ -7,6 +7,8 @@ const {
   Comment,
 } = require("../models/models");
 
+const { generateUniqueId } = require("../utils");
+
 class PostApis {
   async storePost(req, res) {
     const { title, description, postedBy, imgUrl, tags } = req.body;
@@ -642,6 +644,37 @@ class PostApis {
       FollowingData = FollowingData.map((follower) => follower.userData);
       console.log(FollowingData);
       res.send(FollowingData);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async getsCommentsOfPost(req, res) {
+    const { start, limit, postId } = req.query;
+    try {
+      const comments = await Post.aggregate([
+        { $match: { PostId: postId } },
+        {
+          $lookup: {
+            from: "comments",
+            localField: "PostId",
+            foreignField: "postId",
+            as: "comments",
+          },
+        },
+        {
+          $unwind: "$comments", // Unwind the comments array
+        },
+        {
+          $replaceRoot: { newRoot: "$comments" }, // Replace the root with the comments
+        },
+        {
+          $project: { userId: 1, comment: 1, _id: 0 },
+        },
+      ]);
+      console.log(comments);
+      res.send(comments);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");

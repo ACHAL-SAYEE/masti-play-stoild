@@ -136,8 +136,8 @@ const AgencyDataSchema = new mongoose.Schema({
   ownerId: String,
   AgencyId: String,
   name: String,
-  diamondsCount: Number,
-  beansCount: Number,
+  // diamondsCount: Number,
+  beansCount: { type: Number, default: 0 },
 });
 
 const following = mongoose.model("following", followingDataSchema);

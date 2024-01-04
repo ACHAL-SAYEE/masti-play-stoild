@@ -42,6 +42,7 @@ const authenticateToken = (request, response, next) => {
   }
 };
 
+
 initializeDB();
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
@@ -57,6 +58,7 @@ app.post("/api/register", authenticationController.register);
 
 app.post("/api/user", async (req, res) => {
   const {
+    id,
     email,
     password,
     name,
@@ -85,10 +87,11 @@ app.post("/api/user", async (req, res) => {
     if (ExistingUsers.length === 0) {
       newUserId = 20240000;
     } else {
-      newUserId = ExistingUsers[ExistingUsers.length - 1].UserId + 1;
+      newUserId = parseInt(ExistingUsers[ExistingUsers.length - 1].UserId) + 1;
     }
     const newUser = new User({
       UserId: `${newUserId}`,
+      // UserId: id,
       email,
       password: hashedPassword,
       name,
@@ -107,7 +110,7 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.post("/api/SignInWithGoggle",authenticationController.SignInWithGoggle)
+app.post("/api/SignInWithGoggle", authenticationController.SignInWithGoggle);
 
 app.post("/api/login", authenticationController.login);
 
@@ -178,3 +181,14 @@ app.put("/api/agent-recharge", gamesController.recharge);
 app.get("/api/api/agencies/all", gamesController.getAllAgencies);
 
 app.put("/api/make-agent", gamesController.makeAgent);
+
+app.get("/api/comments", postsController.getsCommentsOfPost);
+
+app.get("/api/agency", gamesController.getAgencyDataOfUser);
+
+app.post("/api/spinner-betting", gamesController.storeBettingInfo);
+
+app.post("/api/spinner-result", gamesController.getBettingResults);
+
+// exports.bettingInfoArray = bettingInfoArray;
+// exports.bettingWheelValues = bettingWheelValues;
