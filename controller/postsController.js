@@ -672,6 +672,9 @@ class PostApis {
         {
           $project: { userId: 1, comment: 1, _id: 0 },
         },
+
+        { $skip: Number(start) }, 
+        { $limit: Number(limit) },
       ]);
       console.log(comments);
       res.send(comments);
