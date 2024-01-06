@@ -606,14 +606,6 @@ class games {
     let nearestEntry;
     let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
 
-    // newtransformedData.forEach((entry) => {
-    //   const difference = Math.abs(entry.betreturnvalue - amountToconsider);
-
-    //   if (difference < minDifference) {
-    //     minDifference = difference;
-    //     nearestEntry = entry;
-    //   }
-    // });
     let i = 1;
     while (minDifference < 0 && i <= newtransformedData.length - 1) {
       minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
