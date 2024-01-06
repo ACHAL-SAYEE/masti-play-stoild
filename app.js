@@ -42,7 +42,6 @@ const authenticateToken = (request, response, next) => {
   }
 };
 
-
 initializeDB();
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);

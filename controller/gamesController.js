@@ -601,22 +601,28 @@ class games {
       betreturnvalue: bettingWheelValues[index] * data.totalAmount,
     }));
 
-    newtransformedData.sort((a, b) => a.betreturnvalue - b.betreturnvalue);
+    newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
 
     let nearestEntry;
-    let minDifference = Infinity;
+    let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
 
-    newtransformedData.forEach((entry) => {
-      const difference = Math.abs(entry.betreturnvalue - amountToconsider);
+    // newtransformedData.forEach((entry) => {
+    //   const difference = Math.abs(entry.betreturnvalue - amountToconsider);
 
-      if (difference < minDifference) {
-        minDifference = difference;
-        nearestEntry = entry;
-      }
-    });
+    //   if (difference < minDifference) {
+    //     minDifference = difference;
+    //     nearestEntry = entry;
+    //   }
+    // });
+    let i = 1;
+    while (minDifference < 0 && i <= newtransformedData.length - 1) {
+      minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
+      nearestEntry=newtransformedData[i]
+    }
+
     const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
     bettingInfoArray.forEach((betItem) => {
-      if (betItem.userId in nearestEntry.userids) {
+      if (betItem.userId in nearestEntry.userids && betItem.wheelNo===nearestEntry.wheelNo) {
         User.updateOne(
           { UserId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
@@ -624,6 +630,8 @@ class games {
       }
     });
     res.send({ winners: nearestEntry.userids });
+    bettingWheelValues = [];
+    bettingInfoArray = [];
   }
 }
 
