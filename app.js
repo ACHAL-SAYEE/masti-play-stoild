@@ -198,6 +198,6 @@ app.get("/api/agency/all", gamesController.getAllAgencies);
 
 app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
-app.put("/api/agency/collect", gamesController.collectBeans);
+app.post("/api/agency/collect", gamesController.collectBeans);
 // exports.bettingInfoArray = bettingInfoArray;
 // exports.bettingWheelValues = bettingWheelValues;

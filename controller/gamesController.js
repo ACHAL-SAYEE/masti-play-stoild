@@ -755,6 +755,7 @@ class games {
         { userId: agencyData.ownerId },
         { $inc: { beansCount: agencyData.beansCount } }
       );
+      res.send("collected successfully")
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
