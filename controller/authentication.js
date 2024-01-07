@@ -166,11 +166,12 @@ class Authentication {
         const { email, name, photo } = payload;
         const UserInfo = await User.findOne({ email });
         if (UserInfo) {
-          await User.create({ email, name, photo });
-          res.send("user registered successfully");
+          res.send("user signed in successfully");
+
           return;
         }
-        res.send("user signed in successfully");
+        await User.create({ email, name, photo });
+        res.send("user registered successfully");
       } else {
         console.log("token is invalid!");
         res.status(400).send("token is invalid!");
@@ -180,7 +181,6 @@ class Authentication {
       res.status(500).send("internal server error");
     }
   }
-  
 }
 
 const AuthenticationController = new Authentication();

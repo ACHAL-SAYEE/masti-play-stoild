@@ -188,7 +188,7 @@ class PostApis {
   }
   async followUser(req, res) {
     const { followerId, followingId } = req.body;
-    // const followerId=req.UserId
+    // const followerId=req.userId
     try {
       const followStatus = await following.find({
         followerId,
@@ -203,17 +203,17 @@ class PostApis {
         });
         if (bidirection !== null) {
           const updateFriend = await User.updateMany(
-            { UserId: { $in: [followerId, followingId] } },
+            { userId: { $in: [followerId, followingId] } },
             { $inc: { friends: 1 } }
           );
         }
 
         const updatefollowerUser = await User.updateOne(
-          { UserId: followerId },
+          { userId: followerId },
           { $inc: { followingCount: 1 } }
         );
         const updatefollowingUser = await User.updateOne(
-          { UserId: followingId },
+          { userId: followingId },
           { $inc: { followersCount: 1 } }
         );
         res.status(200).send("following");
@@ -225,7 +225,7 @@ class PostApis {
         });
         if (bidirection !== null) {
           const updateFriend = await User.updateMany(
-            { UserId: { $in: [followerId, followingId] } },
+            { userId: { $in: [followerId, followingId] } },
             { $inc: { friends: -1 } }
           );
         }
@@ -234,11 +234,11 @@ class PostApis {
           followingId,
         });
         const updatefollowerUser = await User.updateOne(
-          { UserId: followerId },
+          { userId: followerId },
           { $inc: { followingCount: -1 } }
         );
         const updatefollowingUser = await User.updateOne(
-          { UserId: followingId },
+          { userId: followingId },
           { $inc: { followersCount: -1 } }
         );
         res.send("unfollowing");
@@ -249,7 +249,7 @@ class PostApis {
     }
   }
   async getPostsOfFollowingUsers(req, res) {
-    // const userId=req.UserId
+    // const userId=req.userId
     const { limit, start, userId } = req.query;
     try {
       const followerIds = await following
@@ -335,7 +335,7 @@ class PostApis {
     //
     const { userId, tags, limit, start } = req.body;
     let posts;
-    // const userId=req.UserId
+    // const userId=req.userId
     console.log(userId);
     try {
       if (userId == null) {
@@ -414,7 +414,7 @@ class PostApis {
 
   async commentPost(req, res) {
     const { postId, comment, userId } = req.body;
-    // const userId=req.UserId
+    // const userId=req.userId
     try {
       const NewComment = new Comment({ postId, userId, comment });
       await NewComment.save();
@@ -431,7 +431,7 @@ class PostApis {
   }
 
   async likePost(req, res) {
-    // const userId=req.UserId
+    // const userId=req.userId
     const { postId, userId } = req.body;
     try {
       const likedStatus = await LikesInfo.find({
@@ -523,7 +523,7 @@ class PostApis {
           $lookup: {
             from: "users",
             localField: "followerId",
-            foreignField: "UserId",
+            foreignField: "userId",
             as: "userData",
           },
         },
@@ -565,7 +565,7 @@ class PostApis {
           $lookup: {
             from: "users",
             localField: "followingId",
-            foreignField: "UserId",
+            foreignField: "userId",
             as: "userData",
           },
         },
@@ -616,7 +616,7 @@ class PostApis {
           $lookup: {
             from: "users",
             localField: "followingId",
-            foreignField: "UserId",
+            foreignField: "userId",
             as: "userData",
           },
         },
@@ -672,8 +672,18 @@ class PostApis {
         {
           $project: { userId: 1, comment: 1, _id: 0 },
         },
-
-        { $skip: Number(start) }, 
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "userId",
+            as: "commentedBy",
+          },
+        },
+        {
+          $unwind: "$commentedBy", // Unwind the comments array
+        },
+        { $skip: Number(start) },
         { $limit: Number(limit) },
       ]);
       console.log(comments);

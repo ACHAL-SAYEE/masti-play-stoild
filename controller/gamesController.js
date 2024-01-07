@@ -4,10 +4,14 @@ const {
   Agent,
   agencyParticipant,
   AgencyData,
+  monthlyAgentHistory,
+  monthlyAgencyHistory,
 } = require("../models/models");
 
+const beansToDiamondsRate = 1;
+
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
-// const { generateUniqueId, generateUserId } = require("../utils");
+const { generateUniqueId, generateUserId } = require("../utils");
 const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
 const bettingInfoArray = [];
 
@@ -78,7 +82,7 @@ class games {
       }
       await transaction.save();
       const result = await User.updateOne(
-        { UserId: userId },
+        { userId: userId },
         {
           $inc: {
             diamondsCount: diamonds == undefined ? 0 : diamonds,
@@ -189,7 +193,7 @@ class games {
   async getUsers(req, res) {
     const { userId } = req.query;
     try {
-      const result = await User.findOne({ UserId: userId }).select({
+      const result = await User.findOne({ userId: userId }).select({
         _id: 0,
         __v: 0,
       });
@@ -207,20 +211,15 @@ class games {
 
   async convert(req, res) {
     const { diamonds, beans, userId } = req.query;
-    console.log(typeof diamonds);
-    console.log(typeof beans);
-
-    console.log(userId);
-
     try {
       if (diamonds == null) {
         console.log("entered2");
         const DiamondsToAdd = beans * beansToDiamondsRate;
         const result2 = await User.updateOne(
-          { UserId: userId },
-          { $inc: { diamondsCount: DiamondsToAdd, beansCount: -beans } }
+          { userId: userId },
+          { $inc: { diamondsCount: DiamondsToAdd, beansCount: -1 * beans } }
         );
-        const result = await User.findOne({ UserId: userId }).select({
+        const result = await User.findOne({ userId: userId }).select({
           _id: 0,
           __v: 0,
         });
@@ -230,10 +229,10 @@ class games {
         console.log("entered");
         const BeansToAdd = diamonds / beansToDiamondsRate;
         const result2 = await User.updateOne(
-          { UserId: userId },
-          { $inc: { diamondsCount: -diamonds, beansCount: BeansToAdd } }
+          { userId: userId },
+          { $inc: { diamondsCount: -1 * diamonds, beansCount: BeansToAdd } }
         );
-        const result = await User.findOne({ UserId: userId }).select({
+        const result = await User.findOne({ userId: userId }).select({
           _id: 0,
           __v: 0,
         });
@@ -246,16 +245,30 @@ class games {
     }
   }
 
+  async convertUsertoAgent(req, res) {
+    const { userId, beans } = req.body;
+    try {
+      await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
+      await Agent.updateOne(
+        { agentId: userId },
+        { $inc: { diamondsCount: beans } }
+      );
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
   async postAgent(req, res) {
     console.log("called make user");
     const { resellerOf, paymentMethods, status, userId } = req.body;
     console.log(paymentMethods);
     try {
       const origUser = await User.findOneAndUpdate(
-        { UserId: userId },
-        { AgentId: `A${userId}` }
+        { userId: userId },
+        { agentId: `A${userId}` }
       );
-      if (origUser.AgentId) {
+      if (origUser.agentId) {
         res.status(400).send("user is already an agent");
         return;
       }
@@ -265,7 +278,7 @@ class games {
         paymentMethods,
         status,
         diamondsCount: 0,
-        AgentId: `A${userId}`,
+        agentId: `A${userId}`,
       });
 
       await newAgent.save();
@@ -283,13 +296,13 @@ class games {
     console.log(userId);
     let agentData, ownedAgencyData;
     try {
-      const existingUser = await User.findOne({ UserId: userId })
-        .select({ _id: 0, __v: 0, AgentId: 0 })
+      const existingUser = await User.findOne({ userId: userId })
+        .select({ _id: 0, __v: 0, agentId: 0 })
         .lean();
-      if (existingUser.AgentId) {
+      if (existingUser.agentId) {
         res.send(existingUser);
       } else {
-        agentData = await Agent.findOne({ AgentId: `A${userId}` }).select({
+        agentData = await Agent.findOne({ agentId: `A${userId}` }).select({
           _id: 0,
           __v: 0,
         });
@@ -301,7 +314,7 @@ class games {
         } else {
           const AgencyIdInfo = await agencyParticipant.find({ userId });
           const joinedAgencyData = await AgencyData.findOne({
-            AgencyId: AgencyIdInfo.agencyId,
+            agencyId: AgencyIdInfo.agencyId,
           });
           res.send({ ...existingUser, joinedAgencyData, agentData });
         }
@@ -313,15 +326,28 @@ class games {
     }
   }
 
+  async getAllUsers(req, res) {
+    try {
+      const Users = User.find({});
+      res.send(Users);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
   async getAllAgents(req, res) {
     const { limit, start } = req.query;
     try {
       const result = await User.aggregate([
         {
+          $match: { agentId: { $ne: null } },
+        },
+        {
           $lookup: {
             from: "agents",
-            localField: "AgentId",
-            foreignField: "AgentId",
+            localField: "agentId",
+            foreignField: "agentId",
             as: "AgentData",
           },
         },
@@ -342,32 +368,62 @@ class games {
       res.status(500).send("internal server error");
     }
   }
+
+  async getAllAgencies(req, res) {
+    try {
+      const Agencies = await User.aggregate([
+        { $match: { agentId: { $ne: null } } },
+        {
+          $lookup: {
+            from: "agencydatas",
+            localField: "userId",
+            foreignField: "ownerId",
+            as: "ownedAgencyData",
+          },
+        },
+        {
+          $unwind: "$ownedAgencyData",
+        },
+      ]);
+      res.send(Agencies);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
   async getResellers(req, res) {
-    const { userId } = req.query;
+    const { userId, limit, start } = req.query;
     try {
       let rellersofUser = await Agent.find({ resellerOf: `A${userId}` }).select(
         {
-          AgentId: 1,
+          agentId: 1,
         }
       );
-      rellersofUser = rellersofUser.map((reseller) => reseller.AgentId);
+      rellersofUser = rellersofUser.map((reseller) => reseller.agentId);
       console.log(rellersofUser);
       const result = await User.aggregate([
         {
           $match: {
-            AgentId: { $in: rellersofUser },
+            agentId: { $in: rellersofUser },
           },
         },
         {
           $lookup: {
             from: "agents",
-            localField: "AgentId",
-            foreignField: "AgentId",
+            localField: "agentId",
+            foreignField: "agentId",
             as: "AgentData",
           },
         },
         {
           $unwind: "$AgentData",
+        },
+        {
+          $skip: Number(start),
+        },
+        {
+          $limit: Number(limit),
         },
       ]);
       res.send(result);
@@ -380,9 +436,7 @@ class games {
   async ChangeUserRole(req, res) {
     const { userId, role } = req.body;
     try {
-      // const newRole = new Role({ userId, role });
-      // await newRole.save();
-      await User.updateOne({ UserId: userId }, { role });
+      await User.updateOne({ userId: userId }, { role });
       res.send("role changed successfully");
     } catch (e) {
       console.log(e);
@@ -395,7 +449,8 @@ class games {
     try {
       const newAgent = new agencyParticipant({ userId, agencyId });
       await newAgent.save();
-      res.send("joined agency successfully");
+      const agencyData = await AgencyData.findOne({ agencyId });
+      res.send(agencyData);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -410,20 +465,20 @@ class games {
       if (agencyId == null) {
         randomNumber = generateUserId();
         const existingUserWithId = await AgencyData.find({
-          AgencyId: randomNumber,
+          agencyId: randomNumber,
         });
         if (existingUserWithId.length > 0) {
           isUserIdMatched = true;
           while (isUserIdMatched) {
             randomNumber = generateUserId();
             const existingUserWithId = await AgencyData.find({
-              AgencyId: randomNumber,
+              agencyId: randomNumber,
             });
             isUserIdMatched = existingUserWithId.length > 0;
           }
         }
         const newAgencyData = new AgencyData({
-          AgencyId: randomNumber,
+          agencyId: randomNumber,
           ownerId: userId,
           name,
         });
@@ -432,7 +487,7 @@ class games {
       // const newOwner = new AgencyOwnership({ userId, agencyId });
       // await newOwner.save();
       const agencyData = await AgencyData.findOneAndUpdate(
-        { AgencyId: agencyId == null ? randomNumber : agencyId },
+        { agencyId: agencyId == null ? randomNumber : agencyId },
         { ownerId: userId }
       )
         .select({ _id: 0, __v: 0 })
@@ -444,20 +499,21 @@ class games {
       res.status(500).send("internal server error");
     }
   }
+
   async sendGift(req, res) {
     const { sentTo, sentby, diamondsSent } = req.body;
     try {
-      const sendingUserBalance = await User.findOne({ UserId: sentby });
+      const sendingUserBalance = await User.findOne({ userId: sentby });
       if (sendingUserBalance.diamondsCount < diamondsSent) {
         res.status(400).send("insufficient balance");
       }
       await User.updateOne(
-        { UserId: sentby },
-        { diamondsCount: { $inc: -1 * Number(diamondsSent) } }
+        { userId: sentby },
+        { $inc: { diamondsCount: -1 * Number(diamondsSent) } }
       );
       await User.updateOne(
-        { UserId: sentTo },
-        { beansCount: { $inc: (9 * Number(diamondsSent)) / 10 } }
+        { userId: sentTo },
+        { $inc: { beansCount: (9 * Number(diamondsSent)) / 10 } }
       );
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
@@ -465,8 +521,27 @@ class games {
 
       await User.updateOne(
         { agencyId: agencyOfSentTo.agencyId },
-        { beansCount: { $inc: Number(diamondsSent) / 10 } }
+        {
+          $inc: {
+            beansCount: Number(diamondsSent) / 10,
+            totalBeansRecieved: Number(diamondsSent) / 10,
+          },
+        }
       );
+      const currentDate = new Date();
+      await monthlyAgencyHistory.findOneAndUpdate(
+        {
+          month: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+        },
+        {
+          $inc: { beans: diamondsSent },
+        },
+        {
+          upsert: true,
+          new: true,
+        }
+      );
+
       await res.send("gift sent successfully");
     } catch (e) {
       console.log(e);
@@ -477,37 +552,37 @@ class games {
   async recharge(req, res) {
     const { userId, agentId, diamonds } = req.body;
     try {
-      const agentData = await Agent.findOne({ AgentId: agentId });
+      const agentData = await Agent.findOne({ agentId: agentId });
       if (agentData.diamondsCount < diamonds) {
         res.status(400).send("insufficient balance");
       } else {
         await Agent.updateOne(
-          { AgentId: agentId },
+          { agentId: agentId },
           { $inc: { diamondsCount: -1 * diamonds } }
         );
         await User.updateOne(
-          { UserId: userId },
+          { userId: userId },
           { $inc: { diamondsCount: diamonds } }
+        );
+        const currentDate = new Date();
+        await monthlyAgentHistory.findOneAndUpdate(
+          {
+            month: new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              1
+            ),
+          },
+          {
+            $inc: { diamonds },
+          },
+          {
+            upsert: true,
+            new: true,
+          }
         );
         res.send("recharged successfully");
       }
-    } catch (e) {
-      console.log(e);
-      res.status(500).send("internal server error");
-    }
-  }
-
-  async getAllAgencies(req, res) {
-    const { limit, start } = req.query;
-    try {
-      const agencyData = await AgencyData.find({})
-        .skip(Number(start))
-        .limit(Number(limit))
-        .select({
-          _id: 0,
-          __v: 0,
-        });
-      res.send(agencyData);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -521,8 +596,8 @@ class games {
       if (isAgencyowner) {
         res.status(400).send("you aleady own a agency");
       } else {
-        await User.updateOne({ UserId: userId }, { role: "agent" });
-        const newAgent = new Agent({ AgentId: `A${userId}` });
+        await User.updateOne({ userId: userId }, { role: "agent" });
+        const newAgent = new Agent({ agentId: `A${userId}` });
       }
     } catch (e) {
       console.log(e);
@@ -531,12 +606,19 @@ class games {
   }
 
   async getAgencyDataOfUser(req, res) {
-    const { userId } = req.query;
+    const { userId, agencyId } = req.query;
     try {
+      if (userId == null) {
+        console.log(agencyId);
+        const agencyData = await AgencyData.findOne({ agencyId });
+        console.log(agencyData);
+        res.send(agencyData);
+        return;
+      }
       const agencyJoined = await agencyParticipant.findOne({ userId });
       if (agencyJoined) {
         const AgencyData1 = await AgencyData.findOne({
-          AgencyId: agencyJoined.agencyId,
+          agencyId: agencyJoined.agencyId,
         });
         res.send(AgencyData1);
       } else {
@@ -559,7 +641,7 @@ class games {
     const { userId, wheelNo, amount } = req.body;
     bettingInfoArray.push({ userId, wheelNo, amount });
     await User.updateOne(
-      { UserId: userId },
+      { userId: userId },
       { $inc: { diamondsCount: -1 * amount } }
     );
     res.send("betted successfully");
@@ -609,14 +691,17 @@ class games {
     let i = 1;
     while (minDifference < 0 && i <= newtransformedData.length - 1) {
       minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
-      nearestEntry=newtransformedData[i]
+      nearestEntry = newtransformedData[i];
     }
 
     const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
     bettingInfoArray.forEach((betItem) => {
-      if (betItem.userId in nearestEntry.userids && betItem.wheelNo===nearestEntry.wheelNo) {
+      if (
+        betItem.userId in nearestEntry.userids &&
+        betItem.wheelNo === nearestEntry.wheelNo
+      ) {
         User.updateOne(
-          { UserId: betItem.userId },
+          { userId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
         );
       }
@@ -624,6 +709,56 @@ class games {
     res.send({ winners: nearestEntry.userids });
     bettingWheelValues = [];
     bettingInfoArray = [];
+  }
+
+  async getAgencyParticipants(req, res) {
+    const { agencyId } = req.query;
+    try {
+      const participants = await agencyParticipant.aggregate([
+        { $match: { agencyId } },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "userId",
+            as: "participentsData",
+          },
+        },
+        {
+          $unwind: "$participentsData",
+        },
+        {
+          $replaceRoot: { newRoot: "$participentsData" },
+        },
+        {
+          $project: { _id: 0, __v: 0 },
+        },
+      ]);
+
+      res.send(participants);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async collectBeans(req, res) {
+    const { agencyId } = req.body;
+    try {
+      console.log(agencyId);
+      const agencyData = await AgencyData.findOneAndUpdate(
+        { agencyId },
+        { beansCount: 0 }
+      );
+      console.log(agencyData);
+      await User.updateOne(
+        { userId: agencyData.ownerId },
+        { $inc: { beansCount: agencyData.beansCount } }
+      );
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
   }
 }
 

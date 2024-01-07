@@ -6,6 +6,7 @@ const PORT = process.env.PORT || 4000;
 
 const express = require("express");
 const cors = require("cors");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
@@ -35,7 +36,7 @@ const authenticateToken = (request, response, next) => {
         response.status(401);
         response.send("Invalid JWT Token");
       } else {
-        request.UserId = payload.UserId;
+        request.userId = payload.userId;
         next();
       }
     });
@@ -72,12 +73,12 @@ app.post("/api/user", async (req, res) => {
     const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
     // let randomNumber = generateUserId();
-    // const existingUserWithId = await User.find({ UserId: randomNumber });
+    // const existingUserWithId = await User.find({ userId: randomNumber });
     // if (existingUserWithId.length > 0) {
     //   isUserIdMatched = true;
     //   while (isUserIdMatched) {
     //     randomNumber = generateUserId();
-    //     const existingUserWithId = await User.find({ UserId: randomNumber });
+    //     const existingUserWithId = await User.find({ userId: randomNumber });
     //     isUserIdMatched = existingUserWithId.length > 0;
     //   }
     // }
@@ -86,11 +87,11 @@ app.post("/api/user", async (req, res) => {
     if (ExistingUsers.length === 0) {
       newUserId = 20240000;
     } else {
-      newUserId = parseInt(ExistingUsers[ExistingUsers.length - 1].UserId) + 1;
+      newUserId = parseInt(ExistingUsers[ExistingUsers.length - 1].userId) + 1;
     }
     const newUser = new User({
-      UserId: `${newUserId}`,
-      // UserId: id,
+      userId: `${newUserId}`,
+      // userId: id,
       email,
       password: hashedPassword,
       name,
@@ -159,11 +160,15 @@ app.get("/api/users", gamesController.getUsers);
 
 app.get("/api/convert", gamesController.convert);
 
+app.put("/api/agent/convert", gamesController.convertUsertoAgent);
+
 app.post("/api/agent", gamesController.postAgent);
 
 app.get("/api/agent", gamesController.getAgentData);
 
-app.get("/api/agent/all", gamesController.getAllAgents);
+app.get("/api/users/all", gamesController.getAllUsers);
+
+app.get("/api/agents/all", gamesController.getAllAgents);
 
 app.get("/api/agent/resellers", gamesController.getResellers);
 
@@ -177,7 +182,7 @@ app.put("/api/send-gift", gamesController.sendGift);
 
 app.put("/api/agent-recharge", gamesController.recharge);
 
-app.get("/api/api/agencies/all", gamesController.getAllAgencies);
+app.get("/api/agencies/all", gamesController.getAllAgencies);
 
 app.put("/api/make-agent", gamesController.makeAgent);
 
@@ -189,5 +194,10 @@ app.post("/api/spinner-betting", gamesController.storeBettingInfo);
 
 app.post("/api/spinner-result", gamesController.getBettingResults);
 
+app.get("/api/agency/all", gamesController.getAllAgencies);
+
+app.get("/api/agency/participants", gamesController.getAgencyParticipants);
+
+app.put("/api/agency/collect", gamesController.collectBeans);
 // exports.bettingInfoArray = bettingInfoArray;
 // exports.bettingWheelValues = bettingWheelValues;

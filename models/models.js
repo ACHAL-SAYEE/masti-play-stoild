@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-  UserId: String,
-  AgentId: { type: String, default: null },
+  userId: String,
+  agentId: { type: String, default: null },
   name: String,
   email: String,
   photo: {
@@ -38,7 +38,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, default: "user" },
 });
 
-const TagSchema = (tag = new mongoose.Schema(
+const TagSchema = new mongoose.Schema(
   {
     tag: String,
     usedCount: {
@@ -47,7 +47,7 @@ const TagSchema = (tag = new mongoose.Schema(
     },
   },
   { timestamps: true }
-));
+);
 
 const followingDataSchema = new mongoose.Schema({
   followerId: String,
@@ -90,7 +90,7 @@ const postSchema = new mongoose.Schema(
 );
 
 const agentSchema = new mongoose.Schema({
-  AgentId: String,
+  agentId: String,
   resellerOf: { type: String, default: null },
   diamondsCount: Number,
   paymentMethods: [String],
@@ -112,11 +112,6 @@ const TransactionHistorySchema = new mongoose.Schema(
   }
 );
 
-const roleSchema = new mongoose.Schema({
-  userId: String,
-  role: String,
-});
-
 const agencyParticipantsSchema = new mongoose.Schema({
   userId: String,
   agencyId: String,
@@ -134,12 +129,33 @@ const AgencyOwnershipSchema = new mongoose.Schema({
 
 const AgencyDataSchema = new mongoose.Schema({
   ownerId: String,
-  AgencyId: String,
+  agencyId: String,
   name: String,
+  totalBeansRecieved: { type: Number, default: 0 },
   // diamondsCount: Number,
   beansCount: { type: Number, default: 0 },
 });
 
+const monthlyAgentHistorySchema = new mongoose.Schema({
+  month: Date,
+  diamonds: { type: Number, default: 0 },
+  agentId: String,
+});
+
+const monthlyAgencyHistorySchema = new mongoose.Schema({
+  month: Date,
+  beans: { type: Number, default: 0 },
+  agencyId: String,
+});
+
+const monthlyAgencyHistory = mongoose.model(
+  "monthlyAgencyHistory",
+  monthlyAgencyHistorySchema
+);
+const monthlyAgentHistory = mongoose.model(
+  "monthlyAgentHistory",
+  monthlyAgentHistorySchema
+);
 const following = mongoose.model("following", followingDataSchema);
 const Tag = mongoose.model("Tag", TagSchema);
 const LikesInfo = mongoose.model("LikesInfo", likesInfo);
@@ -148,7 +164,7 @@ const User = mongoose.model("User", userSchema);
 const Post = mongoose.model("Post", postSchema);
 const Comment = mongoose.model("Comment", CommentSchema);
 const Agent = mongoose.model("Agent", agentSchema);
-const Role = mongoose.model("Role", roleSchema);
+
 const AgencyOwnership = mongoose.model(
   "AgencyOwnership",
   AgencyOwnershipSchema
@@ -167,7 +183,8 @@ exports.TransactionHistory = TransactionHistory;
 exports.Post = Post;
 exports.Comment = Comment;
 exports.Agent = Agent;
-exports.Role = Role;
 exports.agencyParticipant = agencyParticipant;
 exports.AgencyOwnership = AgencyOwnership;
 exports.AgencyData = AgencyData;
+exports.monthlyAgentHistory = monthlyAgentHistory;
+exports.monthlyAgencyHistory = monthlyAgencyHistory;
