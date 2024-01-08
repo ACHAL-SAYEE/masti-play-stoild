@@ -36,6 +36,7 @@ const userSchema = new mongoose.Schema({
   followingCount: { type: Number, default: 0 },
   friends: { type: Number, default: 0 },
   role: { type: String, default: "user" },
+  isVerified: { type: Boolean, default: false },
 });
 
 const TagSchema = new mongoose.Schema(

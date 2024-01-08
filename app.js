@@ -3,7 +3,9 @@
 
 require("dotenv").config();
 const PORT = process.env.PORT || 4000;
-
+const multer = require("multer");
+const bodyParser = require("body-parser");
+const base64ToImage = require("base64-to-image");
 const express = require("express");
 const cors = require("cors");
 const bcrypt = require("bcrypt");
@@ -16,10 +18,37 @@ const initializeDB = require("./InitialiseDb/index");
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
 app.use(express.json());
+app.use(
+  bodyParser.json({
+    limit: "50mb", //increased the limit to receive base64
+  })
+);
+app.use(
+  bodyParser.urlencoded({
+    limit: "50mb",
+    extended: true,
+    parameterLimit: 50000,
+  })
+);
+
 const postsController = require("./controller/postsController");
 const gamesController = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
 const { User } = require("./models/models");
+
+const multerStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, `public/${req.body.path}`);
+  },
+  filename: (req, file, cb) => {
+    const filename = req.body.fileName;
+    cb(null, `${filename}`);
+  },
+});
+
+const upload = multer({
+  storage: multerStorage,
+});
 
 const authenticateToken = (request, response, next) => {
   let iChatJwtToken;
@@ -49,6 +78,21 @@ app.listen(PORT, () => {
 });
 
 const beansToDiamondsRate = 0.5;
+
+app.post("/upload", (req, res, next) => {
+  const uuid = uuidv4();
+  var filename = req.body.filename;
+  var base64url = req.body.base64url;
+  var base64Str = "data:image/png;base64," + base64url;
+  var path = "./public/";
+  var optionalObj = {
+    fileName: filename,
+    type: "png",
+  };
+  base64ToImage(base64Str, path, optionalObj); //saving
+  var imageInfo = base64ToImage(base64Str, path, optionalObj);
+  var fileLink = "/" + filename;
+});
 
 app.post("/otp", authenticationController.sendOtp);
 

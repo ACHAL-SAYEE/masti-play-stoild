@@ -3,6 +3,15 @@ const { User } = require("../models/models");
 const bcrypt = require("bcrypt");
 const otpMap = {};
 const { OAuth2Client } = require("google-auth-library");
+const nodemailer = require("nodemailer");
+const transporter = nodemailer.createTransport({
+  service: "hotmail",
+  auth: {
+    user: "achalsayee@outlook.com",
+    pass: "Achal12345678",
+  },
+});
+
 class Authentication {
   async sendOtp(req, res) {
     const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
@@ -116,7 +125,25 @@ class Authentication {
         phoneNumber,
       });
       await newUser.save();
-      res.status(200).send("user created successfully");
+      res
+        .status(201)
+        .send(
+          "user created successfully.To use your account you need to verify.check your email for instructions"
+        );
+      const options = {
+        from: "achalsayee@outlook.com",
+        to: email,
+        subject: "verify your mastiplay account",
+        text: `to continue using your mastiplay account you need first verify it`,
+      };
+
+      transporter.sendMail(options, function (err, info) {
+        if (err) {
+          console.log(err);
+          return;
+        }
+        console.log("sent:" + info.response);
+      });
     } else {
       res.status(400).send("User already exists");
     }

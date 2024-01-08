@@ -601,17 +601,35 @@ class PostApis {
 
   async getFriendsData(req, res) {
     const { userId, limit, start } = req.query;
+    console.log(userId);
     try {
       let FollowingData = await following.aggregate([
         {
-          $match: {
-            $and: [
-              { $or: [{ followerId: userId }, { followingId: userId }] },
-              { followerId: userId },
-            ],
+          $match: { followerId: userId },
+        },
+        {
+          $lookup: {
+            from: "followings",
+            localField: "followingId",
+            foreignField: "followerId",
+            as: "friends",
           },
         },
-        // { $match: { followerId: userId } },
+        {
+          $unwind: "$friends",
+        },
+        {
+          $match: {
+            $expr: {
+              $eq: ["$followerId", "$friends.followingId"],
+            },
+          },
+        },
+        {
+          $project: {
+            friends: 0,
+          },
+        },
         {
           $lookup: {
             from: "users",
@@ -641,8 +659,9 @@ class PostApis {
         },
       ]);
       //   console.log("FollowingData",FollowingData);
-      FollowingData = FollowingData.map((follower) => follower.userData);
       console.log(FollowingData);
+      // FollowingData = FollowingData.map((follower) => follower.userData);
+
       res.send(FollowingData);
     } catch (e) {
       console.log(e);
