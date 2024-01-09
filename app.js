@@ -34,6 +34,7 @@ app.use(
 const postsController = require("./controller/postsController");
 const gamesController = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
+const bdRoutes = require("./routes/bd");
 const { User } = require("./models/models");
 
 const multerStorage = multer.diskStorage({
@@ -243,5 +244,16 @@ app.get("/api/agency/all", gamesController.getAllAgencies);
 app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
 app.post("/api/agency/collect", gamesController.collectBeans);
+
+app.get("/api/bd/all", bdRoutes.getAllBD);
+app.get("/api/bd", bdRoutes.getBD);
+app.get("/api/bd/participants", bdRoutes.getParticipantAgencies);
+app.post("/api/bd", bdRoutes.createBD);
+app.put("/api/bd", bdRoutes.updateBD);
+app.put("/api/bd/add-beans", bdRoutes.addBeans);
+app.post("/api/bd/agency", bdRoutes.addAgency);
+app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
+
+
 // exports.bettingInfoArray = bettingInfoArray;
 // exports.bettingWheelValues = bettingWheelValues;

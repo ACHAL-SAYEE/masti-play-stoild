@@ -6,6 +6,7 @@ const {
   AgencyData,
   monthlyAgentHistory,
   monthlyAgencyHistory,
+  SpinnerGameWinnerHistory,
 } = require("../models/models");
 
 const beansToDiamondsRate = 1;
@@ -13,7 +14,7 @@ const beansToDiamondsRate = 1;
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 const { generateUniqueId, generateUserId } = require("../utils");
 const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
-const bettingInfoArray = [];
+let bettingInfoArray = [];
 
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
@@ -700,14 +701,18 @@ class games {
         betItem.userId in nearestEntry.userids &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
+        SpinnerGameWinnerHistory.findOneAndUpdate(
+          { userId: betItem.userId },
+          { $inc: { diamondsEarned: betItem.amount * multiplyvalue } },
+          { upsert: true }
+        );
         User.updateOne(
           { userId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
         );
       }
     });
-    res.send({ winners: nearestEntry.userids });
-    bettingWheelValues = [];
+    res.send({ winners: nearestEntry.userids, wheelNo: nearestEntry.wheelNo });
     bettingInfoArray = [];
   }
 
@@ -755,7 +760,7 @@ class games {
         { userId: agencyData.ownerId },
         { $inc: { beansCount: agencyData.beansCount } }
       );
-      res.send("collected successfully")
+      res.send("collected successfully");
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
