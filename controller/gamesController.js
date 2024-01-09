@@ -13,7 +13,7 @@ const beansToDiamondsRate = 1;
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 const { generateUniqueId, generateUserId } = require("../utils");
 const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
-const bettingInfoArray = [];
+let bettingInfoArray = [];
 
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
@@ -707,7 +707,6 @@ class games {
       }
     });
     res.send({ winners: nearestEntry.userids });
-    bettingWheelValues = [];
     bettingInfoArray = [];
   }
 
