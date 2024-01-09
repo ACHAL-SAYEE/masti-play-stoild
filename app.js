@@ -1,7 +1,8 @@
 // const bodyParser = require('body-parser');
 // app.use(bodyParser.json());
-
 require("dotenv").config();
+const http = require("http");
+const socketIO = require("socket.io");
 const PORT = process.env.PORT || 4000;
 const multer = require("multer");
 const bodyParser = require("body-parser");
@@ -12,6 +13,8 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
 const path = require("path");
 const { generateUniqueId, generateUserId } = require("./utils");
 const initializeDB = require("./InitialiseDb/index");
@@ -30,12 +33,20 @@ app.use(
     parameterLimit: 50000,
   })
 );
-
+const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
+let bettingInfoArray = [];
+const beansToDiamondsRate = 1;
+let bettingGameparticipants = 0;
 const postsController = require("./controller/postsController");
 const gamesController = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
 const bdRoutes = require("./routes/bd");
-const { User } = require("./models/models");
+const {
+  User,
+  Top3Winners,
+  bettingGameData,
+  SpinnerGameWinnerHistory,
+} = require("./models/models");
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -74,11 +85,9 @@ const authenticateToken = (request, response, next) => {
 };
 
 initializeDB();
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-const beansToDiamondsRate = 0.5;
 
 app.post("/upload", (req, res, next) => {
   const uuid = uuidv4();
@@ -235,15 +244,32 @@ app.get("/api/comments", postsController.getsCommentsOfPost);
 
 app.get("/api/agency", gamesController.getAgencyDataOfUser);
 
-app.post("/api/spinner-betting", gamesController.storeBettingInfo);
+app.post("/api/spinner-betting", async (req, res) => {
+  const { userId, wheelNo, amount } = req.body;
+  var userExists = bettingInfoArray.some((item) => item.userId === userId);
 
-app.post("/api/spinner-result", gamesController.getBettingResults);
+  if (!userExists) bettingGameparticipants += 1;
+  bettingInfoArray.push({ userId, wheelNo, amount });
+  await User.updateOne(
+    { userId: userId },
+    { $inc: { diamondsCount: -1 * amount } }
+  );
+  res.send("betted successfully");
+});
+
+app.post("/api/top3-winner", gamesController.getBettingResults);
+
+app.get("/api/all-history", gamesController.getSpinnerHistory);
 
 app.get("/api/agency/all", gamesController.getAllAgencies);
 
 app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
 app.post("/api/agency/collect", gamesController.collectBeans);
+
+app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory);
+// app.post("/api/top-3-winners",gamesController.getTop3winners)
+app.get("/api/top-winner", gamesController.getTopWinners);
 
 app.get("/api/bd/all", bdRoutes.getAllBD);
 app.get("/api/bd", bdRoutes.getBD);
@@ -254,6 +280,146 @@ app.put("/api/bd/add-beans", bdRoutes.addBeans);
 app.post("/api/bd/agency", bdRoutes.addAgency);
 app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
 
-
 // exports.bettingInfoArray = bettingInfoArray;
-// exports.bettingWheelValues = bettingWheelValues;
+io.on("connection", (socket) => {
+  socket.on("game-started", () => {});
+  socket.on("betting-ends", async () => {
+    bettingGameparticipants = 0;
+    const totalbettAmount = bettingInfoArray.reduce(
+      (sum, item) => sum + item.amount,
+      0
+    );
+    const amountToconsider = totalbettAmount * 0.9;
+    const transformedData = bettingInfoArray.reduce((result, current) => {
+      // Find the existing entry for the current wheelNo
+      const existingEntry = result.findIndex(
+        (entry) => entry.wheelNo === current.wheelNo
+      );
+
+      if (existingEntry !== -1) {
+        // If the entry exists, update the userids and total amount
+        if (!result[existingEntry].userids.includes(current.userId)) {
+          result[existingEntry].userids.push(current.userId);
+        }
+        result[existingEntry].totalAmount += current.amount;
+      } else {
+        // If the entry doesn't exist, create a new one
+        result.push({
+          userids: [current.userId],
+          wheelNo: current.wheelNo,
+          totalAmount: current.amount,
+        });
+      }
+
+      return result;
+    }, []);
+    const newtransformedData = transformedData.map((data, index) => ({
+      userids: data.userids,
+      wheelNo: data.wheelNo,
+      totalAmount: data.totalAmount,
+      betreturnvalue: bettingWheelValues[index] * data.totalAmount,
+    }));
+
+    newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
+
+    let nearestEntry;
+    let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
+
+    let i = 1;
+    while (minDifference < 0 && i <= newtransformedData.length - 1) {
+      minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
+      nearestEntry = newtransformedData[i];
+    }
+
+    const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
+    bettingInfoArray.forEach(async (betItem) => {
+      if (
+        betItem.userId in nearestEntry.userids &&
+        betItem.wheelNo === nearestEntry.wheelNo
+      ) {
+        await SpinnerGameWinnerHistory.create(
+          { userId: betItem.userId },
+          {
+            diamondsEarned: betItem.amount * multiplyvalue,
+            wheelNo: betItem.wheelNo,
+          }
+        );
+        await User.updateOne(
+          { userId: betItem.userId },
+          { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
+        );
+      }
+    });
+
+    await bettingGameData.create({
+      participants: bettingGameparticipants,
+      winners: nearestEntry.userids.length,
+    });
+    const betInfoFiltered = bettingInfoArray.filter(
+      (item) =>
+        item.wheelNo === nearestEntry.wheelNo &&
+        nearestEntry.userids.includes(item.userId)
+    );
+    var resultArray = betInfoFiltered.reduce((acc, current) => {
+      var existingUser = acc.findIndex(
+        (item) => item.userId === current.userId
+      );
+
+      if (existingUser !== -1) {
+        acc[existingUser].amount += current.amount * multiplyvalue;
+      } else {
+        acc.push({
+          userId: current.userId,
+          wheelNo: current.wheelNo,
+          amount: current.amount * multiplyvalue,
+        });
+      }
+
+      return acc;
+    }, []);
+    resultArray.sort((a, b) => b.amount - a.amount);
+
+    let top3Entries = resultArray.slice(0, 3);
+    top3Entries = top3Entries.map((item) => ({
+      userId: item.userId,
+      winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
+    }));
+    await Top3Winners.insertMany(top3Entries);
+  
+    let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
+      var existingUserIndex = acc.findIndex(
+        (item) => item.userId === current.userId
+      );
+      if (current.wheelNo !== nearestEntry.wheelNo) {
+        if (existingUserIndex !== -1) {
+          acc[existingUserIndex].amount += current.amount;
+        } else {
+          acc.push({
+            userId: current.userId,
+            amount: current.amount,
+          });
+        }
+      }
+
+      return acc;
+    }, []);
+    UserBetAmount.forEach(
+      SpinnerGameWinnerHistory.findOneAndUpdate(
+        {
+          userId: UserBetAmount.userId,
+        },
+        {
+          $inc: { diamondsSpent: UserBetAmount.amount },
+        },
+        {
+          upsert: true,
+        }
+      )
+    );
+ 
+  });
+  socket.on("game-ends",async ()=>{
+    bettingInfoArray = [];
+    await Top3Winners.delete({});
+  })
+});

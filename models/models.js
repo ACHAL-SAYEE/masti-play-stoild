@@ -149,9 +149,23 @@ const monthlyAgencyHistorySchema = new mongoose.Schema({
   agencyId: String,
 });
 
-const SpinnerGameWinnerHistorySchema = new mongoose.Schema({
-  userId: String,
-  diamondsEarned: { type: Number, default: 0 },
+const SpinnerGameWinnerHistorySchema = new mongoose.Schema(
+  {
+    wheelNo: Number,
+    userId: String,
+    diamondsEarned: { type: Number, default: 0 },
+    diamondsSpent: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+
+const bettingGameDataSchema = new mongoose.Schema(
+  { participants: Number, winners: Number },
+  { timestamps: true }
+);
+
+const Top3WinnersSchema = new mongoose.Schema({
+  Winners: Array,
 });
 
 const SpinnerGameWinnerHistory = mongoose.model(
@@ -174,7 +188,11 @@ const User = mongoose.model("User", userSchema);
 const Post = mongoose.model("Post", postSchema);
 const Comment = mongoose.model("Comment", CommentSchema);
 const Agent = mongoose.model("Agent", agentSchema);
-
+const Top3Winners = mongoose.model("Top3Winners", Top3WinnersSchema);
+const bettingGameData = mongoose.model(
+  "bettingGameData",
+  bettingGameDataSchema
+);
 const AgencyOwnership = mongoose.model(
   "AgencyOwnership",
   AgencyOwnershipSchema
@@ -199,3 +217,5 @@ exports.AgencyData = AgencyData;
 exports.monthlyAgentHistory = monthlyAgentHistory;
 exports.monthlyAgencyHistory = monthlyAgencyHistory;
 exports.SpinnerGameWinnerHistory = SpinnerGameWinnerHistory;
+exports.bettingGameData = bettingGameData;
+exports.Top3Winners = Top3Winners;
