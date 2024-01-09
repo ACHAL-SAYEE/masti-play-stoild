@@ -7,14 +7,12 @@ const {
   monthlyAgentHistory,
   monthlyAgencyHistory,
   SpinnerGameWinnerHistory,
+  bettingGameData,
+  Top3Winners,
 } = require("../models/models");
-
-const beansToDiamondsRate = 1;
 
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 const { generateUniqueId, generateUserId } = require("../utils");
-const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
-let bettingInfoArray = [];
 
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
@@ -638,82 +636,11 @@ class games {
     }
   }
 
-  async storeBettingInfo(req, res) {
-    const { userId, wheelNo, amount } = req.body;
-    bettingInfoArray.push({ userId, wheelNo, amount });
-    await User.updateOne(
-      { userId: userId },
-      { $inc: { diamondsCount: -1 * amount } }
-    );
-    res.send("betted successfully");
-  }
-
   async getBettingResults(req, res) {
-    const totalbettAmount = bettingInfoArray.reduce(
-      (sum, item) => sum + item.amount,
-      0
-    );
-    const amountToconsider = totalbettAmount * 0.9;
-    const transformedData = bettingInfoArray.reduce((result, current) => {
-      // Find the existing entry for the current wheelNo
-      const existingEntry = result.find(
-        (entry) => entry.wheelNo === current.wheelNo
-      );
-
-      if (existingEntry) {
-        // If the entry exists, update the userids and total amount
-        if (!existingEntry.userids.includes(current.userId)) {
-          existingEntry.userids.push(current.userId);
-        }
-        existingEntry.totalAmount += current.amount;
-      } else {
-        // If the entry doesn't exist, create a new one
-        result.push({
-          userids: [current.userId],
-          wheelNo: current.wheelNo,
-          totalAmount: current.amount,
-        });
-      }
-
-      return result;
-    }, []);
-    const newtransformedData = transformedData.map((data, index) => ({
-      userids: data.userids,
-      wheelNo: data.wheelNo,
-      totalAmount: data.totalAmount,
-      betreturnvalue: bettingWheelValues[index] * data.totalAmount,
-    }));
-
-    newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-
-    let nearestEntry;
-    let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
-
-    let i = 1;
-    while (minDifference < 0 && i <= newtransformedData.length - 1) {
-      minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
-      nearestEntry = newtransformedData[i];
-    }
-
-    const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
-    bettingInfoArray.forEach((betItem) => {
-      if (
-        betItem.userId in nearestEntry.userids &&
-        betItem.wheelNo === nearestEntry.wheelNo
-      ) {
-        SpinnerGameWinnerHistory.findOneAndUpdate(
-          { userId: betItem.userId },
-          { $inc: { diamondsEarned: betItem.amount * multiplyvalue } },
-          { upsert: true }
-        );
-        User.updateOne(
-          { userId: betItem.userId },
-          { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
-        );
-      }
+    const Top3Winnersinfo = await Top3Winners.find({});
+    res.send({
+      Top3Winnersinfo,
     });
-    res.send({ winners: nearestEntry.userids, wheelNo: nearestEntry.wheelNo });
-    bettingInfoArray = [];
   }
 
   async getAgencyParticipants(req, res) {
@@ -761,6 +688,44 @@ class games {
         { $inc: { beansCount: agencyData.beansCount } }
       );
       res.send("collected successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async getSpinnerHistory(req, res) {
+    try {
+      res.send(await bettingGameData.find({}));
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
+  async getUserAllBettingHistory(req, res) {
+    const { userId } = req.query;
+    try {
+      const bettingHistory = await SpinnerGameWinnerHistory.find({
+        userId,
+      });
+      res.send(bettingHistory);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+  async getTopWinners(req, res) {
+    try {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const todayEnd = new Date();
+      todayEnd.setHours(23, 59, 59, 999);
+      const TopWinners = await SpinnerGameWinnerHistory.find({
+        createdAt: { $gte: todayStart, $lt: todayEnd },
+      });
+      res.send(TopWinners);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
