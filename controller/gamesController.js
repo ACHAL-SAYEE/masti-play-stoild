@@ -6,6 +6,7 @@ const {
   AgencyData,
   monthlyAgentHistory,
   monthlyAgencyHistory,
+  SpinnerGameWinnerHistory,
 } = require("../models/models");
 
 const beansToDiamondsRate = 1;
@@ -700,13 +701,18 @@ class games {
         betItem.userId in nearestEntry.userids &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
+        SpinnerGameWinnerHistory.findOneAndUpdate(
+          { userId: betItem.userId },
+          { $inc: { diamondsEarned: betItem.amount * multiplyvalue } },
+          { upsert: true }
+        );
         User.updateOne(
           { userId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
         );
       }
     });
-    res.send({ winners: nearestEntry.userids });
+    res.send({ winners: nearestEntry.userids, wheelNo: nearestEntry.wheelNo });
     bettingInfoArray = [];
   }
 
@@ -754,7 +760,7 @@ class games {
         { userId: agencyData.ownerId },
         { $inc: { beansCount: agencyData.beansCount } }
       );
-      res.send("collected successfully")
+      res.send("collected successfully");
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");

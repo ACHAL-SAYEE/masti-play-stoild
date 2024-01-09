@@ -149,6 +149,15 @@ const monthlyAgencyHistorySchema = new mongoose.Schema({
   agencyId: String,
 });
 
+const SpinnerGameWinnerHistorySchema = new mongoose.Schema({
+  userId: String,
+  diamondsEarned: { type: Number, default: 0 },
+});
+
+const SpinnerGameWinnerHistory = mongoose.model(
+  "SpinnerGameWinnerHistory",
+  SpinnerGameWinnerHistorySchema
+);
 const monthlyAgencyHistory = mongoose.model(
   "monthlyAgencyHistory",
   monthlyAgencyHistorySchema
@@ -189,3 +198,4 @@ exports.AgencyOwnership = AgencyOwnership;
 exports.AgencyData = AgencyData;
 exports.monthlyAgentHistory = monthlyAgentHistory;
 exports.monthlyAgencyHistory = monthlyAgencyHistory;
+exports.SpinnerGameWinnerHistory = SpinnerGameWinnerHistory;
