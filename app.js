@@ -14,7 +14,7 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 const server = http.createServer(app);
-const  io = socketIO(server);
+const io = socketIO(server);
 const path = require("path");
 const cron = require('node-cron');
 const { generateUniqueId, generateUserId } = require("./utils");
@@ -283,16 +283,16 @@ app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
 
 async function gameStarts(socket) {
   console.log("Game Started");
-  // socket.emit("game-started", {
-  //   gameName: "Happy Zoo",
-  // });
+  socket.emit("game-started", {
+    gameName: "Happy Zoo",
+  });
 }
 
 async function gameEnds(socket) {
   console.log("Game Ends");
-  // socket.emit("game-ended", {
-  //   gameName: "Happy Zoo",
-  // });
+  socket.emit("game-ended", {
+    gameName: "Happy Zoo",
+  });
   bettingInfoArray = [];
   await Top3Winners.delete({});
 }
