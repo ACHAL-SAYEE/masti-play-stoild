@@ -367,7 +367,7 @@ async function bettingEnds() {
     bettingEndTime: new Date(),
     totalBet: totalBet,
     totalPlayers: bettingGameparticipants,
-    result: 2,
+    result: result,
   });
   sendGameUpdate("betting-ended");
 }
@@ -433,25 +433,24 @@ async function endBetting() {
       minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
     }
 
-    console.log("nearestEntry", nearestEntry)
     let i = 1;
     newtransformedData = ensureWheelNumbers(newtransformedData);
 
     while (minDifference < 0 && i <= newtransformedData.length - 1) {
       minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
       nearestEntry = newtransformedData[i];
+      i++;
     }
-    // totalBet: null,
-    // totalPlayers: null,
-    // result: null,
+    console.log("nearestEntry", nearestEntry)
     //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
-    let multiplyvalue
+    let multiplyvalue = 0;
     if (nearestEntry !== undefined) {
       multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
     }
     bettingInfoArray.forEach(async (betItem) => {
+      console.log("betItem:", betItem);
       if (
-        betItem.userId in nearestEntry.userids &&
+        nearestEntry.userids.includes(betItem.userId) &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
         await SpinnerGameWinnerHistory.create(
@@ -461,6 +460,7 @@ async function endBetting() {
             wheelNo: betItem.wheelNo,
           }
         );
+        console.log("Updating wallet", betItem.amount * multiplyvalue);
         await User.updateOne(
           { userId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
@@ -519,14 +519,14 @@ async function endBetting() {
 
         return acc;
       }, []);
-      UserBetAmount.forEach((item)=>{
+      UserBetAmount.forEach((item) => {
         SpinnerGameWinnerHistory.findOneAndUpdate(
           { userId: item.userId },
           { $inc: { diamondsSpent: item.amount } },
           { upsert: true }
         )
       }
-     
+
       );
     }
     return {
@@ -541,8 +541,16 @@ async function endBetting() {
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
   console.log(`some user with id ${socket.id} connected`);
-  socket.on("get-status", () => {
-    sendGameUpdate("game-status");
+  socket.on("get-status", async (data) => {
+    const userId = data.userId;
+    if (userId != null) {
+      const user = await User.findOne({ userId: userId });
+      sendGameUpdate("game-status", socket, {
+        'diamonds': user.diamonds
+      });
+    } else {
+      sendGameUpdate("game-status");
+    }
   });
   socket.on("join-game", (data) => {
     const userId = data.userId;
@@ -563,33 +571,27 @@ io.on("connection", (socket) => {
 
     if (!userExists) bettingGameparticipants += 1;
 
- const updatedUser = await User.findOneAndUpdate(
-  { userId: userId, diamondsCount: { $gte: amount } }, 
-  { $inc: { diamondsCount: -1 * amount } },
-  { new: true }
-);
+    const updatedUser = await User.findOneAndUpdate(
+      { userId: userId, diamondsCount: { $gte: amount } },
+      { $inc: { diamondsCount: -1 * amount } },
+      { new: true }
+    );
 
-if (!updatedUser) {
-  // sendGameUpdate("bet-status");
-  sendGameUpdate("bet-status", socket, {
-    'diamonds': updatedUser.diamondsCount,
-    status:"rejected"  
-});
-
-} else {
-  bettingInfoArray.push({ userId, wheelNo, amount });
-
-  console.log(
-    `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
-  );
-  // sendGameUpdate("bet-status");
-  sendGameUpdate("bet-status", socket, {
-    'diamonds': updatedUser.diamondsCount, 
-    status:"accepted"
-});
-}
-
-  
+    if (!updatedUser) {
+      sendGameUpdate("bet-status", socket, {
+        'diamonds': updatedUser.diamondsCount,
+        status: "rejected"
+      });
+    } else {
+      bettingInfoArray.push({ userId, wheelNo, amount });
+      console.log(
+        `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
+      );
+      sendGameUpdate("bet-status", socket, {
+        'diamonds': updatedUser.diamondsCount,
+        status: "accepted"
+      });
+    }
   });
   // TODO: an event for checking the leaderboard
 });
