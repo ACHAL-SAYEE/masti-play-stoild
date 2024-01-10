@@ -529,9 +529,6 @@ async function endBetting() {
      
       );
     }
-
-
-
     return {
       totalBet: totalbettAmount,
       result: nearestEntry !== undefined ? nearestEntry.wheelNo : null
