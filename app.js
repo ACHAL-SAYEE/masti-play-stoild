@@ -302,7 +302,7 @@ async function gameEnds() {
 }
 
 async function bettingEnds() {
-  bettingOn = false;
+  
   bettingGameparticipants = 0;
   const totalbettAmount = bettingInfoArray.reduce(
     (sum, item) => sum + item.amount,
