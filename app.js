@@ -353,11 +353,12 @@ async function gameStarts() {
 
 async function bettingEnds() {
   const { totalBet, result } = await endBetting();
+  console.log(`result: ${result}`);
   updateGameProperties({
     bettingEndTime: new Date(),
     totalBet: totalBet,
     totalPlayers: bettingGameparticipants,
-    result: result,
+    result: 2,
   });
   sendGameUpdate("betting-ended");
 }
@@ -371,162 +372,162 @@ async function gameEnds() {
 }
 
 async function endBetting() {
-  console.log("bettingInfoArray",bettingInfoArray)
-  if(bettingInfoArray.length===0){
+  console.log("bettingInfoArray", bettingInfoArray)
+  if (bettingInfoArray.length === 0) {
     return {
       totalBet: 0,
-      result: Math.floor(Math.random() * 8 ) + 1
+      result: Math.floor(Math.random() * 8) + 1
     }
   }
-  else{const totalbettAmount = bettingInfoArray.reduce(
-    (sum, item) => sum + item.amount,
-    0
-  );
-  const amountToconsider = totalbettAmount * 0.9;
-  const transformedData = bettingInfoArray.reduce((result, current) => {
-    // Find the existing entry for the current wheelNo
-    const existingEntry = result.findIndex(
-      (entry) => entry.wheelNo === current.wheelNo
+  else {
+    const totalbettAmount = bettingInfoArray.reduce(
+      (sum, item) => sum + item.amount,
+      0
     );
+    const amountToconsider = totalbettAmount * 0.9;
+    const transformedData = bettingInfoArray.reduce((result, current) => {
+      // Find the existing entry for the current wheelNo
+      const existingEntry = result.findIndex(
+        (entry) => entry.wheelNo === current.wheelNo
+      );
 
-    if (existingEntry !== -1) {
-      // If the entry exists, update the userids and total amount
-      if (!result[existingEntry].userids.includes(current.userId)) {
-        result[existingEntry].userids.push(current.userId);
-      }
-      result[existingEntry].totalAmount += current.amount;
-    } else {
-      // If the entry doesn't exist, create a new one
-      result.push({
-        userids: [current.userId],
-        wheelNo: current.wheelNo,
-        totalAmount: current.amount,
-      });
-    }
-
-    return result;
-  }, []);
-  console.log("transformedData",transformedData)
-  let newtransformedData = transformedData.map((data, index) => ({
-    userids: data.userids,
-    wheelNo: data.wheelNo,
-    totalAmount: data.totalAmount,
-    betreturnvalue: bettingWheelValues[index] * data.totalAmount,
-  }));
-
-  newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-console.log("newtransformedData",newtransformedData)
-  let nearestEntry;
-  let minDifference 
-  if(newtransformedData.length>0){
-    nearestEntry = newtransformedData[0];
-    minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
-  }
-
-console.log("nearestEntry",nearestEntry)
-  let i = 1;
-   newtransformedData = ensureWheelNumbers(newtransformedData);
-
-  while (minDifference < 0 && i <= newtransformedData.length - 1) {
-    minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
-    nearestEntry = newtransformedData[i];
-  }
-  // totalBet: null,
-  // totalPlayers: null,
-  // result: null,
-  //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
-  let  multiplyvalue
-  if(nearestEntry!==undefined){  
-    multiplyvalue= bettingWheelValues[nearestEntry.wheelNo - 1];
-  }
-  bettingInfoArray.forEach(async (betItem) => {
-    if (
-      betItem.userId in nearestEntry.userids &&
-      betItem.wheelNo === nearestEntry.wheelNo
-    ) {
-      await SpinnerGameWinnerHistory.create(
-        { userId: betItem.userId },
-        {
-          diamondsEarned: betItem.amount * multiplyvalue,
-          wheelNo: betItem.wheelNo,
+      if (existingEntry !== -1) {
+        // If the entry exists, update the userids and total amount
+        if (!result[existingEntry].userids.includes(current.userId)) {
+          result[existingEntry].userids.push(current.userId);
         }
-      );
-      await User.updateOne(
-        { userId: betItem.userId },
-        { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
-      );
-    }
-  });
-  let resultArray,betInfoFiltered;
-if(nearestEntry!==undefined){
-  await bettingGameData.create({
-    participants: bettingGameparticipants,
-    winners: nearestEntry.userids.length,
-  });
-   betInfoFiltered = bettingInfoArray.filter(
-    (item) =>
-      item.wheelNo === nearestEntry.wheelNo &&
-      nearestEntry.userids.includes(item.userId)
-  );
-   resultArray = betInfoFiltered.reduce((acc, current) => {
-    var existingUser = acc.findIndex((item) => item.userId === current.userId);
-
-    if (existingUser !== -1) {
-      acc[existingUser].amount += current.amount * multiplyvalue;
-    } else {
-      acc.push({
-        userId: current.userId,
-        wheelNo: current.wheelNo,
-        amount: current.amount * multiplyvalue,
-      });
-    }
-
-    return acc;
-  }, []);
-  resultArray.sort((a, b) => b.amount - a.amount);
-
-  let top3Entries = resultArray.slice(0, 3);
-  top3Entries = top3Entries.map((item) => ({
-    userId: item.userId,
-    winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
-  }));
-  await Top3Winners.insertMany(top3Entries);
-
-  let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
-    var existingUserIndex = acc.findIndex(
-      (item) => item.userId === current.userId
-    );
-    if (current.wheelNo !== nearestEntry.wheelNo) {
-      if (existingUserIndex !== -1) {
-        acc[existingUserIndex].amount += current.amount;
+        result[existingEntry].totalAmount += current.amount;
       } else {
-        acc.push({
-          userId: current.userId,
-          amount: current.amount,
+        // If the entry doesn't exist, create a new one
+        result.push({
+          userids: [current.userId],
+          wheelNo: current.wheelNo,
+          totalAmount: current.amount,
         });
       }
+
+      return result;
+    }, []);
+    console.log("transformedData", transformedData)
+    let newtransformedData = transformedData.map((data, index) => ({
+      userids: data.userids,
+      wheelNo: data.wheelNo,
+      totalAmount: data.totalAmount,
+      betreturnvalue: bettingWheelValues[index] * data.totalAmount,
+    }));
+
+    newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
+    console.log(newtransformedData)
+    let nearestEntry;
+    let minDifference
+    if (newtransformedData.length > 0) {
+      minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
     }
 
-    return acc;
-  }, []);
-  console.log("UserBetAmount",UserBetAmount)
-  UserBetAmount.forEach((item)=>{
-    SpinnerGameWinnerHistory.findOneAndUpdate(
-      { userId: item.userId },
-      { $inc: { diamondsSpent: item.amount } },
-      { upsert: true }
-    )
-  }
-    
-  );
-}
-  return {
-    totalBet: totalbettAmount,
-    result: nearestEntry!==undefined ?nearestEntry.wheelNo:null
-  };
+    console.log("nearestEntry", nearestEntry)
+    let i = 1;
+    newtransformedData = ensureWheelNumbers(newtransformedData);
+
+    while (minDifference < 0 && i <= newtransformedData.length - 1) {
+      minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
+      nearestEntry = newtransformedData[i];
+    }
+    // totalBet: null,
+    // totalPlayers: null,
+    // result: null,
+    //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
+    let multiplyvalue
+    if (nearestEntry !== undefined) {
+      multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
+    }
+    bettingInfoArray.forEach(async (betItem) => {
+      if (
+        betItem.userId in nearestEntry.userids &&
+        betItem.wheelNo === nearestEntry.wheelNo
+      ) {
+        await SpinnerGameWinnerHistory.create(
+          { userId: betItem.userId },
+          {
+            diamondsEarned: betItem.amount * multiplyvalue,
+            wheelNo: betItem.wheelNo,
+          }
+        );
+        await User.updateOne(
+          { userId: betItem.userId },
+          { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
+        );
+      }
+    });
+    let resultArray, betInfoFiltered;
+    if (nearestEntry !== undefined) {
+      await bettingGameData.create({
+        participants: bettingGameparticipants,
+        winners: nearestEntry.userids.length,
+      });
+      betInfoFiltered = bettingInfoArray.filter(
+        (item) =>
+          item.wheelNo === nearestEntry.wheelNo &&
+          nearestEntry.userids.includes(item.userId)
+      );
+      resultArray = betInfoFiltered.reduce((acc, current) => {
+        var existingUser = acc.findIndex((item) => item.userId === current.userId);
+
+        if (existingUser !== -1) {
+          acc[existingUser].amount += current.amount * multiplyvalue;
+        } else {
+          acc.push({
+            userId: current.userId,
+            wheelNo: current.wheelNo,
+            amount: current.amount * multiplyvalue,
+          });
+        }
+
+        return acc;
+      }, []);
+      resultArray.sort((a, b) => b.amount - a.amount);
+
+      let top3Entries = resultArray.slice(0, 3);
+      top3Entries = top3Entries.map((item) => ({
+        userId: item.userId,
+        winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
+      }));
+      await Top3Winners.insertMany(top3Entries);
+
+      let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
+        var existingUserIndex = acc.findIndex(
+          (item) => item.userId === current.userId
+        );
+        if (current.wheelNo !== nearestEntry.wheelNo) {
+          if (existingUserIndex !== -1) {
+            acc[existingUserIndex].amount += current.amount;
+          } else {
+            acc.push({
+              userId: current.userId,
+              amount: current.amount,
+            });
+          }
+        }
+
+        return acc;
+      }, []);
+      UserBetAmount.forEach(
+        SpinnerGameWinnerHistory.findOneAndUpdate(
+          { userId: UserBetAmount.userId },
+          { $inc: { diamondsSpent: UserBetAmount.amount } },
+          { upsert: true }
+        )
+      );
+    }
+
+
+
+    return {
+      totalBet: totalbettAmount,
+      result: nearestEntry !== undefined ? nearestEntry.wheelNo : null
+    };
 
   }
-  
+
 }
 
 // exports.bettingInfoArray = bettingInfoArray;
