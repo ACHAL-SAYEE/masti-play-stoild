@@ -281,16 +281,20 @@ app.put("/api/bd/add-beans", bdRoutes.addBeans);
 app.post("/api/bd/agency", bdRoutes.addAgency);
 app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
 
-async function gameStarts(socket) {
+let isGameStarted = false
+async function gameStarts() {
+  isGameStarted = true
+  bettingOn = true;
   console.log("Game Started");
-  socket.emit("game-started", {
+  io.emit("game-started", {
     gameName: "Happy Zoo",
   });
 }
 
-async function gameEnds(socket) {
+async function gameEnds() {
+  isGameStarted = false
   console.log("Game Ends");
-  socket.emit("game-ended", {
+  io.emit("game-ended", {
     gameName: "Happy Zoo",
   });
   bettingInfoArray = [];
@@ -298,6 +302,7 @@ async function gameEnds(socket) {
 }
 
 async function bettingEnds() {
+  bettingOn = false;
   bettingGameparticipants = 0;
   const totalbettAmount = bettingInfoArray.reduce(
     (sum, item) => sum + item.amount,
@@ -434,6 +439,12 @@ async function bettingEnds() {
 
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
+  socket.on("status", () => {
+    socket.emit("current-status", {
+      gameStartTime: gameStartTime,
+      bettingOn: bettingOn,
+    });
+  });
   socket.on("game-started", () => {
     gameStarts(socket);
   });
@@ -450,9 +461,13 @@ io.on("connection", (socket) => {
 // 10 sec - spin time
 // 10 sec - leaderboard show time
 // 10 sec - new game start time
+var gameStartTime = new Date();
+var bettingOn = false;
 
 async function startANewGame() {
+  gameStartTime = new Date();
   try {
+
     setTimeout(gameStarts, 0, io);  // Betting Starts
     setTimeout(bettingEnds, 30000); // Betting Ends & send result
     setTimeout(gameEnds, 50000, (io));  // 10 sec spinner + 10 sec leaderboard
