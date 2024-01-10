@@ -338,7 +338,13 @@ async function gameEnds() {
 
 async function endBetting() {
   console.log(bettingInfoArray)
-  const totalbettAmount = bettingInfoArray.reduce(
+  if(bettingInfoArray.length===0){
+    return {
+      totalBet: 0,
+      result:null
+    }
+  }
+  else{const totalbettAmount = bettingInfoArray.reduce(
     (sum, item) => sum + item.amount,
     0
   );
@@ -480,6 +486,9 @@ if(nearestEntry!==undefined){
     totalBet: totalbettAmount,
     result: nearestEntry!==undefined ?nearestEntry.wheelNo:null
   };
+
+  }
+  
 }
 
 // exports.bettingInfoArray = bettingInfoArray;
