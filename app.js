@@ -48,6 +48,7 @@ const {
   bettingGameData,
   SpinnerGameWinnerHistory,
 } = require("./models/models");
+const { send } = require("process");
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -337,12 +338,20 @@ function updateGameProperties(data) {
   if (data.gameName) gameProperties.gameName = data.gameName;
 }
 
-function sendGameUpdate(event) {
+function sendGameUpdate(event, socket = null, data = null) {
   console.log(
     `Sending Game Update: ${event} | gameProperties:`,
     gameProperties
   );
-  io.emit(event, gameProperties);
+  var sendData = {
+    ...gameProperties,
+    ...(data ? data : {}),
+  };
+  if (socket) {
+    socket.emit(event, sendData);
+  } else {
+    io.emit(event, sendData);
+  }
 }
 
 async function gameStarts() {
@@ -562,7 +571,9 @@ io.on("connection", (socket) => {
     console.log(
       `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
     );
-    sendGameUpdate("bet-status");
+    sendGameUpdate("bet-status", socket, {
+      'diamonds': 0,  // ACHAL
+    });
   });
   // TODO: an event for checking the leaderboard
 });
