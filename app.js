@@ -16,7 +16,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 const path = require("path");
-const cron = require('node-cron');
+const cron = require("node-cron");
 const { generateUniqueId, generateUserId } = require("./utils");
 const initializeDB = require("./InitialiseDb/index");
 app.use(express.urlencoded({ extended: false }));
@@ -255,7 +255,7 @@ app.post("/api/spinner-betting", async (req, res) => {
     { userId: userId },
     { $inc: { diamondsCount: -1 * amount } }
   );
-  res.send("betted successfully");
+  // res.send("betted successfully");
 });
 
 app.post("/api/top3-winner", gamesController.getBettingResults);
@@ -288,9 +288,9 @@ var gameProperties = {
   totalBet: null,
   totalPlayers: null,
   result: null,
-  myBet: null,
+  // myBet: null,
   gameName: null,
-}
+};
 
 function updateGameProperties(data) {
   if (data.gameStartTime) gameProperties.gameStartTime = data.gameStartTime;
@@ -304,7 +304,10 @@ function updateGameProperties(data) {
 }
 
 function sendGameUpdate(event) {
-  console.log(`Sending Game Update: ${event} | gameProperties:`, gameProperties);
+  console.log(
+    `Sending Game Update: ${event} | gameProperties:`,
+    gameProperties
+  );
   io.emit(event, gameProperties);
 }
 
@@ -315,27 +318,25 @@ async function gameStarts() {
 }
 
 async function bettingEnds() {
+  const { totalBet, result } = await endBetting();
   updateGameProperties({
     bettingEndTime: new Date(),
-    totalBet: bettingInfoArray.reduce((sum, item) => sum + item.amount, 0),
+    totalBet: totalBet,
     totalPlayers: bettingGameparticipants,
+    result: result,
   });
-  // TODO: get the result here and send it to the users
-  // whenBettingEnds();
   sendGameUpdate("betting-ended");
 }
-
 
 async function gameEnds() {
   updateGameProperties({ gameEndTime: new Date() });
   sendGameUpdate("game-ended");
-  // bettingInfoArray = [];
-  // await Top3Winners.delete({});
+  bettingInfoArray = [];
+  await Top3Winners.delete({});
+  bettingGameparticipants = 0;
 }
 
-async function whenBettingEnds() {
-  bettingOn = false;
-  bettingGameparticipants = 0;
+async function endBetting() {
   const totalbettAmount = bettingInfoArray.reduce(
     (sum, item) => sum + item.amount,
     0
@@ -381,7 +382,10 @@ async function whenBettingEnds() {
     minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
     nearestEntry = newtransformedData[i];
   }
-
+  // totalBet: null,
+  // totalPlayers: null,
+  // result: null,
+  //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
   const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
   bettingInfoArray.forEach(async (betItem) => {
     if (
@@ -412,9 +416,7 @@ async function whenBettingEnds() {
       nearestEntry.userids.includes(item.userId)
   );
   var resultArray = betInfoFiltered.reduce((acc, current) => {
-    var existingUser = acc.findIndex(
-      (item) => item.userId === current.userId
-    );
+    var existingUser = acc.findIndex((item) => item.userId === current.userId);
 
     if (existingUser !== -1) {
       acc[existingUser].amount += current.amount * multiplyvalue;
@@ -456,17 +458,15 @@ async function whenBettingEnds() {
   }, []);
   UserBetAmount.forEach(
     SpinnerGameWinnerHistory.findOneAndUpdate(
-      {
-        userId: UserBetAmount.userId,
-      },
-      {
-        $inc: { diamondsSpent: UserBetAmount.amount },
-      },
-      {
-        upsert: true,
-      }
+      { userId: UserBetAmount.userId },
+      { $inc: { diamondsSpent: UserBetAmount.amount } },
+      { upsert: true }
     )
   );
+  return {
+    totalBet: totalbettAmount,
+    result: nearestEntry.wheelNo,
+  };
 }
 
 // exports.bettingInfoArray = bettingInfoArray;
@@ -481,7 +481,7 @@ io.on("connection", (socket) => {
     console.log(`${userId} wants to join the game ${gameName}`);
     sendGameUpdate("game-status");
   });
-  socket.on("bet", (data) => {
+  socket.on("bet", async (data) => {
     if (gameProperties.bettingEndTime) {
       console.log("Betting has already ended. Can't bet");
       return;
@@ -490,7 +490,17 @@ io.on("connection", (socket) => {
     const gameName = data.gameName;
     const wheelNo = data.wheelNo;
     const amount = data.amount;
-    console.log(`${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`);
+    var userExists = bettingInfoArray.some((item) => item.userId === userId);
+
+    if (!userExists) bettingGameparticipants += 1;
+    bettingInfoArray.push({ userId, wheelNo, amount });
+    await User.updateOne(
+      { userId: userId },
+      { $inc: { diamondsCount: -1 * amount } }
+    );
+    console.log(
+      `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
+    );
     sendGameUpdate("bet-status");
   });
   // TODO: an event for checking the leaderboard
@@ -498,9 +508,9 @@ io.on("connection", (socket) => {
 
 async function startANewGame() {
   try {
-    setTimeout(gameStarts, 0, io);  // Betting Starts
+    setTimeout(gameStarts, 0, io); // Betting Starts
     setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    setTimeout(gameEnds, 50000, (io));  // 10 sec spinner + 10 sec leaderboard
+    setTimeout(gameEnds, 50000, io); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
