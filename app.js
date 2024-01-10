@@ -298,6 +298,7 @@ async function gameEnds(socket) {
 }
 
 async function bettingEnds() {
+  
   bettingGameparticipants = 0;
   const totalbettAmount = bettingInfoArray.reduce(
     (sum, item) => sum + item.amount,
