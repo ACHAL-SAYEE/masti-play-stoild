@@ -471,14 +471,15 @@ async function whenBettingEnds() {
 
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
-  socket.on("status", () => {
-    socket.emit("current-status", {
-      gameStartTime: gameStartTime,
-      bettingOn: bettingOn,
-    });
+  console.log(`some user with id ${socket.id} connected`);
+  socket.on("get-status", () => {
+    sendGameUpdate("game-status");
   });
-  socket.on("game-started", () => {
-    gameStarts(socket);
+  socket.on("join-game", (data) => {
+    const userId = data.userId;
+    const gameName = data.gameName;
+    console.log(`${userId} wants to join the game ${gameName}`);
+    sendGameUpdate("game-status");
   });
   socket.on("bet", (data) => {
     if (gameProperties.bettingEndTime) {
