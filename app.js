@@ -519,12 +519,14 @@ async function endBetting() {
 
         return acc;
       }, []);
-      UserBetAmount.forEach(
+      UserBetAmount.forEach((item)=>{
         SpinnerGameWinnerHistory.findOneAndUpdate(
-          { userId: UserBetAmount.userId },
-          { $inc: { diamondsSpent: UserBetAmount.amount } },
+          { userId: item.userId },
+          { $inc: { diamondsSpent: item.amount } },
           { upsert: true }
         )
+      }
+     
       );
     }
 
