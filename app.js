@@ -293,8 +293,8 @@ async function gameEnds(socket) {
   // socket.emit("game-ended", {
   //   gameName: "Happy Zoo",
   // });
-  // bettingInfoArray = [];
-  // await Top3Winners.delete({});
+  bettingInfoArray = [];
+  await Top3Winners.delete({});
 }
 
 async function bettingEnds() {
