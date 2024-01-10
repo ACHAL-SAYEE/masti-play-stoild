@@ -34,7 +34,7 @@ app.use(
     parameterLimit: 50000,
   })
 );
-const bettingWheelValues = [2, 4, 5, 6, 7, 8, 9, 12];
+const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
 let bettingInfoArray = [];
 const beansToDiamondsRate = 1;
 let bettingGameparticipants = 0;
@@ -104,6 +104,40 @@ app.post("/upload", (req, res, next) => {
   var imageInfo = base64ToImage(base64Str, path, optionalObj);
   var fileLink = "/" + filename;
 });
+
+
+function ensureWheelNumbers(array) {
+  const resultArray = [];
+
+  // Create an object to store entries based on wheel number
+  const wheelNumberMap = {};
+
+  // Populate the map with existing entries
+  array.forEach((entry) => {
+    wheelNumberMap[entry.wheelNo] = entry;
+  });
+
+  // Check and add entries for missing wheel numbers
+  for (let i = 1; i <= 8; i++) {
+    const existingEntry = wheelNumberMap[i];
+
+    if (existingEntry) {
+      // If entry exists, add it to the result array
+      resultArray.push(existingEntry);
+    } else {
+      // If entry doesn't exist, add an entry with zero amount
+      resultArray.push({
+        userids: [],
+        wheelNo: i,
+        totalAmount: 0,
+        betreturnvalue: 0
+      });
+    }
+  }
+
+  return resultArray;
+}
+
 
 app.post("/otp", authenticationController.sendOtp);
 
@@ -337,11 +371,11 @@ async function gameEnds() {
 }
 
 async function endBetting() {
-  console.log(bettingInfoArray)
+  console.log("bettingInfoArray",bettingInfoArray)
   if(bettingInfoArray.length===0){
     return {
       totalBet: 0,
-      result:null
+      result: Math.floor(Math.random() * 8 ) + 1
     }
   }
   else{const totalbettAmount = bettingInfoArray.reduce(
@@ -372,8 +406,8 @@ async function endBetting() {
 
     return result;
   }, []);
-  console.log(transformedData)
-  const newtransformedData = transformedData.map((data, index) => ({
+  console.log("transformedData",transformedData)
+  let newtransformedData = transformedData.map((data, index) => ({
     userids: data.userids,
     wheelNo: data.wheelNo,
     totalAmount: data.totalAmount,
@@ -381,14 +415,18 @@ async function endBetting() {
   }));
 
   newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-console.log(newtransformedData)
+console.log("newtransformedData",newtransformedData)
   let nearestEntry;
   let minDifference 
   if(newtransformedData.length>0){
+    nearestEntry = newtransformedData[0];
     minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
   }
 
+console.log("nearestEntry",nearestEntry)
   let i = 1;
+   newtransformedData = ensureWheelNumbers(newtransformedData);
+
   while (minDifference < 0 && i <= newtransformedData.length - 1) {
     minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
     nearestEntry = newtransformedData[i];
@@ -471,17 +509,17 @@ if(nearestEntry!==undefined){
 
     return acc;
   }, []);
-  UserBetAmount.forEach(
+  console.log("UserBetAmount",UserBetAmount)
+  UserBetAmount.forEach((item)=>{
     SpinnerGameWinnerHistory.findOneAndUpdate(
-      { userId: UserBetAmount.userId },
-      { $inc: { diamondsSpent: UserBetAmount.amount } },
+      { userId: item.userId },
+      { $inc: { diamondsSpent: item.amount } },
       { upsert: true }
     )
+  }
+    
   );
 }
-  
-
- 
   return {
     totalBet: totalbettAmount,
     result: nearestEntry!==undefined ?nearestEntry.wheelNo:null
