@@ -281,27 +281,59 @@ app.put("/api/bd/add-beans", bdRoutes.addBeans);
 app.post("/api/bd/agency", bdRoutes.addAgency);
 app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
 
-let isGameStarted = false
-async function gameStarts() {
-  isGameStarted = true
-  bettingOn = true;
-  console.log("Game Started");
-  io.emit("game-started", {
-    gameName: "Happy Zoo",
-  });
+var gameProperties = {
+  gameStartTime: null,
+  gameEndTime: null,
+  bettingEndTime: null,
+  totalBet: null,
+  totalPlayers: null,
+  result: null,
+  myBet: null,
+  gameName: null,
 }
 
-async function gameEnds() {
-  isGameStarted = false
-  console.log("Game Ends");
-  io.emit("game-ended", {
-    gameName: "Happy Zoo",
-  });
-  bettingInfoArray = [];
-  await Top3Winners.delete({});
+function updateGameProperties(data) {
+  if (data.gameStartTime) gameProperties.gameStartTime = data.gameStartTime;
+  if (data.gameEndTime) gameProperties.gameEndTime = data.gameEndTime;
+  if (data.bettingEndTime) gameProperties.bettingEndTime = data.bettingEndTime;
+  if (data.totalBet) gameProperties.totalBet = data.totalBet;
+  if (data.totalPlayers) gameProperties.totalPlayers = data.totalPlayers;
+  if (data.result) gameProperties.result = data.result;
+  if (data.myBet) gameProperties.myBet = data.myBet;
+  if (data.gameName) gameProperties.gameName = data.gameName;
+}
+
+function sendGameUpdate(event) {
+  console.log(`Sending Game Update: ${event} | gameProperties:`, gameProperties);
+  io.emit(event, gameProperties);
+}
+
+async function gameStarts() {
+  gameProperties = {};
+  updateGameProperties({ gameStartTime: new Date() });
+  sendGameUpdate("game-started");
 }
 
 async function bettingEnds() {
+  updateGameProperties({
+    bettingEndTime: new Date(),
+    totalBet: bettingInfoArray.reduce((sum, item) => sum + item.amount, 0),
+    totalPlayers: bettingGameparticipants,
+  });
+  // TODO: get the result here and send it to the users
+  // whenBettingEnds();
+  sendGameUpdate("betting-ended");
+}
+
+
+async function gameEnds() {
+  updateGameProperties({ gameEndTime: new Date() });
+  sendGameUpdate("game-ended");
+  // bettingInfoArray = [];
+  // await Top3Winners.delete({});
+}
+
+async function whenBettingEnds() {
   bettingOn = false;
   bettingGameparticipants = 0;
   const totalbettAmount = bettingInfoArray.reduce(
@@ -439,35 +471,33 @@ async function bettingEnds() {
 
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
-  socket.on("status", () => {
-    socket.emit("current-status", {
-      gameStartTime: gameStartTime,
-      bettingOn: bettingOn,
-    });
+  console.log(`some user with id ${socket.id} connected`);
+  socket.on("get-status", () => {
+    sendGameUpdate("game-status");
   });
-  socket.on("game-started", () => {
-    gameStarts(socket);
+  socket.on("join-game", (data) => {
+    const userId = data.userId;
+    const gameName = data.gameName;
+    console.log(`${userId} wants to join the game ${gameName}`);
+    sendGameUpdate("game-status");
   });
-  socket.on("betting-ends", async () => {
-    // bettingEnds();
-    console.log("Betting Ends");
+  socket.on("bet", (data) => {
+    if (gameProperties.bettingEndTime) {
+      console.log("Betting has already ended. Can't bet");
+      return;
+    }
+    const userId = data.userId;
+    const gameName = data.gameName;
+    const wheelNo = data.wheelNo;
+    const amount = data.amount;
+    console.log(`${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`);
+    sendGameUpdate("bet-status");
   });
-  socket.on("game-ends", () => {
-    gameEnds(socket);
-  })
+  // TODO: an event for checking the leaderboard
 });
 
-// 30 sec - bet time
-// 10 sec - spin time
-// 10 sec - leaderboard show time
-// 10 sec - new game start time
-var gameStartTime = new Date();
-var bettingOn = false;
-
 async function startANewGame() {
-  gameStartTime = new Date();
   try {
-
     setTimeout(gameStarts, 0, io);  // Betting Starts
     setTimeout(bettingEnds, 30000); // Betting Ends & send result
     setTimeout(gameEnds, 50000, (io));  // 10 sec spinner + 10 sec leaderboard
