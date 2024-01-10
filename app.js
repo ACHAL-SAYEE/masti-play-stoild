@@ -463,3 +463,4 @@ async function startANewGame() {
 }
 
 startANewGame();
+console.log("Some change");
