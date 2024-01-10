@@ -339,14 +339,14 @@ function updateGameProperties(data) {
 }
 
 function sendGameUpdate(event, socket = null, data = null) {
-  console.log(
-    `Sending Game Update: ${event} | gameProperties:`,
-    gameProperties
-  );
   var sendData = {
     ...gameProperties,
     ...(data ? data : {}),
   };
+  console.log(
+    `Sending Game Update: ${event} | gameProperties:`,
+    sendData,
+  );
   if (socket) {
     socket.emit(event, sendData);
   } else {
@@ -543,10 +543,12 @@ io.on("connection", (socket) => {
   console.log(`some user with id ${socket.id} connected`);
   socket.on("get-status", async (data) => {
     const userId = data.userId;
-    if (userId != null) {
+    console.log("userId", userId);
+    if (userId) {
       const user = await User.findOne({ userId: userId });
+      console.log("user", user);
       sendGameUpdate("game-status", socket, {
-        'diamonds': user.diamonds
+        'diamonds': user.diamondsCount
       });
     } else {
       sendGameUpdate("game-status");
