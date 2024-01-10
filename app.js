@@ -332,11 +332,12 @@ async function gameEnds() {
   updateGameProperties({ gameEndTime: new Date() });
   sendGameUpdate("game-ended");
   bettingInfoArray = [];
-  await Top3Winners.delete({});
+  await Top3Winners.deleteMany({});
   bettingGameparticipants = 0;
 }
 
 async function endBetting() {
+  console.log(bettingInfoArray)
   const totalbettAmount = bettingInfoArray.reduce(
     (sum, item) => sum + item.amount,
     0
@@ -365,6 +366,7 @@ async function endBetting() {
 
     return result;
   }, []);
+  console.log(transformedData)
   const newtransformedData = transformedData.map((data, index) => ({
     userids: data.userids,
     wheelNo: data.wheelNo,
@@ -373,9 +375,12 @@ async function endBetting() {
   }));
 
   newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-
+console.log(newtransformedData)
   let nearestEntry;
-  let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
+  let minDifference 
+  if(newtransformedData.length>0){
+    minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
+  }
 
   let i = 1;
   while (minDifference < 0 && i <= newtransformedData.length - 1) {
@@ -386,7 +391,10 @@ async function endBetting() {
   // totalPlayers: null,
   // result: null,
   //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
-  const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
+  let  multiplyvalue
+  if(nearestEntry!==undefined){  
+    multiplyvalue= bettingWheelValues[nearestEntry.wheelNo - 1];
+  }
   bettingInfoArray.forEach(async (betItem) => {
     if (
       betItem.userId in nearestEntry.userids &&
@@ -405,17 +413,18 @@ async function endBetting() {
       );
     }
   });
-
+  let resultArray,betInfoFiltered;
+if(nearestEntry!==undefined){
   await bettingGameData.create({
     participants: bettingGameparticipants,
     winners: nearestEntry.userids.length,
   });
-  const betInfoFiltered = bettingInfoArray.filter(
+   betInfoFiltered = bettingInfoArray.filter(
     (item) =>
       item.wheelNo === nearestEntry.wheelNo &&
       nearestEntry.userids.includes(item.userId)
   );
-  var resultArray = betInfoFiltered.reduce((acc, current) => {
+   resultArray = betInfoFiltered.reduce((acc, current) => {
     var existingUser = acc.findIndex((item) => item.userId === current.userId);
 
     if (existingUser !== -1) {
@@ -463,9 +472,13 @@ async function endBetting() {
       { upsert: true }
     )
   );
+}
+  
+
+ 
   return {
     totalBet: totalbettAmount,
-    result: nearestEntry.wheelNo,
+    result: nearestEntry!==undefined ?nearestEntry.wheelNo:null
   };
 }
 
