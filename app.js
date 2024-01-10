@@ -14,8 +14,9 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const  io = socketIO(server);
 const path = require("path");
+const cron = require('node-cron');
 const { generateUniqueId, generateUserId } = require("./utils");
 const initializeDB = require("./InitialiseDb/index");
 app.use(express.urlencoded({ extended: false }));
@@ -280,146 +281,185 @@ app.put("/api/bd/add-beans", bdRoutes.addBeans);
 app.post("/api/bd/agency", bdRoutes.addAgency);
 app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
 
-// exports.bettingInfoArray = bettingInfoArray;
-io.on("connection", (socket) => {
-  socket.on("game-started", () => {});
-  socket.on("betting-ends", async () => {
-    bettingGameparticipants = 0;
-    const totalbettAmount = bettingInfoArray.reduce(
-      (sum, item) => sum + item.amount,
-      0
+async function gameStarts(socket) {
+  console.log("Game Started");
+  // socket.emit("game-started", {
+  //   gameName: "Happy Zoo",
+  // });
+}
+
+async function gameEnds(socket) {
+  console.log("Game Ends");
+  // socket.emit("game-ended", {
+  //   gameName: "Happy Zoo",
+  // });
+  // bettingInfoArray = [];
+  // await Top3Winners.delete({});
+}
+
+async function bettingEnds() {
+  bettingGameparticipants = 0;
+  const totalbettAmount = bettingInfoArray.reduce(
+    (sum, item) => sum + item.amount,
+    0
+  );
+  const amountToconsider = totalbettAmount * 0.9;
+  const transformedData = bettingInfoArray.reduce((result, current) => {
+    // Find the existing entry for the current wheelNo
+    const existingEntry = result.findIndex(
+      (entry) => entry.wheelNo === current.wheelNo
     );
-    const amountToconsider = totalbettAmount * 0.9;
-    const transformedData = bettingInfoArray.reduce((result, current) => {
-      // Find the existing entry for the current wheelNo
-      const existingEntry = result.findIndex(
-        (entry) => entry.wheelNo === current.wheelNo
-      );
 
-      if (existingEntry !== -1) {
-        // If the entry exists, update the userids and total amount
-        if (!result[existingEntry].userids.includes(current.userId)) {
-          result[existingEntry].userids.push(current.userId);
-        }
-        result[existingEntry].totalAmount += current.amount;
-      } else {
-        // If the entry doesn't exist, create a new one
-        result.push({
-          userids: [current.userId],
-          wheelNo: current.wheelNo,
-          totalAmount: current.amount,
-        });
+    if (existingEntry !== -1) {
+      // If the entry exists, update the userids and total amount
+      if (!result[existingEntry].userids.includes(current.userId)) {
+        result[existingEntry].userids.push(current.userId);
       }
-
-      return result;
-    }, []);
-    const newtransformedData = transformedData.map((data, index) => ({
-      userids: data.userids,
-      wheelNo: data.wheelNo,
-      totalAmount: data.totalAmount,
-      betreturnvalue: bettingWheelValues[index] * data.totalAmount,
-    }));
-
-    newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-
-    let nearestEntry;
-    let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
-
-    let i = 1;
-    while (minDifference < 0 && i <= newtransformedData.length - 1) {
-      minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
-      nearestEntry = newtransformedData[i];
+      result[existingEntry].totalAmount += current.amount;
+    } else {
+      // If the entry doesn't exist, create a new one
+      result.push({
+        userids: [current.userId],
+        wheelNo: current.wheelNo,
+        totalAmount: current.amount,
+      });
     }
 
-    const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
-    bettingInfoArray.forEach(async (betItem) => {
-      if (
-        betItem.userId in nearestEntry.userids &&
-        betItem.wheelNo === nearestEntry.wheelNo
-      ) {
-        await SpinnerGameWinnerHistory.create(
-          { userId: betItem.userId },
-          {
-            diamondsEarned: betItem.amount * multiplyvalue,
-            wheelNo: betItem.wheelNo,
-          }
-        );
-        await User.updateOne(
-          { userId: betItem.userId },
-          { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
-        );
-      }
-    });
+    return result;
+  }, []);
+  const newtransformedData = transformedData.map((data, index) => ({
+    userids: data.userids,
+    wheelNo: data.wheelNo,
+    totalAmount: data.totalAmount,
+    betreturnvalue: bettingWheelValues[index] * data.totalAmount,
+  }));
 
-    await bettingGameData.create({
-      participants: bettingGameparticipants,
-      winners: nearestEntry.userids.length,
-    });
-    const betInfoFiltered = bettingInfoArray.filter(
-      (item) =>
-        item.wheelNo === nearestEntry.wheelNo &&
-        nearestEntry.userids.includes(item.userId)
-    );
-    var resultArray = betInfoFiltered.reduce((acc, current) => {
-      var existingUser = acc.findIndex(
-        (item) => item.userId === current.userId
+  newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
+
+  let nearestEntry;
+  let minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
+
+  let i = 1;
+  while (minDifference < 0 && i <= newtransformedData.length - 1) {
+    minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
+    nearestEntry = newtransformedData[i];
+  }
+
+  const multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
+  bettingInfoArray.forEach(async (betItem) => {
+    if (
+      betItem.userId in nearestEntry.userids &&
+      betItem.wheelNo === nearestEntry.wheelNo
+    ) {
+      await SpinnerGameWinnerHistory.create(
+        { userId: betItem.userId },
+        {
+          diamondsEarned: betItem.amount * multiplyvalue,
+          wheelNo: betItem.wheelNo,
+        }
       );
+      await User.updateOne(
+        { userId: betItem.userId },
+        { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
+      );
+    }
+  });
 
-      if (existingUser !== -1) {
-        acc[existingUser].amount += current.amount * multiplyvalue;
+  await bettingGameData.create({
+    participants: bettingGameparticipants,
+    winners: nearestEntry.userids.length,
+  });
+  const betInfoFiltered = bettingInfoArray.filter(
+    (item) =>
+      item.wheelNo === nearestEntry.wheelNo &&
+      nearestEntry.userids.includes(item.userId)
+  );
+  var resultArray = betInfoFiltered.reduce((acc, current) => {
+    var existingUser = acc.findIndex(
+      (item) => item.userId === current.userId
+    );
+
+    if (existingUser !== -1) {
+      acc[existingUser].amount += current.amount * multiplyvalue;
+    } else {
+      acc.push({
+        userId: current.userId,
+        wheelNo: current.wheelNo,
+        amount: current.amount * multiplyvalue,
+      });
+    }
+
+    return acc;
+  }, []);
+  resultArray.sort((a, b) => b.amount - a.amount);
+
+  let top3Entries = resultArray.slice(0, 3);
+  top3Entries = top3Entries.map((item) => ({
+    userId: item.userId,
+    winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
+  }));
+  await Top3Winners.insertMany(top3Entries);
+
+  let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
+    var existingUserIndex = acc.findIndex(
+      (item) => item.userId === current.userId
+    );
+    if (current.wheelNo !== nearestEntry.wheelNo) {
+      if (existingUserIndex !== -1) {
+        acc[existingUserIndex].amount += current.amount;
       } else {
         acc.push({
           userId: current.userId,
-          wheelNo: current.wheelNo,
-          amount: current.amount * multiplyvalue,
+          amount: current.amount,
         });
       }
+    }
 
-      return acc;
-    }, []);
-    resultArray.sort((a, b) => b.amount - a.amount);
-
-    let top3Entries = resultArray.slice(0, 3);
-    top3Entries = top3Entries.map((item) => ({
-      userId: item.userId,
-      winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
-    }));
-    await Top3Winners.insertMany(top3Entries);
-  
-    let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
-      var existingUserIndex = acc.findIndex(
-        (item) => item.userId === current.userId
-      );
-      if (current.wheelNo !== nearestEntry.wheelNo) {
-        if (existingUserIndex !== -1) {
-          acc[existingUserIndex].amount += current.amount;
-        } else {
-          acc.push({
-            userId: current.userId,
-            amount: current.amount,
-          });
-        }
+    return acc;
+  }, []);
+  UserBetAmount.forEach(
+    SpinnerGameWinnerHistory.findOneAndUpdate(
+      {
+        userId: UserBetAmount.userId,
+      },
+      {
+        $inc: { diamondsSpent: UserBetAmount.amount },
+      },
+      {
+        upsert: true,
       }
+    )
+  );
+}
 
-      return acc;
-    }, []);
-    UserBetAmount.forEach(
-      SpinnerGameWinnerHistory.findOneAndUpdate(
-        {
-          userId: UserBetAmount.userId,
-        },
-        {
-          $inc: { diamondsSpent: UserBetAmount.amount },
-        },
-        {
-          upsert: true,
-        }
-      )
-    );
- 
+// exports.bettingInfoArray = bettingInfoArray;
+io.on("connection", (socket) => {
+  socket.on("game-started", () => {
+    gameStarts(socket);
   });
-  socket.on("game-ends",async ()=>{
-    bettingInfoArray = [];
-    await Top3Winners.delete({});
+  socket.on("betting-ends", async () => {
+    // bettingEnds();
+    console.log("Betting Ends");
+  });
+  socket.on("game-ends", () => {
+    gameEnds(socket);
   })
 });
+
+// 30 sec - bet time
+// 10 sec - spin time
+// 10 sec - leaderboard show time
+// 10 sec - new game start time
+
+async function startANewGame() {
+  try {
+    setTimeout(gameStarts, 0, io);  // Betting Starts
+    setTimeout(bettingEnds, 30000); // Betting Ends & send result
+    setTimeout(gameEnds, 50000, (io));  // 10 sec spinner + 10 sec leaderboard
+  } catch (e) {
+    console.error("Error in Game:", e);
+  }
+  setTimeout(startANewGame, 60000); // New Game Begins
+}
+
+startANewGame();
