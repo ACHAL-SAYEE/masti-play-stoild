@@ -564,16 +564,25 @@ io.on("connection", (socket) => {
 
     if (!userExists) bettingGameparticipants += 1;
     bettingInfoArray.push({ userId, wheelNo, amount });
-    await User.updateOne(
-      { userId: userId },
-      { $inc: { diamondsCount: -1 * amount } }
-    );
-    console.log(
-      `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
-    );
-    sendGameUpdate("bet-status", socket, {
-      'diamonds': 0,  // ACHAL
-    });
+
+ const updatedUser = await User.findOneAndUpdate(
+  { userId: userId, diamondsCount: { $gte: amount } }, 
+  { $inc: { diamondsCount: -1 * amount } },
+  { new: true }
+);
+
+if (!updatedUser) {
+  sendGameUpdate("bet-status");
+
+  console.log('Insufficient balance');
+} else {
+  console.log(
+    `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
+  );
+  sendGameUpdate("bet-status");
+}
+
+  
   });
   // TODO: an event for checking the leaderboard
 });
