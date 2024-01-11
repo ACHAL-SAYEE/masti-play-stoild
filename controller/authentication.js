@@ -103,19 +103,26 @@ class Authentication {
           .send("password is too short .minimum length of password shoud be 8");
         return;
       }
-      let randomNumber = generateUserId();
-      console.log(randomNumber);
-      const existingUserWithId = await User.find({ UserId: randomNumber });
-      if (existingUserWithId.length > 0) {
-       let isUserIdMatched = true;
-        while (isUserIdMatched) {
-          randomNumber = generateUserId();
-          const existingUserWithId = await User.find({ UserId: randomNumber });
-          isUserIdMatched = existingUserWithId.length > 0;
-        }
-      }
+      // let randomNumber = generateUserId();
+      // console.log(randomNumber);
+      // const existingUserWithId = await User.find({ UserId: randomNumber });
+      // if (existingUserWithId.length > 0) {
+      //  let isUserIdMatched = true;
+      //   while (isUserIdMatched) {
+      //     randomNumber = generateUserId();
+      //     const existingUserWithId = await User.find({ UserId: randomNumber });
+      //     isUserIdMatched = existingUserWithId.length > 0;
+      //   }
+      // }
+      let newUserId;
+    const ExistingUsers = await User.find({});
+    if (ExistingUsers.length === 0) {
+      newUserId = 20240000;
+    } else {
+      newUserId = parseInt(ExistingUsers[ExistingUsers.length - 1].userId) + 1;
+    }
       const newUser = new User({
-        UserId: `${randomNumber}`,
+        UserId: `${newUserId}`,
         email,
         password: hashedPassword,
         name,
