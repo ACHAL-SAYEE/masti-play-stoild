@@ -94,7 +94,7 @@ class Authentication {
       phoneNumber,
     } = req.body;
 
-    const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
+    const hashedPassword = await bcrypt.hash(password, 10);
     const result = await User.find({ email });
     if (result.length === 0) {
       if (password.length < 8) {

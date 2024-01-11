@@ -160,6 +160,11 @@ app.post("/api/user", async (req, res) => {
     phoneNumber,
   } = req.body;
   try {
+    const existstingUserInfo=await User.findOne({email,phoneNumber})
+    if(existstingUserInfo){
+      res.status(400).send("email or phoneNumber is already taken")
+      return
+    }
     const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
     // let randomNumber = generateUserId();
