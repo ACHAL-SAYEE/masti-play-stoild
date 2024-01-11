@@ -192,8 +192,8 @@ app.post("/api/user", async (req, res) => {
       photo,
       phoneNumber,
     });
-    await newUser.save();
-    res.status(200).send(newUser);
+   let x= await newUser.save();
+    res.status(200).send(x);
   } catch (e) {
     console.log(e);
     res.status(500).send("internal server error");
