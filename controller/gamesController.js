@@ -190,12 +190,20 @@ class games {
   }
 
   async getUsers(req, res) {
-    const { userId } = req.query;
+    const { userId, email } = req.query;
     try {
-      const result = await User.findOne({ userId: userId }).select({
-        _id: 0,
-        __v: 0,
-      });
+      let result;
+      if (email) {
+        result = await User.findOne({ email: email }).select({
+          _id: 0,
+          __v: 0,
+        });
+      } else {
+        result = await User.findOne({ userId: userId }).select({
+          _id: 0,
+          __v: 0,
+        });
+      }
       if (result === null) {
         res.status(400).send("user not found");
       } else {
@@ -265,8 +273,7 @@ class games {
     try {
       const origUser = await User.findOneAndUpdate(
         { userId: userId },
-        { agentId: `A${userId}` },
-        {new:true}
+        { agentId: `A${userId}` }
       );
       // console.log("origUser",origUser);
       if (origUser.agentId) {
@@ -297,15 +304,17 @@ class games {
     let agentData, ownedAgencyData;
     try {
       const existingUser = await User.findOne({ userId: userId })
-        .select({ _id: 0, __v: 0, agentId: 0 })
+        .select({ _id: 0, __v: 0 })
         .lean();
-      if (existingUser.agentId) {
-        res.send(existingUser);
+      console.log("existingUser=", existingUser);
+      if (existingUser.agentId == null) {
+        res.status(404).send("user is not an agent");
       } else {
-        agentData = await Agent.findOne({ agentId: `A${userId}` }).select({
+        agentData = await Agent.findOne({ agentId: existingUser.agentId }).select({
           _id: 0,
           __v: 0,
         });
+        console.log("agentData:", agentData);
         const ownedAgencyData = await AgencyData.findOne({ ownerId: userId });
 
         if (ownedAgencyData) {
@@ -501,14 +510,19 @@ class games {
   }
 
   async sendGift(req, res) {
-    const { sentTo, sentby, diamondsSent } = req.body;
+    const { sentTo, sentBy, diamondsSent } = req.body;
+    console.log("sentTo, sentBy, diamondsSent =", sentTo, sentBy, diamondsSent);
     try {
-      const sendingUserBalance = await User.findOne({ userId: sentby });
+      const sendingUserBalance = await User.findOne({ userId: sentBy });
+      if (!sendingUserBalance) {
+        res.status(400).send("user not found");
+        return;
+      }
       if (sendingUserBalance.diamondsCount < diamondsSent) {
         res.status(400).send("insufficient balance");
       }
       await User.updateOne(
-        { userId: sentby },
+        { userId: sentBy },
         { $inc: { diamondsCount: -1 * Number(diamondsSent) } }
       );
       await User.updateOne(
@@ -518,16 +532,17 @@ class games {
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
       });
-
-      await User.updateOne(
-        { agencyId: agencyOfSentTo.agencyId },
-        {
-          $inc: {
-            beansCount: Number(diamondsSent) / 10,
-            totalBeansRecieved: Number(diamondsSent) / 10,
-          },
-        }
-      );
+      if (agencyOfSentTo) {
+        await User.updateOne(
+          { agencyId: agencyOfSentTo.agencyId },
+          {
+            $inc: {
+              beansCount: Number(diamondsSent) / 10,
+              totalBeansRecieved: Number(diamondsSent) / 10,
+            },
+          }
+        );
+      }
       const currentDate = new Date();
       await monthlyAgencyHistory.findOneAndUpdate(
         {

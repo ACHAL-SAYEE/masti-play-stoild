@@ -160,8 +160,13 @@ app.post("/api/user", async (req, res) => {
     phoneNumber,
   } = req.body;
   try {
-    const existstingUserInfo=await User.findOne({email,phoneNumber})
-    if(existstingUserInfo){
+    var existingUserInfo;
+    if (phoneNumber) {
+      existingUserInfo = await User.findOne({ $or: [{ email }, { phoneNumber }] });
+    } else {
+      existingUserInfo = await User.findOne({ $or: [{ email }] });
+    }
+    if (existingUserInfo) {
       res.status(400).send("email or phoneNumber is already taken")
       return
     }
@@ -197,7 +202,7 @@ app.post("/api/user", async (req, res) => {
       photo,
       phoneNumber,
     });
-   let x= await newUser.save();
+    let x = await newUser.save();
     res.status(200).send(x);
   } catch (e) {
     console.log(e);
@@ -205,25 +210,24 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.get("/api/user",async(req,res)=>{
-  const {userId}=req.query
-try{
-  const UserInfo=await User.findOne({userId})
-  res.send(UserInfo)
+app.get("/api/user", async (req, res) => {
+  const { userId } = req.query
+  try {
+    const UserInfo = await User.findOne({ userId })
+    res.send(UserInfo)
 
-}catch(e){
-  console.log(e);
-  res.status(500).send("internal server error");
-}
+  } catch (e) {
+    console.log(e);
+    res.status(500).send("internal server error");
+  }
 })
 
-app.put("/api/user",async(req,res)=>{
-  const {userId}=req.body
-  try{
-    const UserInfo=await User.findOneAndUpdate({userId},{...req.body},{new:true})
+app.put("/api/user", async (req, res) => {
+  const { id } = req.body
+  try {
+    const UserInfo = await User.findOneAndUpdate({ userId: id }, { ...req.body }, { new: true })
     res.send(UserInfo)
-  
-  }catch(e){
+  } catch (e) {
     console.log(e);
     res.status(500).send("internal server error");
   }
@@ -631,11 +635,11 @@ async function startANewGame() {
   try {
     setTimeout(gameStarts, 0, io); // Betting Starts
     setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    setTimeout(gameEnds, 50000, io); // 10 sec spinner + 10 sec leaderboard
+    setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
-  setTimeout(startANewGame, 60000); // New Game Begins
+  setTimeout(startANewGame, 40000); // New Game Begins
 }
 
 startANewGame();
