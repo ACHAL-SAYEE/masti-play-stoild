@@ -212,6 +212,18 @@ try{
 }
 })
 
+app.put("/api/user",async(req,res)=>{
+  const {userId}=req.body
+  try{
+    const UserInfo=await User.findOneAndUpdate({userId},{...req.body},{new:true})
+    res.send(UserInfo)
+  
+  }catch(e){
+    console.log(e);
+    res.status(500).send("internal server error");
+  }
+})
+
 app.post("/api/SignInWithGoggle", authenticationController.SignInWithGoggle);
 
 app.post("/api/login", authenticationController.login);
