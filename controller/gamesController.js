@@ -259,19 +259,20 @@ class games {
   }
 
   async postAgent(req, res) {
-    console.log("called make user");
+    // console.log("called make user");
     const { resellerOf, paymentMethods, status, userId } = req.body;
     console.log(paymentMethods);
     try {
       const origUser = await User.findOneAndUpdate(
         { userId: userId },
-        { agentId: `A${userId}` }
+        { agentId: `A${userId}` },
+        {new:true}
       );
+      // console.log("origUser",origUser);
       if (origUser.agentId) {
         res.status(400).send("user is already an agent");
         return;
       }
-      console.log(origUser);
       const newAgent = new Agent({
         resellerOf,
         paymentMethods,

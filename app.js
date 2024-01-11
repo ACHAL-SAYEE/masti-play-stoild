@@ -193,7 +193,7 @@ app.post("/api/user", async (req, res) => {
       phoneNumber,
     });
     await newUser.save();
-    res.status(200).send("user created successfully");
+    res.status(200).send(newUser);
   } catch (e) {
     console.log(e);
     res.status(500).send("internal server error");

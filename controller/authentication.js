@@ -12,6 +12,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+const {generateUserId}=require("../utils")
+
 class Authentication {
   async sendOtp(req, res) {
     const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
@@ -105,7 +107,7 @@ class Authentication {
       console.log(randomNumber);
       const existingUserWithId = await User.find({ UserId: randomNumber });
       if (existingUserWithId.length > 0) {
-        isUserIdMatched = true;
+       let isUserIdMatched = true;
         while (isUserIdMatched) {
           randomNumber = generateUserId();
           const existingUserWithId = await User.find({ UserId: randomNumber });
