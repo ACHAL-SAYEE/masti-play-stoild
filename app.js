@@ -200,6 +200,18 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
+app.get("/api/user",async(req,res)=>{
+  const {userId}=req.query
+try{
+  const UserInfo=await User.findOne({userId})
+  res.send(UserInfo)
+
+}catch(e){
+  console.log(e);
+  res.status(500).send("internal server error");
+}
+})
+
 app.post("/api/SignInWithGoggle", authenticationController.SignInWithGoggle);
 
 app.post("/api/login", authenticationController.login);
