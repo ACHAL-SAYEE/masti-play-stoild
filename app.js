@@ -635,11 +635,11 @@ async function startANewGame() {
   try {
     setTimeout(gameStarts, 0, io); // Betting Starts
     setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
+    setTimeout(gameEnds, 42000, io); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
-  setTimeout(startANewGame, 40000); // New Game Begins
+  setTimeout(startANewGame, 45000); // New Game Begins
 }
 
 startANewGame();
