@@ -202,7 +202,7 @@ app.post("/api/user", async (req, res) => {
       photo,
       phoneNumber,
     });
-   let x= await newUser.save();
+    let x = await newUser.save();
     res.status(200).send(x);
   } catch (e) {
     console.log(e);
@@ -210,25 +210,25 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.get("/api/user",async(req,res)=>{
-  const {userId}=req.query
-try{
-  const UserInfo=await User.findOne({userId})
-  res.send(UserInfo)
+app.get("/api/user", async (req, res) => {
+  const { userId } = req.query
+  try {
+    const UserInfo = await User.findOne({ userId })
+    res.send(UserInfo)
 
-}catch(e){
-  console.log(e);
-  res.status(500).send("internal server error");
-}
+  } catch (e) {
+    console.log(e);
+    res.status(500).send("internal server error");
+  }
 })
 
-app.put("/api/user",async(req,res)=>{
-  const {userId}=req.body
-  try{
-    const UserInfo=await User.findOneAndUpdate({userId},{...req.body},{new:true})
+app.put("/api/user", async (req, res) => {
+  const { userId } = req.body
+  try {
+    const UserInfo = await User.findOneAndUpdate({ userId }, { ...req.body }, { new: true })
     res.send(UserInfo)
-  
-  }catch(e){
+
+  } catch (e) {
     console.log(e);
     res.status(500).send("internal server error");
   }
@@ -347,8 +347,8 @@ app.get("/api/bd/participants", bdRoutes.getParticipantAgencies);
 app.post("/api/bd", bdRoutes.createBD);
 app.put("/api/bd", bdRoutes.updateBD);
 app.put("/api/bd/add-beans", bdRoutes.addBeans);
-app.post("/api/bd/agency", bdRoutes.addAgency);
-app.put("/api/bd/agency/remove", bdRoutes.removeAgency);
+app.post("/api/bd/add-agency", bdRoutes.addAgency);
+app.put("/api/bd/remove-agency", bdRoutes.removeAgency);
 
 var gameProperties = {
   gameStartTime: null,

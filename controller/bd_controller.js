@@ -1,6 +1,6 @@
 const { BdData, ParticipantAgencies } = require('../models/bd');
 const { generateUniqueId, generateUserId } = require("../utils");
-const { User } = require("../models/models");
+const { User, AgencyData } = require("../models/models");
 
 class bdController {
     async getAllBD(start, limit) {
@@ -15,10 +15,15 @@ class bdController {
             const result = bdDataList.map((bd) => {
                 const ownerData = ownerDatas.find((user) => user.userId === bd.owner);
                 return {
-                    ...bd,
+                    id: bd.id,
+                    beans: bd.beans,
+                    owner: bd.owner,
+                    createdAt: bd.createdAt,
+                    updatedAt: bd.updatedAt,
                     ownerData: ownerData,
                 };
             });
+            console.log("result", result);
             return result;
         } catch (error) {
             console.error('Error fetching BdData:', error.message);
@@ -29,21 +34,66 @@ class bdController {
     async getBD(id, userId) {
         try {
             let bdData;
+
             if (id) {
-                bdData = await BdData.find({ id: id }).exec();
-                if (bdData.length == 0) {
-                    throw `No BD found with id ${id}`;
-                }
+                bdData = await BdData.aggregate([
+                    { $match: { id: id } },
+                    {
+                        $lookup: {
+                            from: 'participantagencies',
+                            localField: 'id',
+                            foreignField: 'bdId',
+                            as: 'agencies',
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$_id',
+                            id: { $first: '$id' },
+                            owner: { $first: '$owner' },
+                            beans: { $first: '$beans' },
+                            totalIncome: { $sum: '$agencies.contributedBeans' },
+                        },
+                    },
+                ]).exec();
             } else if (userId) {
-                bdData = await BdData.find({ owner: userId }).exec();
-                if (bdData.length == 0) {
-                    throw `No BD found with userId ${userId}`;
-                }
+                bdData = await BdData.aggregate([
+                    { $match: { owner: userId } },
+                    {
+                        $lookup: {
+                            from: 'participantagencies',
+                            localField: 'id',
+                            foreignField: 'bdId',
+                            as: 'agencies',
+                        },
+                    },
+                    {
+                        $group: {
+                            _id: '$_id',
+                            id: { $first: '$id' },
+                            owner: { $first: '$owner' },
+                            beans: { $first: '$beans' },
+                            totalIncome: { $sum: '$agencies.contributedBeans' },
+                        },
+                    },
+                ]).exec();
             } else {
                 console.error('Both id and userId are undefined.');
                 throw "Both id and userId are undefined.";
             }
-            return bdData;
+
+            if (bdData.length == 0) {
+                throw `No BD found with id ${id || userId}`;
+            }
+
+            console.log("bdData[0]", bdData[0]);
+
+            const ownerData = await User.findOne({ userId: bdData[0].owner }).exec();
+            const result = {
+                ownerData: ownerData,
+                ...bdData[0],
+            };
+            return result;
         } catch (error) {
             console.error('Error fetching BdData by id:', error);
             throw error;
@@ -52,28 +102,24 @@ class bdController {
 
     async getParticipantAgencies(bdId, start = 0, limit = 10) {
         try {
-            const participantAgenciesList = await ParticipantAgencies.find({ bdId: bdId })
+            const participantAgenciesList = await ParticipantAgencies.find({ bdId: bdId, exists: true })
                 .skip(start)
                 .limit(limit)
                 .exec();
-            // const agencyIds = participantAgenciesList.map((agency) => agency.agencyId);
-            // const agencies = await AgencyData.find({ agencyId: { $in: agencyIds } }).exec();
-            // const ownerIds = agencies.map((agency) => agency.ownerId);
-            // const usersData = await User.find({ userId: { $in: ownerIds } }).exec();
-
-            // const result = participantAgenciesList.map((agency) => {
-            //     const userData = usersData.find((user) => user.userId === agency.agencyId);
-            //     return {
-            //         agencyId: agency.agencyId,
-            //         agencyData: agencies.find((agency2) => agency2.agencyId === agency.agencyId),
-            //         contributedBeans: agency.contributedBeans,
-            //         exists: agency.exists,
-            //         ownerData: userData,
-            //     };
-            // });
-
-            // return result;
-            return participantAgenciesList;
+            const agencyIds = participantAgenciesList.map((participantAgencies) => participantAgencies.agencyId);
+            const agencies = await AgencyData.find({ agencyId: { $in: agencyIds } }).exec();
+            const result = agencies.map((agencyData) => {
+                const participant = participantAgenciesList.find((p) => p.agencyId === agencyData.agencyId);
+                return {
+                    contributedBeans: participant.contributedBeans,
+                    ownerId: agencyData.ownerId,
+                    agencyId: agencyData.agencyId,
+                    name: agencyData.name,
+                    totalBeansRecieved: agencyData.totalBeansRecieved,
+                    beansCount: agencyData.beansCount,
+                };
+            });
+            return result;
         } catch (error) {
             console.error('Error fetching ParticipantAgencies:', error.message);
             throw error;
@@ -148,7 +194,9 @@ class bdController {
 
             if (existingDocument) {
                 console.log('ParticipantAgencies document already exists for bdId and agencyId:', bdId, agencyId);
-                return null;
+                existingDocument.exists = true;
+                const updatedDocument = await existingDocument.save();
+                return updatedDocument;
             }
             const newDocument = new ParticipantAgencies({
                 bdId: bdId,
@@ -169,7 +217,7 @@ class bdController {
             const participantAgenciesDocument = await ParticipantAgencies.findOne({ bdId: bdId, agencyId: agencyId }).exec();
             if (!participantAgenciesDocument) {
                 console.log('ParticipantAgencies document not found for bdId and agencyId:', bdId, agencyId);
-                return null;
+                throw `No Agency Found with agencyId: ${agencyId} in BD with id: ${bdId}.`;
             }
             participantAgenciesDocument.exists = false;
             const updatedDocument = await participantAgenciesDocument.save();
