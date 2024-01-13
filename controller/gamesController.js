@@ -614,6 +614,37 @@ class games {
     }
   }
 
+  async adminRecharge(req, res) {
+    const { agentId, diamonds } = req.body;
+    try {
+      const agentData = await Agent.findOne({ agentId: agentId });
+      await Agent.updateOne(
+        { agentId: agentId },
+        { $inc: { diamondsCount: diamonds } }
+      );
+      // await monthlyAgentHistory.findOneAndUpdate(
+      //   {
+      //     month: new Date(
+      //       currentDate.getFullYear(),
+      //       currentDate.getMonth(),
+      //       1
+      //     ),
+      //   },
+      //   {
+      //     $inc: { diamonds },
+      //   },
+      //   {
+      //     upsert: true,
+      //     new: true,
+      //   }
+      // );
+      res.send("recharged successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send("internal server error");
+    }
+  }
+
   async makeAgent(req, res) {
     const { userId } = req.body;
     try {
