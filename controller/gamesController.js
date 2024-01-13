@@ -11,7 +11,7 @@ const {
   Top3Winners,
 } = require("../models/models");
 
-const beansToDiamondsRate=1
+const beansToDiamondsRate = 1
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 const { generateUniqueId, generateUserId } = require("../utils");
 
@@ -192,6 +192,8 @@ class games {
 
   async getUsers(req, res) {
     const { userId, email } = req.query;
+    console.log("email =", email);
+    console.log("userId =", userId);
     try {
       let result;
       if (email) {
@@ -207,10 +209,10 @@ class games {
       }
       if (result === null) {
         res.status(400).send("user not found");
-      } else {
-        console.log(result);
-        res.send(result);
+        return;
       }
+      console.log(result);
+      res.send(result);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -472,8 +474,8 @@ class games {
     console.log("userId, agencyId, name", userId, agencyId, name);
     let randomNumber;
     try {
-      const AlreadyAgencyOwner=await AgencyData.findOne({ownerId:userId})
-      if(AlreadyAgencyOwner){
+      const AlreadyAgencyOwner = await AgencyData.findOne({ ownerId: userId })
+      if (AlreadyAgencyOwner) {
         res.status(400).send("user is already agency owner")
         return
       }
@@ -482,9 +484,9 @@ class games {
         const existingUserWithId = await AgencyData.find({
           agencyId: randomNumber,
         });
-        
+
         if (existingUserWithId.length > 0) {
-         let isUserIdMatched = true;
+          let isUserIdMatched = true;
           while (isUserIdMatched) {
             randomNumber = generateUserId();
             const existingUserWithId = await AgencyData.find({

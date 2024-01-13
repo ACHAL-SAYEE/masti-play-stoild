@@ -13,7 +13,8 @@ class bdRoutes {
 
     async getBD(req, res) {
         try {
-            const bdData = await bdController.getBD(req.params.id, req.params.userId);
+            console.log("req.query", req.query);
+            const bdData = await bdController.getBD(req.query.id, req.query.userId);
             res.status(200).send(bdData);
         } catch (e) {
             console.log(e);
@@ -23,7 +24,7 @@ class bdRoutes {
 
     async getParticipantAgencies(req, res) {
         try {
-            const participantAgenciesList = await bdController.getParticipantAgencies(req.params.bdId, req.query.start, req.query.limit);
+            const participantAgenciesList = await bdController.getParticipantAgencies(req.query.bdId, req.query.start, req.query.limit);
             res.status(200).send(participantAgenciesList);
         } catch (e) {
             console.log(e);
@@ -33,7 +34,7 @@ class bdRoutes {
 
     async createBD(req, res) {
         try {
-            const newBdData = await bdController.createBD(req.body.ownerId);
+            const newBdData = await bdController.createBD(req.body.owner);
             res.status(200).send(newBdData);
         } catch (e) {
             console.log(e);
@@ -43,7 +44,7 @@ class bdRoutes {
 
     async updateBD(req, res) {
         try {
-            const updatedBdData = await bdController.updateBD(req.params.id, req.body);
+            const updatedBdData = await bdController.updateBD(req.query.id, req.body);
             res.status(200).send(updatedBdData);
         } catch (e) {
             console.log(e);
@@ -53,7 +54,7 @@ class bdRoutes {
 
     async addBeans(req, res) {
         try {
-            const updatedBdData = await bdController.addBeans(req.params.bdId, req.body.beans);
+            const updatedBdData = await bdController.addBeans(req.query.bdId, req.body.beans);
             res.status(200).send(updatedBdData);
         } catch (e) {
             console.log(e);
@@ -63,7 +64,7 @@ class bdRoutes {
 
     async addAgency(req, res) {
         try {
-            const newParticipantAgency = await bdController.addAgency(req.params.bdId, req.body.agencyId);
+            const newParticipantAgency = await bdController.addAgency(req.query.bdId, req.body.agencyId);
             res.status(200).send(newParticipantAgency);
         } catch (e) {
             console.log(e);
@@ -73,7 +74,7 @@ class bdRoutes {
 
     async removeAgency(req, res) {
         try {
-            const updatedParticipantAgency = await bdController.removeAgency(req.params.bdId, req.params.agencyId);
+            const updatedParticipantAgency = await bdController.removeAgency(req.query.bdId, req.query.agencyId);
             res.status(200).send(updatedParticipantAgency);
         } catch (e) {
             console.log(e);

@@ -1,5 +1,6 @@
 const { BdData, ParticipantAgencies } = require('../models/bd');
 const { generateUniqueId, generateUserId } = require("../utils");
+const { User } = require("../models/models");
 
 class bdController {
     async getAllBD(start, limit) {
@@ -8,7 +9,17 @@ class bdController {
                 .skip(start)
                 .limit(limit)
                 .exec();
-            return bdDataList;
+            console.log("bdDataList", bdDataList);
+            const ownerDatas = await User.find({ userId: { $in: bdDataList.map((bd) => bd.owner) } }).exec();
+            console.log("ownerDatas", ownerDatas);
+            const result = bdDataList.map((bd) => {
+                const ownerData = ownerDatas.find((user) => user.userId === bd.owner);
+                return {
+                    ...bd,
+                    ownerData: ownerData,
+                };
+            });
+            return result;
         } catch (error) {
             console.error('Error fetching BdData:', error.message);
             throw error;
@@ -19,16 +30,22 @@ class bdController {
         try {
             let bdData;
             if (id) {
-                bdData = await BdData.findOne({ id: id }).exec();
+                bdData = await BdData.find({ id: id }).exec();
+                if (bdData.length == 0) {
+                    throw `No BD found with id ${id}`;
+                }
             } else if (userId) {
-                bdData = await BdData.findOne({ owner: userId }).exec();
+                bdData = await BdData.find({ owner: userId }).exec();
+                if (bdData.length == 0) {
+                    throw `No BD found with userId ${userId}`;
+                }
             } else {
                 console.error('Both id and userId are undefined.');
                 throw "Both id and userId are undefined.";
             }
             return bdData;
         } catch (error) {
-            console.error('Error fetching BdData by id:', error.message);
+            console.error('Error fetching BdData by id:', error);
             throw error;
         }
     }
@@ -63,7 +80,7 @@ class bdController {
         }
     }
 
-    async createBD(ownerId) {
+    async createBD(owner) {
         try {
             let isUnique = false;
             let newBdData;
@@ -74,7 +91,7 @@ class bdController {
                     newBdData = new BdData({
                         id: newId,
                         beans: 0,
-                        owner: ownerId,
+                        owner: owner,
                     });
                     await newBdData.save();
                     isUnique = true;
