@@ -520,6 +520,7 @@ class games {
       }
       if (sendingUserBalance.diamondsCount < diamondsSent) {
         res.status(400).send("insufficient balance");
+        return
       }
       await User.updateOne(
         { userId: sentBy },
