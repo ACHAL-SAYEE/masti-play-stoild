@@ -506,6 +506,7 @@ class games {
       const sendingUserBalance = await User.findOne({ userId: sentby });
       if (sendingUserBalance.diamondsCount < diamondsSent) {
         res.status(400).send("insufficient balance");
+        return
       }
       await User.updateOne(
         { userId: sentby },
