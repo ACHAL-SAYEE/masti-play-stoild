@@ -474,7 +474,7 @@ class games {
         });
         
         if (existingUserWithId.length > 0) {
-          isUserIdMatched = true;
+         let isUserIdMatched = true;
           while (isUserIdMatched) {
             randomNumber = generateUserId();
             const existingUserWithId = await AgencyData.find({
