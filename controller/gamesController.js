@@ -11,6 +11,7 @@ const {
   Top3Winners,
 } = require("../models/models");
 
+const beansToDiamondsRate=1
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 const { generateUniqueId, generateUserId } = require("../utils");
 
@@ -301,7 +302,7 @@ class games {
 
     const { userId } = req.query;
     console.log(userId);
-    let agentData, ownedAgencyData;
+    let agentData;
     try {
       const existingUser = await User.findOne({ userId: userId })
         .select({ _id: 0, __v: 0 })
