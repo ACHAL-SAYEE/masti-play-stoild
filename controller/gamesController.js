@@ -462,11 +462,17 @@ class games {
     console.log("userId, agencyId, name", userId, agencyId, name);
     let randomNumber;
     try {
+      const AlreadyAgencyOwner=await AgencyData.findOne({ownerId:userId})
+      if(AlreadyAgencyOwner){
+        res.status(400).send("user is already agency owner")
+        return
+      }
       if (agencyId == null) {
         randomNumber = generateUserId();
         const existingUserWithId = await AgencyData.find({
           agencyId: randomNumber,
         });
+        
         if (existingUserWithId.length > 0) {
           isUserIdMatched = true;
           while (isUserIdMatched) {
