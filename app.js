@@ -160,7 +160,7 @@ app.post("/api/user", async (req, res) => {
     phoneNumber,
   } = req.body;
   try {
-    const existstingUserInfo=await User.findOne({email,phoneNumber})
+    const existstingUserInfo = await User.findOne({ $or: [{ email }, { phoneNumber }] });
     if(existstingUserInfo){
       res.status(400).send("email or phoneNumber is already taken")
       return
