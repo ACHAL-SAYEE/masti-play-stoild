@@ -731,9 +731,15 @@ class games {
     try {
       if (userId == null) {
         console.log(agencyId);
-        const agencyData = await AgencyData.findOne({ agencyId });
-        console.log(agencyData);
-        res.send(agencyData);
+        const agencyData = await AgencyData.find({ agencyId });
+        if (agencyData.length === 0) {
+          res
+            .status(404)
+            .send("user did not joined any agency or own an agency");
+          return;
+        }
+        console.log(agencyData[0]);
+        res.send(agencyData[0]);
         return;
       }
       const agencyJoined = await agencyParticipant.findOne({ userId });
@@ -743,13 +749,15 @@ class games {
         });
         res.send(AgencyData1);
       } else {
-        const agencyOwned = await AgencyData.findOne({ ownerId: userId });
-        if (agencyOwned) {
-          res.send(agencyOwned);
+        const agencyOwned = await AgencyData.find({ ownerId: userId });
+        if (agencyOwned.length > 0) {
+          res.send(agencyOwned[0]);
+          return;
         } else {
           res
-            .status(400)
+            .status(404)
             .send("user did not joined any agency or own an agency");
+          return;
         }
       }
     } catch (e) {
