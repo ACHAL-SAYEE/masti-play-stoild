@@ -108,6 +108,7 @@ const TransactionHistorySchema = new mongoose.Schema(
     sentTo: String,
     sentby: { type: String, default: null },
     isGift: { type: Boolean, default: false },
+    roomId: { type: String, default: null },
   },
   {
     timestamps: true,

@@ -528,7 +528,7 @@ class games {
   }
 
   async sendGift(req, res) {
-    const { sentTo, sentBy, diamondsSent } = req.body;
+    const { sentTo, sentBy, diamondsSent,roomId } = req.body;
     console.log("sentTo, sentBy, diamondsSent =", sentTo, sentBy, diamondsSent);
     try {
       const sendingUserBalance = await User.findOne({ userId: sentBy });
@@ -590,6 +590,7 @@ class games {
         }
       );
       await TransactionHistory.create({
+        roomId,
         sentby: sentBy,
         sentTo,
         diamondsAdded:  diamondsSent,
