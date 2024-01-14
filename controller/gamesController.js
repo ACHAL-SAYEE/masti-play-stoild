@@ -113,20 +113,35 @@ class games {
 
     switch (mode) {
       case "income":
-        query = { sentTo: userId, paymentType: null, beansAdded: { $gt: 0 } };
+        query = {
+          isGift: false,
+          sentTo: userId,
+          paymentType: null,
+          beansAdded: { $gt: 0 },
+        };
         break;
       case "cashout":
-        query = { amount: { $gt: 0 }, sentTo: userId, beans: { $lt: 0 } };
+        query = {
+          isGift: false,
+          amount: { $gt: 0 },
+          sentTo: userId,
+          beans: { $lt: 0 },
+        };
         break;
       case "agent-transfer":
         query = {
+          isGift: false,
           sentTo: { $regex: /^Ain/ },
           sentby: userId,
           beansAdded: { $gt: 0 },
         };
         break;
       default:
-        query = { beansAdded: { $lt: 0 }, diamondsAdded: { $gt: 0 } };
+        query = {
+          isGift: false,
+          beansAdded: { $lt: 0 },
+          diamondsAdded: { $gt: 0 },
+        };
         break;
     }
 
@@ -159,16 +174,23 @@ class games {
     switch (mode) {
       case "income":
         query = {
+          isGift: false,
           sentTo: userId,
           paymentType: null,
           diamondsAdded: { $gt: 0 },
         };
         break;
       case "recharge":
-        query = { sentTo: userId, game: null, diamondsAdded: { $gt: 0 } };
+        query = {
+          isGift: false,
+          sentTo: userId,
+          game: null,
+          diamondsAdded: { $gt: 0 },
+        };
         break;
       default:
         query = {
+          isGift: false,
           paymentType: null,
           sentby: userId,
           diamondsAdded: { $lt: 0 },
@@ -528,7 +550,7 @@ class games {
   }
 
   async sendGift(req, res) {
-    const { sentTo, sentBy, diamondsSent,roomId } = req.body;
+    const { sentTo, sentBy, diamondsSent, roomId } = req.body;
     console.log("sentTo, sentBy, diamondsSent =", sentTo, sentBy, diamondsSent);
     try {
       const sendingUserBalance = await User.findOne({ userId: sentBy });
@@ -593,7 +615,7 @@ class games {
         roomId,
         sentby: sentBy,
         sentTo,
-        diamondsAdded:  diamondsSent,
+        diamondsAdded: diamondsSent,
         // beansAdded: (9 * Number(diamondsSent)) / 10,
         isGift: true,
       });
@@ -608,28 +630,30 @@ class games {
   async getGiftHistory(req, res) {
     const { userId, month, year, day } = req.query;
     try {
-        let query = {
-            sentTo: userId,
-            isGift: true,
-            $expr: {
-                $and: [
-                    { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
-                    { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
-                ],
-            },
-        };
+      let query = {
+        sentTo: userId,
+        isGift: true,
+        $expr: {
+          $and: [
+            { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
+            { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
+          ],
+        },
+      };
 
-        if (day != null ) {
-            query.$expr.$and.push({ $eq: [{ $dayOfMonth: "$createdAt" }, parseInt(day)] });
-        }
+      if (day != null) {
+        query.$expr.$and.push({
+          $eq: [{ $dayOfMonth: "$createdAt" }, parseInt(day)],
+        });
+      }
 
-        const history = await TransactionHistory.find(query);
-        res.send(history);
+      const history = await TransactionHistory.find(query);
+      res.send(history);
     } catch (e) {
-        console.log(e);
-        res.status(500).send("Internal Server Error");
+      console.log(e);
+      res.status(500).send("Internal Server Error");
     }
-}
+  }
 
   async recharge(req, res) {
     const { userId, agentId, diamonds } = req.body;
