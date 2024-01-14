@@ -594,6 +594,7 @@ class games {
         sentTo,
         diamondsAdded: -1 * diamondsSent,
         beansAdded: (9 * Number(diamondsSent)) / 10,
+        isGift: true,
       });
 
       await res.send("gift sent successfully");
@@ -602,6 +603,32 @@ class games {
       res.status(500).send("internal server error");
     }
   }
+
+  async getGiftHistory(req, res) {
+    const { userId, month, year, day } = req.query;
+    try {
+        let query = {
+            sentTo: userId,
+            isGift: true,
+            $expr: {
+                $and: [
+                    { $eq: [{ $year: "$createdAt" }, parseInt(year)] },
+                    { $eq: [{ $month: "$createdAt" }, parseInt(month)] },
+                ],
+            },
+        };
+
+        if (day != null ) {
+            query.$expr.$and.push({ $eq: [{ $dayOfMonth: "$createdAt" }, parseInt(day)] });
+        }
+
+        const history = await TransactionHistory.find(query);
+        res.send(history);
+    } catch (e) {
+        console.log(e);
+        res.status(500).send("Internal Server Error");
+    }
+}
 
   async recharge(req, res) {
     const { userId, agentId, diamonds } = req.body;

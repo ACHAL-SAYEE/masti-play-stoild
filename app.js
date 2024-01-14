@@ -349,6 +349,8 @@ app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory);
 // app.post("/api/top-3-winners",gamesController.getTop3winners)
 app.get("/api/top-winner", gamesController.getTopWinners);
 
+app.get("/api/gift-history",gamesController.getGiftHistory)
+
 app.get("/api/bd/all", bdRoutes.getAllBD);
 app.get("/api/bd", bdRoutes.getBD);
 app.get("/api/bd/participants", bdRoutes.getParticipantAgencies);

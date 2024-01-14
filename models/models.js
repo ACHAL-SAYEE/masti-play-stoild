@@ -107,6 +107,7 @@ const TransactionHistorySchema = new mongoose.Schema(
     game: { type: String, default: null },
     sentTo: String,
     sentby: { type: String, default: null },
+    isGift: { type: Boolean, default: false },
   },
   {
     timestamps: true,
