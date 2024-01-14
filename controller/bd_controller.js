@@ -51,7 +51,7 @@ class bdController {
                     },
                     {
                         $group: {
-                            _id: '$_id',
+                            _id: '$id',
                             id: { $first: '$id' },
                             owner: { $first: '$owner' },
                             beans: { $first: '$beans' },
@@ -73,7 +73,7 @@ class bdController {
                     },
                     {
                         $group: {
-                            _id: '$_id',
+                            _id: '$id',
                             id: { $first: '$id' },
                             owner: { $first: '$owner' },
                             beans: { $first: '$beans' },
