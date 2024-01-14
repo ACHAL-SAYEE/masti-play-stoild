@@ -592,8 +592,8 @@ class games {
       await TransactionHistory.create({
         sentby: sentBy,
         sentTo,
-        diamondsAdded: -1 * diamondsSent,
-        beansAdded: (9 * Number(diamondsSent)) / 10,
+        diamondsAdded:  diamondsSent,
+        // beansAdded: (9 * Number(diamondsSent)) / 10,
         isGift: true,
       });
 
