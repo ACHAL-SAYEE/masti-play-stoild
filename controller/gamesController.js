@@ -562,25 +562,64 @@ class games {
         res.status(400).send("insufficient balance");
         return;
       }
+      const currentDate2 = new Date();
+      const startOfWeek = new Date(currentDate2);
+      startOfWeek.setDate(
+        currentDate2.getDate() -
+          currentDate2.getDay() +
+          (currentDate2.getDay() === 0 ? -6 : 1)
+      );
+
+      const bonusDetails = await TransactionHistory.aggregate([
+        {
+          $match: {
+            isGift: true,
+            sentTo,
+            createdAt: {
+              $gte: startOfWeek,
+              $lt: currentDate2,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: "$sentTo",
+            weeklyDiamonds: { $sum: "$diamondsAdded" },
+            // weeklyBonus: { $sum: "$bonusDiamonds" },
+          },
+        },
+      ]);
+      let bonusRate;
+      const earning = bonusDetails[0].weeklyDiamonds;
+      if (earning < 50000) {
+        bonusRate = 0;
+      } else if (earning < 200000) {
+        bonusRate = 0.05;
+      } else if (earning < 500000) {
+        bonusRate = 0.07;
+      } else {
+        bonusRate = 0.1;
+      }
+      const DiamondsToAdd = 0.68 * diamondsSent;
+      const bonusDiamonds = bonusRate * diamondsSent;
       await User.updateOne(
         { userId: sentBy },
-        { $inc: { diamondsCount: -1 * Number(diamondsSent) } }
+        { $inc: { diamondsCount: -1 * diamondsSent } }
       );
       await User.updateOne(
         { userId: sentTo },
-        { $inc: { beansCount: (9 * Number(diamondsSent)) / 10 } }
+        { $inc: { beansCount: DiamondsToAdd + bonusDiamonds } }
       );
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
       });
       if (agencyOfSentTo) {
-        // ACHAL: I think this should be agencyOfSentTo.updateOne
         await AgencyData.updateOne(
           { agencyId: agencyOfSentTo.agencyId },
           {
             $inc: {
-              beansCount: Number(diamondsSent) / 10,
-              totalBeansRecieved: Number(diamondsSent) / 10,
+              beansCount: DiamondsToAdd / 10,
+              totalBeansRecieved: DiamondsToAdd / 10,
             },
           }
         );
@@ -590,12 +629,12 @@ class games {
         if (bdOfsentTo) {
           BdData.updateOne(
             { bdId: bdOfsentTo.bdId },
-            { $inc: { beans: Number(diamondsSent) / 100 } }
+            { $inc: { beans: DiamondsToAdd / 100 } }
           );
-          AgencyData.updateOne(
-            { agencyId: agencyOfSentTo.agencyId },
-            { $inc: { beansCount: (-1 * Number(diamondsSent)) / 100 } }
-          );
+          // AgencyData.updateOne(
+          //   { agencyId: agencyOfSentTo.agencyId },
+          //   { $inc: { beansCount: (-1 * DiamondsToAdd) / 100 } }
+          // );
         }
       }
       const currentDate = new Date();
@@ -604,7 +643,7 @@ class games {
           month: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
         },
         {
-          $inc: { beans: diamondsSent },
+          $inc: { beans: DiamondsToAdd + bonusDiamonds },
         },
         {
           upsert: true,
@@ -615,7 +654,7 @@ class games {
         roomId,
         sentby: sentBy,
         sentTo,
-        diamondsAdded: diamondsSent,
+        diamondsAdded: DiamondsToAdd,
         // beansAdded: (9 * Number(diamondsSent)) / 10,
         isGift: true,
       });
