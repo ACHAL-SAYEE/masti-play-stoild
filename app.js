@@ -226,8 +226,13 @@ app.put("/api/user", async (req, res) => {
   const { userId } = req.body;
   try {
     const UserInfo = await User.findOneAndUpdate({ userId }, { ...req.body }, { new: true });
-    // ACHAL: if UserInfo is null, send 404
-    res.send(UserInfo)
+    if(UserInfo){
+      res.send(UserInfo)
+
+    }
+    else{
+      res.status(400).send("user not found")
+    }
 
   } catch (e) {
     console.log(e);
@@ -285,7 +290,7 @@ app.get("/api/users", gamesController.getUsers);
 
 app.get("/api/convert", gamesController.convert); // ACHAL: create a TransactionHistory here
 
-app.put("/api/agent/convert", gamesController.convertUsertoAgent); // ACHAL: create a TransactionHistory here
+app.put("/api/agent/convert", gamesController.convertUsertoAgent); //done
 
 app.post("/api/agent", gamesController.postAgent);
 
@@ -302,12 +307,12 @@ app.post("/api/change-role", gamesController.ChangeUserRole);
 app.post("/api/agency-joining", gamesController.joinAgency);
 
 app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
-// ACHAL: have certain check in it, to check for a avlid balance of user sending gift
-app.put("/api/send-gift", gamesController.sendGift); // ACHAL: create a TransactionHistory here
 
-app.put("/api/agent-recharge", gamesController.recharge); // ACHAL: create a TransactionHistory here
+app.put("/api/send-gift", gamesController.sendGift); 
 
-app.put("/api/agent-admin-recharge", gamesController.adminRecharge); // ACHAL: create a TransactionHistory here
+app.put("/api/agent-recharge", gamesController.recharge); 
+
+app.put("/api/agent-admin-recharge", gamesController.adminRecharge); 
 
 app.get("/api/agencies/all", gamesController.getAllAgencies);
 

@@ -10,8 +10,8 @@ const {
   bettingGameData,
   Top3Winners,
 } = require("../models/models");
-
-const beansToDiamondsRate = 1
+const { ParticipantAgencies, BdData } = require("../models/bd");
+const beansToDiamondsRate = 1;
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 const { generateUniqueId, generateUserId } = require("../utils");
 
@@ -263,6 +263,13 @@ class games {
         { agentId: userId },
         { $inc: { diamondsCount: beans } }
       );
+      await TransactionHistory.create({
+        diamondsAdded: beans,
+        beansAdded: -1 * beans,
+        sentby: userId,
+        sentTo: `A${userId}`,
+      });
+      res.send("beans added to your agent wallet successfully");
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -313,7 +320,9 @@ class games {
       if (existingUser.agentId == null) {
         res.status(404).send("user is not an agent");
       } else {
-        agentData = await Agent.findOne({ agentId: existingUser.agentId }).select({
+        agentData = await Agent.findOne({
+          agentId: existingUser.agentId,
+        }).select({
           _id: 0,
           __v: 0,
         });
@@ -474,10 +483,10 @@ class games {
     console.log("userId, agencyId, name", userId, agencyId, name);
     let randomNumber;
     try {
-      const AlreadyAgencyOwner = await AgencyData.findOne({ ownerId: userId })
+      const AlreadyAgencyOwner = await AgencyData.findOne({ ownerId: userId });
       if (AlreadyAgencyOwner) {
-        res.status(400).send("user is already agency owner")
-        return
+        res.status(400).send("user is already agency owner");
+        return;
       }
       if (agencyId == null) {
         randomNumber = generateUserId();
@@ -529,7 +538,7 @@ class games {
       }
       if (sendingUserBalance.diamondsCount < diamondsSent) {
         res.status(400).send("insufficient balance");
-        return
+        return;
       }
       await User.updateOne(
         { userId: sentBy },
@@ -544,7 +553,7 @@ class games {
       });
       if (agencyOfSentTo) {
         // ACHAL: I think this should be agencyOfSentTo.updateOne
-        await User.updateOne(
+        await AgencyData.updateOne(
           { agencyId: agencyOfSentTo.agencyId },
           {
             $inc: {
@@ -553,8 +562,20 @@ class games {
             },
           }
         );
+        const bdOfsentTo = await ParticipantAgencies.findOne({
+          agencyId: agencyOfSentTo.agencyId,
+        });
+        if (bdOfsentTo) {
+          BdData.updateOne(
+            { bdId: bdOfsentTo.bdId },
+            { $inc: { beans: Number(diamondsSent) / 100 } }
+          );
+          AgencyData.updateOne(
+            { agencyId: agencyOfSentTo.agencyId },
+            { $inc: { beansCount: (-1 * Number(diamondsSent)) / 100 } }
+          );
+        }
       }
-      // ACHAL: if agencyOfSentTo belongs to a BD (check from ParticipantAgencies), then transfer 10% of diamondsSent to that BD
       const currentDate = new Date();
       await monthlyAgencyHistory.findOneAndUpdate(
         {
@@ -568,6 +589,12 @@ class games {
           new: true,
         }
       );
+      await TransactionHistory.create({
+        sentby: sentBy,
+        sentTo,
+        diamondsAdded: -1 * diamondsSent,
+        beansAdded: (9 * Number(diamondsSent)) / 10,
+      });
 
       await res.send("gift sent successfully");
     } catch (e) {
@@ -608,6 +635,11 @@ class games {
             new: true,
           }
         );
+        await TransactionHistory.create({
+          sentby: agentId,
+          sentTo: userId,
+          diamondsAdded: -1 * diamonds,
+        });
         res.send("recharged successfully");
       }
     } catch (e) {
@@ -624,6 +656,10 @@ class games {
         { agentId: agentId },
         { $inc: { diamondsCount: diamonds } }
       );
+      await TransactionHistory.create({
+        sentTo: agentId,
+        diamondsAdded: diamonds,
+      });
       // await monthlyAgentHistory.findOneAndUpdate(
       //   {
       //     month: new Date(
