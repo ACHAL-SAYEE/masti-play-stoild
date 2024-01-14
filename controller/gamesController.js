@@ -629,7 +629,7 @@ class games {
         console.log("bdOfsentTo", bdOfsentTo);
         if (bdOfsentTo) {
           await BdData.updateOne(
-            { bdId: bdOfsentTo.bdId },
+            { id: bdOfsentTo.bdId },
             { $inc: { beans: DiamondsToAdd / 100 } }
           );
           // AgencyData.updateOne(
