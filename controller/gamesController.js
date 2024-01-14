@@ -585,7 +585,6 @@ class games {
           $group: {
             _id: "$sentTo",
             weeklyDiamonds: { $sum: "$diamondsAdded" },
-            // weeklyBonus: { $sum: "$bonusDiamonds" },
           },
         },
       ]);
@@ -830,7 +829,7 @@ class games {
   }
 
   async getAgencyParticipants(req, res) {
-    const { agencyId } = req.query;
+    const { agencyId, start, limit } = req.query;
     try {
       const participants = await agencyParticipant.aggregate([
         { $match: { agencyId } },
@@ -850,6 +849,12 @@ class games {
         },
         {
           $project: { _id: 0, __v: 0 },
+        },
+        {
+          $skip: Number(start),
+        },
+        {
+          $limit: Number(limit),
         },
       ]);
 
