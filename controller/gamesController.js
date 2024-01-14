@@ -282,7 +282,7 @@ class games {
     try {
       await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
       await Agent.updateOne(
-        { agentId: userId },
+        { agentId: `A${userId}` },
         { $inc: { diamondsCount: beans } }
       );
       await TransactionHistory.create({

@@ -37,6 +37,7 @@ const userSchema = new mongoose.Schema({
   friends: { type: Number, default: 0 },
   role: { type: String, default: "user" },
   isVerified: { type: Boolean, default: false },
+  token: { type: String, required: false }
 });
 
 const TagSchema = new mongoose.Schema(
