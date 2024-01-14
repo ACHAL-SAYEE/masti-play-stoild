@@ -5,6 +5,9 @@ const { User, AgencyData } = require("../models/models");
 class bdController {
     async getAllBD(start, limit) {
         try {
+            if (!start) {
+                throw "start is undefined.";
+            }
             const bdDataList = await BdData.find()
                 .skip(start)
                 .limit(limit)
@@ -34,8 +37,8 @@ class bdController {
     async getBD(id, userId) {
         try {
             let bdData;
-
             if (id) {
+                // ACHAL: Fix the query below
                 bdData = await BdData.aggregate([
                     { $match: { id: id } },
                     {
@@ -57,6 +60,7 @@ class bdController {
                     },
                 ]).exec();
             } else if (userId) {
+                // ACHAL: Fix the query below
                 bdData = await BdData.aggregate([
                     { $match: { owner: userId } },
                     {
@@ -102,6 +106,9 @@ class bdController {
 
     async getParticipantAgencies(bdId, start = 0, limit = 10) {
         try {
+            if (!bdId) {
+                throw "bdId is required in the request.";
+            }
             const participantAgenciesList = await ParticipantAgencies.find({ bdId: bdId, exists: true })
                 .skip(start)
                 .limit(limit)

@@ -543,6 +543,7 @@ class games {
         userId: sentTo,
       });
       if (agencyOfSentTo) {
+        // ACHAL: I think this should be agencyOfSentTo.updateOne
         await User.updateOne(
           { agencyId: agencyOfSentTo.agencyId },
           {
@@ -553,6 +554,7 @@ class games {
           }
         );
       }
+      // ACHAL: if agencyOfSentTo belongs to a BD (check from ParticipantAgencies), then transfer 10% of diamondsSent to that BD
       const currentDate = new Date();
       await monthlyAgencyHistory.findOneAndUpdate(
         {

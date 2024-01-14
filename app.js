@@ -210,22 +210,23 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.get("/api/user", async (req, res) => {
-  const { userId } = req.query
-  try {
-    const UserInfo = await User.findOne({ userId })
-    res.send(UserInfo)
+// app.get("/api/user", async (req, res) => {
+//   const { userId } = req.query
+//   try {
+//     const UserInfo = await User.findOne({ userId })
+//     res.send(UserInfo)
 
-  } catch (e) {
-    console.log(e);
-    res.status(500).send("internal server error");
-  }
-})
+//   } catch (e) {
+//     console.log(e);
+//     res.status(500).send("internal server error");
+//   }
+// })
 
 app.put("/api/user", async (req, res) => {
   const { userId } = req.body;
   try {
-    const UserInfo = await User.findOneAndUpdate({ userId }, { ...req.body }, { new: true })
+    const UserInfo = await User.findOneAndUpdate({ userId }, { ...req.body }, { new: true });
+    // ACHAL: if UserInfo is null, send 404
     res.send(UserInfo)
 
   } catch (e) {
@@ -274,7 +275,7 @@ app.get("/api/following-users", postsController.getFollowingData);
 
 app.get("/api/friends", postsController.getFriendsData);
 
-app.post("/api/beansDiamonds", gamesController.postData);
+app.post("/api/create-transaction-history", gamesController.postData);
 
 app.get("/api/beans-history", gamesController.getBeansHistory);
 
@@ -282,9 +283,9 @@ app.get("/api/diamonds-history", gamesController.getDiamondsHistory);
 
 app.get("/api/users", gamesController.getUsers);
 
-app.get("/api/convert", gamesController.convert);
+app.get("/api/convert", gamesController.convert); // ACHAL: create a TransactionHistory here
 
-app.put("/api/agent/convert", gamesController.convertUsertoAgent);
+app.put("/api/agent/convert", gamesController.convertUsertoAgent); // ACHAL: create a TransactionHistory here
 
 app.post("/api/agent", gamesController.postAgent);
 
@@ -301,12 +302,12 @@ app.post("/api/change-role", gamesController.ChangeUserRole);
 app.post("/api/agency-joining", gamesController.joinAgency);
 
 app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
+// ACHAL: have certain check in it, to check for a avlid balance of user sending gift
+app.put("/api/send-gift", gamesController.sendGift); // ACHAL: create a TransactionHistory here
 
-app.put("/api/send-gift", gamesController.sendGift);
+app.put("/api/agent-recharge", gamesController.recharge); // ACHAL: create a TransactionHistory here
 
-app.put("/api/agent-recharge", gamesController.recharge);
-
-app.put("/api/agent-admin-recharge", gamesController.adminRecharge);
+app.put("/api/agent-admin-recharge", gamesController.adminRecharge); // ACHAL: create a TransactionHistory here
 
 app.get("/api/agencies/all", gamesController.getAllAgencies);
 
@@ -316,18 +317,18 @@ app.get("/api/comments", postsController.getsCommentsOfPost);
 
 app.get("/api/agency", gamesController.getAgencyDataOfUser);
 
-app.post("/api/spinner-betting", async (req, res) => {
-  const { userId, wheelNo, amount } = req.body;
-  var userExists = bettingInfoArray.some((item) => item.userId === userId);
+// app.post("/api/spinner-betting", async (req, res) => {
+//   const { userId, wheelNo, amount } = req.body;
+//   var userExists = bettingInfoArray.some((item) => item.userId === userId);
 
-  if (!userExists) bettingGameparticipants += 1;
-  bettingInfoArray.push({ userId, wheelNo, amount });
-  await User.updateOne(
-    { userId: userId },
-    { $inc: { diamondsCount: -1 * amount } }
-  );
-  // res.send("betted successfully");
-});
+//   if (!userExists) bettingGameparticipants += 1;
+//   bettingInfoArray.push({ userId, wheelNo, amount });
+//   await User.updateOne(
+//     { userId: userId },
+//     { $inc: { diamondsCount: -1 * amount } }
+//   );
+//   // res.send("betted successfully");
+// });
 
 app.post("/api/top3-winner", gamesController.getBettingResults);
 
@@ -348,7 +349,7 @@ app.get("/api/bd", bdRoutes.getBD);
 app.get("/api/bd/participants", bdRoutes.getParticipantAgencies);
 app.post("/api/bd", bdRoutes.createBD);
 app.put("/api/bd", bdRoutes.updateBD);
-app.put("/api/bd/add-beans", bdRoutes.addBeans);
+app.put("/api/bd/add-beans", bdRoutes.addBeans); // ACHAL: create a TransactionHistory here
 app.post("/api/bd/add-agency", bdRoutes.addAgency);
 app.put("/api/bd/remove-agency", bdRoutes.removeAgency);
 
@@ -419,7 +420,7 @@ async function gameEnds() {
   bettingGameparticipants = 0;
 }
 
-async function endBetting() {
+async function endBetting() { // ACHAL: update TransactionHistory here for every user according to gamename
   console.log("bettingInfoArray", bettingInfoArray)
   if (bettingInfoArray.length === 0) {
     return {
