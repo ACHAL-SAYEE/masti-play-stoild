@@ -86,7 +86,7 @@ const authenticateToken = (request, response, next) => {
   }
 };
 
-initializeDB();
+ initializeDB();
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
@@ -412,7 +412,10 @@ async function gameEnds() {
   updateGameProperties({ gameEndTime: new Date() });
   sendGameUpdate("game-ended");
   bettingInfoArray = [];
-  await Top3Winners.deleteMany({});
+  try{  await Top3Winners.deleteMany({});
+}catch(e){
+  console.log(e)
+}
   bettingGameparticipants = 0;
 }
 
