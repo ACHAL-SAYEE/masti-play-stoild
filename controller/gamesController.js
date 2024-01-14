@@ -545,7 +545,7 @@ class games {
       res.send({ ...agencyData, ownerId: userId });
     } catch (e) {
       console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send(`internal server error: ${e}`);
     }
   }
 
@@ -566,8 +566,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-          currentDate2.getDay() +
-          (currentDate2.getDay() === 0 ? -6 : 1)
+        currentDate2.getDay() +
+        (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -590,7 +590,7 @@ class games {
         },
       ]);
       let bonusRate;
-      const earning = bonusDetails[0].weeklyDiamonds;
+      const earning = bonusDetails.length == 0 ? 0 : bonusDetails[0].weeklyDiamonds;
       if (earning < 50000) {
         bonusRate = 0;
       } else if (earning < 200000) {
@@ -623,11 +623,13 @@ class games {
             },
           }
         );
-        const bdOfsentTo = await ParticipantAgencies.findOne({
-          agencyId: agencyOfSentTo.agencyId,
-        });
+        const bdOfsentTo = await ParticipantAgencies.findOneAndUpdate(
+          { agencyId: agencyOfSentTo.agencyId },
+          { $inc: { contributedBeans: DiamondsToAdd / 100 } },
+        );
+        console.log("bdOfsentTo", bdOfsentTo);
         if (bdOfsentTo) {
-          BdData.updateOne(
+          await BdData.updateOne(
             { bdId: bdOfsentTo.bdId },
             { $inc: { beans: DiamondsToAdd / 100 } }
           );
@@ -662,7 +664,7 @@ class games {
       await res.send("gift sent successfully");
     } catch (e) {
       console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send(`internal server error: ${e}`);
     }
   }
 
