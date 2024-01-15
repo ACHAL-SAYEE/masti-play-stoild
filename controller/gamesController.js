@@ -280,6 +280,11 @@ class games {
   async convertUsertoAgent(req, res) {
     const { userId, beans } = req.body;
     try {
+      const balance = await User.findOne({ userId });
+      if (balance.beansCount < beans) {
+        res.status(400).send("insufficient balance");
+        return;
+      }
       await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
       await Agent.updateOne(
         { agentId: `A${userId}` },
@@ -569,8 +574,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-        currentDate2.getDay() +
-        (currentDate2.getDay() === 0 ? -6 : 1)
+          currentDate2.getDay() +
+          (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -592,7 +597,8 @@ class games {
         },
       ]);
       let bonusRate;
-      const earning = bonusDetails.length == 0 ? 0 : bonusDetails[0].weeklyDiamonds;
+      const earning =
+        bonusDetails.length == 0 ? 0 : bonusDetails[0].weeklyDiamonds;
       if (earning < 50000) {
         bonusRate = 0;
       } else if (earning < 200000) {
@@ -627,7 +633,7 @@ class games {
         );
         const bdOfsentTo = await ParticipantAgencies.findOneAndUpdate(
           { agencyId: agencyOfSentTo.agencyId },
-          { $inc: { contributedBeans: DiamondsToAdd / 100 } },
+          { $inc: { contributedBeans: DiamondsToAdd / 100 } }
         );
         console.log("bdOfsentTo", bdOfsentTo);
         if (bdOfsentTo) {
