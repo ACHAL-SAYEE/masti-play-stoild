@@ -2,6 +2,7 @@
 // app.use(bodyParser.json());
 require("dotenv").config();
 const http = require("http");
+const { exec } = require('child_process');
 const socketIO = require("socket.io");
 const PORT = process.env.PORT || 4000;
 const multer = require("multer");
@@ -86,7 +87,7 @@ const authenticateToken = (request, response, next) => {
   }
 };
 
- initializeDB();
+initializeDB();
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
@@ -106,6 +107,23 @@ app.post("/upload", (req, res, next) => {
   var fileLink = "/" + filename;
 });
 
+app.post('/api/update-server', async (req, res) => {
+  console.log("Updating Server: ");
+  const payload = req.body;
+  if ((payload && payload.force && payload.force == true) || (payload && payload.ref === 'refs/heads/master')) {
+    exec('git reset --hard && git pull', (error, stdout, stderr) => {
+      if (error) {
+        console.error(`Error: ${error.message}`);
+        res.status(500).send('Internal Server Error');
+        return;
+      }
+      console.log(`Git Pull Successful: ${stdout}`);
+      res.status(200).send('Server Updated Successfully');
+    });
+  } else {
+    res.status(200).send('Ignoring non-master branch push event');
+  }
+});
 
 function ensureWheelNumbers(array) {
   const resultArray = [];
@@ -226,11 +244,11 @@ app.put("/api/user", async (req, res) => {
   const { userId } = req.body;
   try {
     const UserInfo = await User.findOneAndUpdate({ userId }, { ...req.body }, { new: true });
-    if(UserInfo){
+    if (UserInfo) {
       res.send(UserInfo)
 
     }
-    else{
+    else {
       res.status(400).send("user not found")
     }
 
@@ -308,11 +326,11 @@ app.post("/api/agency-joining", gamesController.joinAgency);
 
 app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
 
-app.put("/api/send-gift", gamesController.sendGift); 
+app.put("/api/send-gift", gamesController.sendGift);
 
-app.put("/api/agent-recharge", gamesController.recharge); 
+app.put("/api/agent-recharge", gamesController.recharge);
 
-app.put("/api/agent-admin-recharge", gamesController.adminRecharge); 
+app.put("/api/agent-admin-recharge", gamesController.adminRecharge);
 
 app.get("/api/agencies/all", gamesController.getAllAgencies);
 
@@ -349,7 +367,7 @@ app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory);
 // app.post("/api/top-3-winners",gamesController.getTop3winners)
 app.get("/api/top-winner", gamesController.getTopWinners);
 
-app.get("/api/gift-history",gamesController.getGiftHistory)
+app.get("/api/gift-history", gamesController.getGiftHistory)
 
 app.get("/api/bd/all", bdRoutes.getAllBD);
 app.get("/api/bd", bdRoutes.getBD);
@@ -420,10 +438,11 @@ async function gameEnds() {
   updateGameProperties({ gameEndTime: new Date() });
   sendGameUpdate("game-ended");
   bettingInfoArray = [];
-  try{  await Top3Winners.deleteMany({});
-}catch(e){
-  console.log(e)
-}
+  try {
+    await Top3Winners.deleteMany({});
+  } catch (e) {
+    console.log(e)
+  }
   bettingGameparticipants = 0;
 }
 
