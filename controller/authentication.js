@@ -1,5 +1,10 @@
 const unirest = require("unirest");
-const { User } = require("../models/models");
+const {
+  User,
+  Agent,
+  AgencyData,
+  agencyParticipant,
+} = require("../models/models");
 const bcrypt = require("bcrypt");
 const otpMap = {};
 const { OAuth2Client } = require("google-auth-library");
@@ -12,7 +17,8 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const {generateUserId}=require("../utils")
+const { generateUserId } = require("../utils");
+const { BdData, ParticipantAgencies } = require("../models/bd");
 
 class Authentication {
   async sendOtp(req, res) {
@@ -115,12 +121,13 @@ class Authentication {
       //   }
       // }
       let newUserId;
-    const ExistingUsers = await User.find({});
-    if (ExistingUsers.length === 0) {
-      newUserId = 20240000;
-    } else {
-      newUserId = parseInt(ExistingUsers[ExistingUsers.length - 1].userId) + 1;
-    }
+      const ExistingUsers = await User.find({});
+      if (ExistingUsers.length === 0) {
+        newUserId = 20240000;
+      } else {
+        newUserId =
+          parseInt(ExistingUsers[ExistingUsers.length - 1].userId) + 1;
+      }
       const newUser = new User({
         UserId: `${newUserId}`,
         email,
@@ -215,6 +222,51 @@ class Authentication {
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
+    }
+  }
+
+  async deleteUser(req, res) {
+    const { userId } = req.query;
+    try {
+      await User.deleteOne({ userId });
+      await Agent.deleteOne({ agentId: `A${userId}` });
+      res.send("user deleted successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
+    }
+  }
+  async deleteAgent(req, res) {
+    const { agentId } = req.query;
+    try {
+      await Agent.deleteOne({ agentId });
+      res.send("agent deleted successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
+    }
+  }
+  async deleteAgency(req, res) {
+    const { agencyId } = req.query;
+    try {
+      await AgencyData.deleteOne({ agencyId });
+      await agencyParticipant.deleteMany({ agencyId });
+      await ParticipantAgencies.deleteMany({ agencyId });
+      res.send("agency deleted successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
+    }
+  }
+  async deleteBd(req, res) {
+    const { bdId } = req.query;
+    try {
+      await BdData.deleteOne({ id: bdId });
+      await ParticipantAgencies.deleteMany({ bdId });
+      res.send("bd deleted successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
     }
   }
 }

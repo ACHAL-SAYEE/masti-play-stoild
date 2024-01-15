@@ -210,6 +210,11 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
+app.delete("/api/user",authenticationController.deleteUser)
+app.delete("/api/agent",authenticationController.deleteAgent)
+app.delete("/api/agency",authenticationController.deleteAgency)
+app.delete("/api/bd",authenticationController.deleteBd)
+
 // app.get("/api/user", async (req, res) => {
 //   const { userId } = req.query
 //   try {
