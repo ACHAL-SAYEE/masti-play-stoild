@@ -34,6 +34,7 @@ async function queryDiamondsTransactionHistory(
   selectFields
 ) {
   try {
+    console.log(query)
     return await TransactionHistory.find(query)
       .skip(start)
       .limit(limit)
@@ -739,7 +740,7 @@ class games {
         await TransactionHistory.create({
           sentby: agentId,
           sentTo: userId,
-          diamondsAdded: -1 * diamonds,
+          diamondsAdded:  diamonds,
         });
         res.send("recharged successfully");
       }
