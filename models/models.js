@@ -26,6 +26,18 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
+  audioRoomBackground: {
+    type: String,
+    default: null,
+  },
+  chatBubble: {
+    type: String,
+    default: null,
+  },
+  entry: {
+    type: String,
+    default: null,
+  },
   password: {
     type: String,
     default: null,
