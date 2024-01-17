@@ -378,9 +378,9 @@ class games {
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
-      const Users = User.find({})
+      const Users = await User.find({})
         .skip(Number(start))
-        .limit(Number(limit));
+        .limit(Number(limit)).exec();
       res.send(Users);
     } catch (e) {
       console.log(e);
@@ -575,8 +575,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-          currentDate2.getDay() +
-          (currentDate2.getDay() === 0 ? -6 : 1)
+        currentDate2.getDay() +
+        (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -740,7 +740,7 @@ class games {
         await TransactionHistory.create({
           sentby: agentId,
           sentTo: userId,
-          diamondsAdded:  diamonds,
+          diamondsAdded: diamonds,
         });
         res.send("recharged successfully");
       }
