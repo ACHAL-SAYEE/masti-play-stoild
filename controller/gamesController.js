@@ -949,6 +949,7 @@ class games {
       })
         .skip(Number(start))
         .limit(Number(limit));
+      console.log(TopWinners);
       res.send(TopWinners);
     } catch (e) {
       console.log(e);
