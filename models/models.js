@@ -176,7 +176,7 @@ const SpinnerGameWinnerHistorySchema = new mongoose.Schema(
 );
 
 const bettingGameDataSchema = new mongoose.Schema(
-  { participants: Number, winners: Number },
+  { participants: Number, winners: Number, wheelNo: String },
   { timestamps: true }
 );
 

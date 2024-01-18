@@ -545,6 +545,7 @@ async function endBetting() {
       await bettingGameData.create({
         participants: bettingGameparticipants,
         winners: nearestEntry.userids.length,
+        wheelNo:nearestEntry.wheelNo
       });
       betInfoFiltered = bettingInfoArray.filter(
         (item) =>
