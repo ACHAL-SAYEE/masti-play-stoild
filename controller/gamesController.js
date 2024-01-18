@@ -34,7 +34,7 @@ async function queryDiamondsTransactionHistory(
   selectFields
 ) {
   try {
-    console.log(query)
+    console.log(query);
     return await TransactionHistory.find(query)
       .skip(start)
       .limit(limit)
@@ -378,9 +378,7 @@ class games {
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
-      const Users = User.find({})
-        .skip(Number(start))
-        .limit(Number(limit));
+      const Users = User.find({}).skip(Number(start)).limit(Number(limit));
       res.send(Users);
     } catch (e) {
       console.log(e);
@@ -740,7 +738,7 @@ class games {
         await TransactionHistory.create({
           sentby: agentId,
           sentTo: userId,
-          diamondsAdded:  diamonds,
+          diamondsAdded: diamonds,
         });
         res.send("recharged successfully");
       }
@@ -906,8 +904,11 @@ class games {
   }
 
   async getSpinnerHistory(req, res) {
+    const { start, limit } = req.query;
     try {
-      res.send(await bettingGameData.find({}));
+      res.send(
+        await bettingGameData.find({}).skip(Number(start)).limit(Number(limit))
+      );
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -915,11 +916,13 @@ class games {
   }
 
   async getUserAllBettingHistory(req, res) {
-    const { userId } = req.query;
+    const { userId, start, limit } = req.query;
     try {
       const bettingHistory = await SpinnerGameWinnerHistory.find({
         userId,
-      });
+      })
+        .skip(Number(start))
+        .limit(Number(limit));
       res.send(bettingHistory);
     } catch (e) {
       console.log(e);
@@ -927,6 +930,7 @@ class games {
     }
   }
   async getTopWinners(req, res) {
+    const { start, limit } = req.query;
     try {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
@@ -935,7 +939,9 @@ class games {
       todayEnd.setHours(23, 59, 59, 999);
       const TopWinners = await SpinnerGameWinnerHistory.find({
         createdAt: { $gte: todayStart, $lt: todayEnd },
-      });
+      })
+        .skip(Number(start))
+        .limit(Number(limit));
       res.send(TopWinners);
     } catch (e) {
       console.log(e);

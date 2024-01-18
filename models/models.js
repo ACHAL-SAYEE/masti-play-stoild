@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
   friends: { type: Number, default: 0 },
   role: { type: String, default: "user" },
   isVerified: { type: Boolean, default: false },
-  token: { type: String, required: false }
+  token: { type: String, required: false },
 });
 
 const TagSchema = new mongoose.Schema(
@@ -102,7 +102,7 @@ const agentSchema = new mongoose.Schema({
 const TransactionHistorySchema = new mongoose.Schema(
   {
     amount: { type: Number, default: 0 },
-    paymentType: String,
+    paymentType: { type: String, default: null },
     beansAdded: { type: Number, default: 0 },
     diamondsAdded: { type: Number, default: 0 },
     game: { type: String, default: null },
