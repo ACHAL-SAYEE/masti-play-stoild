@@ -841,10 +841,12 @@ class games {
 
   async getBettingResults(req, res) {
     let Top3Winnersinfo = await Top3Winners.find({});
-    Top3Winnersinfo = Top3Winnersinfo.map(async (winner) => {
-      const userdata = await User.findOne({ userId: winner.userId });
-      return { ...winner, userdata };
-    });
+    Top3Winnersinfo = await Promise.all(
+      Top3Winnersinfo.map(async (winner) => {
+        const userdata = await User.findOne({ userId: winner.userId });
+        return { ...winner, userdata };
+      })
+    );
     res.send({
       Top3Winnersinfo,
     });
