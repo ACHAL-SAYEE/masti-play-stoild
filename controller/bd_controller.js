@@ -48,7 +48,7 @@ class bdController {
               as: "agencies",
             },
           },
-          { $unwind: "$agencies" },
+          { $unwind: { path: "$agencies", preserveNullAndEmptyArrays: true } },
           {
             $group: {
               _id: "$id",
@@ -72,7 +72,7 @@ class bdController {
               as: "agencies",
             },
           },
-          { $unwind: "$agencies" },
+          { $unwind: { path: "$agencies", preserveNullAndEmptyArrays: true } },
           {
             $group: {
               _id: "$id",
