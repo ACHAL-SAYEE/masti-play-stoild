@@ -2,7 +2,7 @@
 // app.use(bodyParser.json());
 require("dotenv").config();
 const http = require("http");
-const { exec } = require('child_process');
+const { exec } = require("child_process");
 const socketIO = require("socket.io");
 const PORT = process.env.PORT || 4000;
 const multer = require("multer");
@@ -107,21 +107,24 @@ app.post("/upload", (req, res, next) => {
   var fileLink = "/" + filename;
 });
 
-app.post('/api/update-server', async (req, res) => {
+app.post("/api/update-server", async (req, res) => {
   console.log("Updating Server: ");
   const payload = req.body;
-  if ((payload && payload.force && payload.force == true) || (payload && payload.ref === 'refs/heads/master')) {
-    exec('git reset --hard && git pull', (error, stdout, stderr) => {
+  if (
+    (payload && payload.force && payload.force == true) ||
+    (payload && payload.ref === "refs/heads/master")
+  ) {
+    exec("git reset --hard && git pull", (error, stdout, stderr) => {
       if (error) {
         console.error(`Error: ${error.message}`);
-        res.status(500).send('Internal Server Error');
+        res.status(500).send("Internal Server Error");
         return;
       }
       console.log(`Git Pull Successful: ${stdout}`);
-      res.status(200).send('Server Updated Successfully');
+      res.status(200).send("Server Updated Successfully");
     });
   } else {
-    res.status(200).send('Ignoring non-master branch push event');
+    res.status(200).send("Ignoring non-master branch push event");
   }
 });
 
@@ -149,14 +152,13 @@ function ensureWheelNumbers(array) {
         userids: [],
         wheelNo: i,
         totalAmount: 0,
-        betreturnvalue: 0
+        betreturnvalue: 0,
       });
     }
   }
 
   return resultArray;
 }
-
 
 app.post("/otp", authenticationController.sendOtp);
 
@@ -180,13 +182,15 @@ app.post("/api/user", async (req, res) => {
   try {
     var existingUserInfo;
     if (phoneNumber) {
-      existingUserInfo = await User.findOne({ $or: [{ email }, { phoneNumber }] });
+      existingUserInfo = await User.findOne({
+        $or: [{ email }, { phoneNumber }],
+      });
     } else {
       existingUserInfo = await User.findOne({ $or: [{ email }] });
     }
     if (existingUserInfo) {
-      res.status(400).send("email or phoneNumber is already taken")
-      return
+      res.status(400).send("email or phoneNumber is already taken");
+      return;
     }
     const hashedPassword = password ? await bcrypt.hash(password, 10) : null;
 
@@ -228,10 +232,10 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.delete("/api/user", authenticationController.deleteUser)
-app.delete("/api/agent", authenticationController.deleteAgent)
-app.delete("/api/agency", authenticationController.deleteAgency)
-app.delete("/api/bd", authenticationController.deleteBd)
+app.delete("/api/user", authenticationController.deleteUser);
+app.delete("/api/agent", authenticationController.deleteAgent);
+app.delete("/api/agency", authenticationController.deleteAgency);
+app.delete("/api/bd", authenticationController.deleteBd);
 
 // app.get("/api/user", async (req, res) => {
 //   const { userId } = req.query
@@ -248,20 +252,21 @@ app.delete("/api/bd", authenticationController.deleteBd)
 app.put("/api/user", async (req, res) => {
   const { userId } = req.body;
   try {
-    const UserInfo = await User.findOneAndUpdate({ userId }, { ...req.body }, { new: true });
+    const UserInfo = await User.findOneAndUpdate(
+      { userId },
+      { ...req.body },
+      { new: true }
+    );
     if (UserInfo) {
-      res.send(UserInfo)
-
+      res.send(UserInfo);
+    } else {
+      res.status(400).send("user not found");
     }
-    else {
-      res.status(400).send("user not found")
-    }
-
   } catch (e) {
     console.log(e);
     res.status(500).send("internal server error");
   }
-})
+});
 
 app.post("/api/SignInWithGoggle", authenticationController.SignInWithGoggle);
 
@@ -372,7 +377,7 @@ app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory); //
 // ACHAL: send top-winner's UsersData as well
 app.get("/api/top-winner", gamesController.getTopWinners);   // today's top winners
 
-app.get("/api/gift-history", gamesController.getGiftHistory)
+app.get("/api/gift-history", gamesController.getGiftHistory);
 
 app.get("/api/bd/all", bdRoutes.getAllBD);
 app.get("/api/bd", bdRoutes.getBD);
@@ -410,10 +415,7 @@ function sendGameUpdate(event, socket = null, data = null) {
     ...gameProperties,
     ...(data ? data : {}),
   };
-  console.log(
-    `Sending Game Update: ${event} | gameProperties:`,
-    sendData,
-  );
+  console.log(`Sending Game Update: ${event} | gameProperties:`, sendData);
   if (socket) {
     socket.emit(event, sendData);
   } else {
@@ -446,20 +448,20 @@ async function gameEnds() {
   try {
     await Top3Winners.deleteMany({});
   } catch (e) {
-    console.log(e)
+    console.log(e);
   }
   bettingGameparticipants = 0;
 }
 
-async function endBetting() { // ACHAL: update TransactionHistory here for every user according to gamename
-  console.log("bettingInfoArray", bettingInfoArray)
+async function endBetting() {
+  // ACHAL: update TransactionHistory here for every user according to gamename
+  console.log("bettingInfoArray", bettingInfoArray);
   if (bettingInfoArray.length === 0) {
     return {
       totalBet: 0,
-      result: Math.floor(Math.random() * 8) + 1
-    }
-  }
-  else {
+      result: Math.floor(Math.random() * 8) + 1,
+    };
+  } else {
     const totalbettAmount = bettingInfoArray.reduce(
       (sum, item) => sum + item.amount,
       0
@@ -488,7 +490,7 @@ async function endBetting() { // ACHAL: update TransactionHistory here for every
 
       return result;
     }, []);
-    console.log("transformedData", transformedData)
+    console.log("transformedData", transformedData);
     let newtransformedData = transformedData.map((data, index) => ({
       userids: data.userids,
       wheelNo: data.wheelNo,
@@ -497,9 +499,9 @@ async function endBetting() { // ACHAL: update TransactionHistory here for every
     }));
 
     newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-    console.log(newtransformedData)
+    console.log(newtransformedData);
     let nearestEntry;
-    let minDifference
+    let minDifference;
     if (newtransformedData.length > 0) {
       minDifference = amountToconsider - newtransformedData[0].betreturnvalue;
     }
@@ -512,7 +514,7 @@ async function endBetting() { // ACHAL: update TransactionHistory here for every
       nearestEntry = newtransformedData[i];
       i++;
     }
-    console.log("nearestEntry", nearestEntry)
+    console.log("nearestEntry", nearestEntry);
     //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
     let multiplyvalue = 0;
     if (nearestEntry !== undefined) {
@@ -550,7 +552,9 @@ async function endBetting() { // ACHAL: update TransactionHistory here for every
           nearestEntry.userids.includes(item.userId)
       );
       resultArray = betInfoFiltered.reduce((acc, current) => {
-        var existingUser = acc.findIndex((item) => item.userId === current.userId);
+        var existingUser = acc.findIndex(
+          (item) => item.userId === current.userId
+        );
 
         if (existingUser !== -1) {
           acc[existingUser].amount += current.amount * multiplyvalue;
@@ -571,7 +575,7 @@ async function endBetting() { // ACHAL: update TransactionHistory here for every
         userId: item.userId,
         winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
       }));
-      await Top3Winners.insertMany(top3Entries);
+      await Top3Winners.create({ Winners: top3Entries });
 
       let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
         var existingUserIndex = acc.findIndex(
@@ -595,18 +599,14 @@ async function endBetting() { // ACHAL: update TransactionHistory here for every
           { userId: item.userId },
           { $inc: { diamondsSpent: item.amount } },
           { upsert: true }
-        )
-      }
-
-      );
+        );
+      });
     }
     return {
       totalBet: totalbettAmount,
-      result: nearestEntry !== undefined ? nearestEntry.wheelNo : null
+      result: nearestEntry !== undefined ? nearestEntry.wheelNo : null,
     };
-
   }
-
 }
 
 // exports.bettingInfoArray = bettingInfoArray;
@@ -619,7 +619,7 @@ io.on("connection", (socket) => {
       const user = await User.findOne({ userId: userId });
       console.log("user", user);
       sendGameUpdate("game-status", socket, {
-        'diamonds': user.diamondsCount
+        diamonds: user.diamondsCount,
       });
     } else {
       sendGameUpdate("game-status");
@@ -652,8 +652,8 @@ io.on("connection", (socket) => {
 
     if (!updatedUser) {
       sendGameUpdate("bet-status", socket, {
-        'diamonds': updatedUser.diamondsCount,
-        status: "rejected"
+        diamonds: updatedUser.diamondsCount,
+        status: "rejected",
       });
     } else {
       bettingInfoArray.push({ userId, wheelNo, amount });
@@ -661,8 +661,8 @@ io.on("connection", (socket) => {
         `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
       );
       sendGameUpdate("bet-status", socket, {
-        'diamonds': updatedUser.diamondsCount,
-        status: "accepted"
+        diamonds: updatedUser.diamondsCount,
+        status: "accepted",
       });
     }
   });
