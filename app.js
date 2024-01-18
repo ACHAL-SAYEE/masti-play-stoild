@@ -357,10 +357,10 @@ app.get("/api/agency", gamesController.getAgencyDataOfUser);
 //   );
 //   // res.send("betted successfully");
 // });
+// ACHAL: send winners's UsersData
+app.post("/api/top3-winner", gamesController.getBettingResults);  // for 1 session
 
-app.post("/api/top3-winner", gamesController.getBettingResults);
-
-app.get("/api/all-history", gamesController.getSpinnerHistory);
+app.get("/api/all-history", gamesController.getSpinnerHistory); // for all sessions
 
 app.get("/api/agency/all", gamesController.getAllAgencies);
 
@@ -368,9 +368,9 @@ app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
 app.post("/api/agency/collect", gamesController.collectBeans);
 
-app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory);
-// app.post("/api/top-3-winners",gamesController.getTop3winners)
-app.get("/api/top-winner", gamesController.getTopWinners);
+app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory); // for a specific user, his betting history
+// ACHAL: send top-winner's UsersData as well
+app.get("/api/top-winner", gamesController.getTopWinners);   // today's top winners
 
 app.get("/api/gift-history", gamesController.getGiftHistory)
 
