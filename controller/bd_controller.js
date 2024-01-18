@@ -34,10 +34,11 @@ class bdController {
   }
 
   async getBD(id, userId) {
+    console.log("id:", id);
+    console.log("userId:", userId);
     try {
       let bdData;
-      if (id) {
-        // ACHAL: Fix the query below
+      if (id && id != null) {
         bdData = await BdData.aggregate([
           { $match: { id: id } },
           {
@@ -60,8 +61,9 @@ class bdController {
           },
         ]).exec();
         console.log(bdData);
-      } else if (userId) {
-        // ACHAL: Fix the query below
+      } else if (userId && userId != null) {
+        // ACHAL: fix this query
+        console.log("Seraching bd data using userId", userId);
         bdData = await BdData.aggregate([
           { $match: { owner: userId } },
           {
@@ -87,9 +89,8 @@ class bdController {
         console.error("Both id and userId are undefined.");
         throw "Both id and userId are undefined.";
       }
-
       if (bdData.length == 0) {
-        throw `No BD found with id ${id || userId}`;
+        throw `No BD found with id/userId ${id || userId}`;
       }
 
       console.log("bdData[0]", bdData[0]);

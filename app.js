@@ -228,10 +228,10 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.delete("/api/user",authenticationController.deleteUser)
-app.delete("/api/agent",authenticationController.deleteAgent)
-app.delete("/api/agency",authenticationController.deleteAgency)
-app.delete("/api/bd",authenticationController.deleteBd)
+app.delete("/api/user", authenticationController.deleteUser)
+app.delete("/api/agent", authenticationController.deleteAgent)
+app.delete("/api/agency", authenticationController.deleteAgency)
+app.delete("/api/bd", authenticationController.deleteBd)
 
 // app.get("/api/user", async (req, res) => {
 //   const { userId } = req.query
@@ -671,9 +671,9 @@ io.on("connection", (socket) => {
 
 async function startANewGame() {
   try {
-    setTimeout(gameStarts, 0, io); // Betting Starts
-    setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
+    // setTimeout(gameStarts, 0, io); // Betting Starts
+    // setTimeout(bettingEnds, 30000); // Betting Ends & send result
+    // setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
