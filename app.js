@@ -725,8 +725,6 @@ io.on("connection", (socket) => {
           break;
         }
       }
-
-      // result.push({ [currentSymbol]: count });
       return result;
     };
 
