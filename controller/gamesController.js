@@ -9,6 +9,7 @@ const {
   SpinnerGameWinnerHistory,
   bettingGameData,
   Top3Winners,
+  CommissionRate,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -625,20 +626,20 @@ class games {
           { agencyId: agencyOfSentTo.agencyId },
           {
             $inc: {
-              beansCount: DiamondsToAdd / 10,
-              totalBeansRecieved: DiamondsToAdd / 10,
+              beansCount: Math.floor(DiamondsToAdd / 10),
+              totalBeansRecieved: Math.floor(DiamondsToAdd / 10),
             },
           }
         );
         const bdOfsentTo = await ParticipantAgencies.findOneAndUpdate(
           { agencyId: agencyOfSentTo.agencyId },
-          { $inc: { contributedBeans: DiamondsToAdd / 100 } }
+          { $inc: { contributedBeans: Math.floor(DiamondsToAdd / 100) } }
         );
         console.log("bdOfsentTo", bdOfsentTo);
         if (bdOfsentTo) {
           await BdData.updateOne(
             { id: bdOfsentTo.bdId },
-            { $inc: { beans: DiamondsToAdd / 100 } }
+            { $inc: { beans: Math.floor(DiamondsToAdd / 100) } }
           );
           // AgencyData.updateOne(
           //   { agencyId: agencyOfSentTo.agencyId },
@@ -954,6 +955,21 @@ class games {
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
+    }
+  }
+
+  async setComissionRate(req, res) {
+    // const {bdRate,agencyRate}=req.body
+    try {
+      await CommissionRate.findOneAndUpdate(
+        {},
+        { ...req.body },
+        { upsert: true }
+      );
+      res.send("commission rate updated");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
     }
   }
 }

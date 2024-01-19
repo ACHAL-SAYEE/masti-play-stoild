@@ -184,6 +184,12 @@ const Top3WinnersSchema = new mongoose.Schema({
   Winners: Array,
 });
 
+const CommissionRateSchema = new mongoose.Schema({
+  bdRate: Number,
+  agencyRate: Number,
+});
+
+const CommissionRate = mongoose.model("CommissionRate", CommissionRateSchema);
 const SpinnerGameWinnerHistory = mongoose.model(
   "SpinnerGameWinnerHistory",
   SpinnerGameWinnerHistorySchema
@@ -235,3 +241,4 @@ exports.monthlyAgencyHistory = monthlyAgencyHistory;
 exports.SpinnerGameWinnerHistory = SpinnerGameWinnerHistory;
 exports.bettingGameData = bettingGameData;
 exports.Top3Winners = Top3Winners;
+exports.CommissionRate = CommissionRate;

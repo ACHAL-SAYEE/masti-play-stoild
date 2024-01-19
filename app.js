@@ -350,6 +350,8 @@ app.get("/api/comments", postsController.getsCommentsOfPost);
 
 app.get("/api/agency", gamesController.getAgencyDataOfUser);
 
+app.put("/api/set-comission-rate",gamesController.setComissionRate)
+
 // app.post("/api/spinner-betting", async (req, res) => {
 //   const { userId, wheelNo, amount } = req.body;
 //   var userExists = bettingInfoArray.some((item) => item.userId === userId);
