@@ -15,7 +15,12 @@ const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server);
+const io = socketIO(server, {
+  cors: [{ origin: "http://localhost:5500" }],
+});
+// const io = socketIO(server
+
+// );
 const path = require("path");
 const cron = require("node-cron");
 const { generateUniqueId, generateUserId } = require("./utils");
@@ -684,7 +689,9 @@ io.on("connection", (socket) => {
   });
   // TODO: an event for checking the leaderboard
   socket.on("jackpot-bet", (data) => {
+    console.log("trigger rjvn");
     const index = jackpotInfo.findIndex((pot) => pot.userId == data.userId);
+    console.log(index);
     if (index == -1) {
       jackpotInfo.push({
         userId: data.userId,
@@ -693,22 +700,23 @@ io.on("connection", (socket) => {
         jackPotAmount: data.lines * data.betAmount,
       });
     } else {
+      // jackpotInfo[index].jackPotAmount +
       jackpotInfo[index] = {
-        jackPotAmount:
-          jackpotInfo[index].jackPotAmount + data.lines * data.betAmount,
+        jackPotAmount: data.lines * data.betAmount,
         userId: data.userId,
         UserBetAmount: data.betAmount,
         lines: data.lines,
       };
     }
+    console.log(jackpotInfo);
   });
   socket.on("spin-jackpot", async (data) => {
     const jackpotUserInfo = jackpotInfo.find(
       (item) => item.userId === data.userId
     );
-
-    let { lines, betAmount, jackPotAmount } = jackpotInfo;
-
+    console.log("jackpotUserInfo", jackpotUserInfo);
+    let { lines, betAmount, jackPotAmount } = jackpotUserInfo;
+    console.log("jackPotAmount1", jackPotAmount);
     const generateLine = (indices) =>
       indices.map((index) => jackpotgameGrid[index[0]][index[1]]);
 
@@ -896,6 +904,9 @@ io.on("connection", (socket) => {
       jackPotAmount -= returnValue;
       await User.updateOne({ diamonds: returnValue });
     }
+    console.log(`socket result`, jackpotgameGrid, jackPotAmount);
+    console.log("jackPotAmount2", jackPotAmount);
+
     return { jackpotgameGrid, jackPotAmount };
   });
 });
