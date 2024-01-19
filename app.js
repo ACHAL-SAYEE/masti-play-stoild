@@ -702,7 +702,7 @@ io.on("connection", (socket) => {
       };
     }
   });
-  socket.on("spin-jackpot", (data) => {
+  socket.on("spin-jackpot", async (data) => {
     const jackpotUserInfo = jackpotInfo.find(
       (item) => item.userId === data.userId
     );
@@ -818,66 +818,77 @@ io.on("connection", (socket) => {
         }
       } else if (key === 2) {
         if (value[key] === 3) {
-          returnValue += betAmount * 60;
+          returnValue += betAmount * 40;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 80;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 240;
         }
       } else if (key === 3) {
         if (value[key] === 3) {
-          returnValue += betAmount * 60;
+          returnValue += betAmount * 25;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 50;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 150;
         }
       } else if (key === 4) {
-        if (value[key] === 3) {
-          returnValue += betAmount * 60;
+        if (value[key] === 2) {
+          returnValue += betAmount * 6;
+        } else if (value[key] === 3) {
+          returnValue += betAmount * 20;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 40;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 120;
         }
       } else if (key === 5) {
-        if (value[key] === 3) {
-          returnValue += betAmount * 60;
+        if (value[key] === 2) {
+          returnValue += betAmount * 5;
+        } else if (value[key] === 3) {
+          returnValue += betAmount * 15;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 30;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 90;
         }
       } else if (key === 6) {
-        if (value[key] === 3) {
-          returnValue += betAmount * 60;
+        if (value[key] === 2) {
+          returnValue += betAmount * 3;
+        } else if (value[key] === 3) {
+          returnValue += betAmount * 12;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 24;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 72;
         }
       } else if (key === 7) {
-        if (value[key] === 3) {
-          returnValue += betAmount * 60;
+        if (value[key] === 2) {
+          returnValue += betAmount * 2;
+        } else if (value[key] === 3) {
+          returnValue += betAmount * 10;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 20;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 60;
         }
       } else if (key === 8) {
-        if (value[key] === 3) {
-          returnValue += betAmount * 60;
+        if (value[key] === 2) {
+          returnValue += betAmount * 1;
+        } else if (value[key] === 3) {
+          returnValue += betAmount * 6;
         } else if (value[key] === 4) {
-          returnValue += betAmount * 120;
+          returnValue += betAmount * 12;
         } else if (value[key] === 5) {
-          returnValue += betAmount * 360;
+          returnValue += betAmount * 36;
         }
       }
     });
-    //with some probability
-    if (returnValue < 0.9 * jackpotUserInfo.jackPotAmount) {
-      //add amount in user wallet
+    const rannum = Math.random();
+    if (returnValue < 0.9 * jackpotUserInfo.jackPotAmount && rannum <= 0.5) {
+      await User.updateOne({ diamonds: returnValue });
     }
+    return()
   });
 });
 
