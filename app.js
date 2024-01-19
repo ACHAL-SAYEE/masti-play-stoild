@@ -37,6 +37,7 @@ app.use(
 );
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
 let bettingInfoArray = [];
+const jackpot=[]
 const beansToDiamondsRate = 1;
 let bettingGameparticipants = 0;
 const postsController = require("./controller/postsController");
@@ -671,6 +672,15 @@ io.on("connection", (socket) => {
     }
   });
   // TODO: an event for checking the leaderboard
+  socket.on("jackpot-bet",(data)=>{
+    if(data.userId in jackpot){
+      jackpot[data.userId]=data.diamonds
+    }
+    else{
+      jackpot[data.userId]=data.diamonds
+    }
+
+  })
 });
 
 async function startANewGame() {
