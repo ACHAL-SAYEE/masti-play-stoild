@@ -518,7 +518,7 @@ class games {
         return;
       }
       if (agencyId == null) {
-        randomNumber = generateUserId();
+        randomNumber = generateUserId(4);
         const existingUserWithId = await AgencyData.find({
           agencyId: randomNumber,
         });
@@ -526,7 +526,7 @@ class games {
         if (existingUserWithId.length > 0) {
           let isUserIdMatched = true;
           while (isUserIdMatched) {
-            randomNumber = generateUserId();
+            randomNumber = generateUserId(4);
             const existingUserWithId = await AgencyData.find({
               agencyId: randomNumber,
             });
