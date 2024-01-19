@@ -707,7 +707,7 @@ io.on("connection", (socket) => {
       (item) => item.userId === data.userId
     );
 
-    const { lines, betAmount } = jackpotInfo;
+    let { lines, betAmount, jackPotAmount } = jackpotInfo;
 
     const generateLine = (indices) =>
       indices.map((index) => jackpotgameGrid[index[0]][index[1]]);
@@ -886,9 +886,17 @@ io.on("connection", (socket) => {
     });
     const rannum = Math.random();
     if (returnValue < 0.9 * jackpotUserInfo.jackPotAmount && rannum <= 0.5) {
+      const jackpotUserInfoindex = jackpotInfo.findIndex(
+        (item) => item.userId === data.userId
+      );
+      jackpotInfo[jackpotUserInfoindex] = {
+        ...jackpotInfo[jackpotUserInfoindex],
+        jackPotAmount: jackpotInfo[jackpotUserInfoindex] - returnValue,
+      };
+      jackPotAmount -= returnValue;
       await User.updateOne({ diamonds: returnValue });
     }
-    return()
+    return { jackpotgameGrid, jackPotAmount };
   });
 });
 
