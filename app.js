@@ -389,7 +389,8 @@ app.put("/api/bd", bdRoutes.updateBD);
 app.put("/api/bd/add-beans", bdRoutes.addBeans); // ACHAL: create a TransactionHistory here
 app.post("/api/bd/add-agency", bdRoutes.addAgency);
 app.put("/api/bd/remove-agency", bdRoutes.removeAgency);
-
+app.delete("/api/agency/agent",gamesController.removeAgentfromAgency)
+app.delete("/api/bd/agency",gamesController.removeAgencyfromBd)
 var gameProperties = {
   gameStartTime: null,
   gameEndTime: null,

@@ -972,6 +972,26 @@ class games {
       res.status(500).send(e);
     }
   }
+  async removeAgentfromAgency(req, res) {
+    const { userId } = req.query;
+    try {
+      await agencyParticipant.deleteOne({ userId });
+      res.send("agent removed from agency");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
+    }
+  }
+  async removeAgencyfromBd(req,res){
+    const {agencyId}=req.query
+    try {
+      await ParticipantAgencies.deleteOne({ agencyId });
+      res.send("agency removed from bd");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(e);
+    }
+  }
 }
 
 const gamesController = new games();
