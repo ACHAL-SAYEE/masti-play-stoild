@@ -121,6 +121,21 @@ function generateSequence() {
   return threeCards;
 }
 
+function generateColor(){
+  const threeCards = [];
+  const color=getRandomInt(0,1)
+  // const startIndex = getRandomInt(0, 10);
+
+  for (let i = 0; i < 3; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
+  }
+
+  return threeCards;
+
+}
+
+
 const jackpotgameGrid = [];
 for (let i = 0; i < rows; i++) {
   jackpotgameGrid[i] = [];
@@ -733,7 +748,7 @@ function getCards(x) {
   } else if (x === 2) {
     cards = generateSequence();
   } else if (x === 3) {
-    cards = generatePureSequence();
+    cards = generateColor();
   } else if (x === 4) {
     cards = generatePureSequence();
   } else if (x === 5) {
