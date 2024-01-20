@@ -160,6 +160,19 @@ function generatePair() {
 
   return threeCards;
 }
+
+function generateHighCard() {
+  const threeCards = [];
+
+  for (let i = 0; i < 3; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    let randomRank = getRandomInt(0, 12);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
+  }
+
+  return threeCards;
+}
+
 const jackpotgameGrid = [];
 for (let i = 0; i < rows; i++) {
   jackpotgameGrid[i] = [];
@@ -785,7 +798,7 @@ function getCards(x) {
   } else if (x === 4) {
     cards = generatePair();
   } else if (x === 5) {
-    cards = generatePureSequence();
+    cards = generateHighCard();
   }
   return cards;
 }
