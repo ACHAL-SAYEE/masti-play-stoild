@@ -64,27 +64,62 @@ const jackpotInfo = [];
 const rows = 3;
 const cols = 5;
 // Define constants for suits and ranks
-const SUITS = ['HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'];
-const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING', 'ACE'];
+const SUITS = ["HEARTS", "DIAMONDS", "CLUBS", "SPADES"];
+const RANKS = [
+  "ACE",
+  "KING",
+  "QUEEN",
+  "JACK",
+  "10",
+  "9",
+  "8",
+  "7",
+  "6",
+  "5",
+  "4",
+  "3",
+  "2",
+];
 
 // Function to generate three cards with the same rank and random suits
 function generateThreeCardsSameRank() {
   // Choose a random rank
-  const randomRank = RANKS[Math.floor(Math.random() * RANKS.length)];
 
   const randomSuits = [];
+  const randomRank = RANKS[getRandomInt(0, 12)];
   while (randomSuits.length < 3) {
-    const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
-    if (!randomSuits.includes(randomSuit)) {
-      randomSuits.push(randomSuit);
-    }
+    const randomSuit = SUITS[getRandomInt(0, 4)];
+
+    randomSuits.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
   }
 
-  const threeCards = randomSuits.map(suit => `${suit}${randomRank}`);
+  return randomSuits;
+}
+
+function generatePureSequence() {
+  let randomSuit = getRandomInt(0, 3);
+
+  const threeCards = [];
+  const startIndex = getRandomInt(0, 10);
+
+  for (let i = 0; i < 3; i += 1) {
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
+  }
 
   return threeCards;
 }
 
+function generateSequence() {
+  const threeCards = [];
+  const startIndex = getRandomInt(0, 10);
+
+  for (let i = 0; i < 3; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
+  }
+
+  return threeCards;
+}
 
 const jackpotgameGrid = [];
 for (let i = 0; i < rows; i++) {
@@ -515,6 +550,23 @@ async function gameEnds() {
 async function endBetting() {
   // ACHAL: update TransactionHistory here for every user according to gamename
   console.log("bettingInfoArray", bettingInfoArray);
+  let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
+    var existingUserIndex = acc.findIndex(
+      (item) => item.userId === current.userId
+    );
+    // if (current.wheelNo !== nearestEntry.wheelNo) {
+      if (existingUserIndex !== -1) {
+        acc[existingUserIndex].amount += current.amount;
+      } else {
+        acc.push({
+          userId: current.userId,
+          amount: current.amount,
+        });
+      // }
+    }
+
+    return acc;
+  }, []);
   if (bettingInfoArray.length === 0) {
     return {
       totalBet: 0,
@@ -585,9 +637,11 @@ async function endBetting() {
         nearestEntry.userids.includes(betItem.userId) &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
+       const userspentInfo=UserBetAmount.find(item=>item.userId===betItem.userId)
         await SpinnerGameWinnerHistory.create(
           { userId: betItem.userId },
           {
+            diamondsSpent:userspentInfo.amount,
             diamondsEarned: betItem.amount * multiplyvalue,
             wheelNo: betItem.wheelNo,
           }
@@ -637,30 +691,30 @@ async function endBetting() {
       }));
       await Top3Winners.create({ Winners: top3Entries });
 
-      let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
-        var existingUserIndex = acc.findIndex(
-          (item) => item.userId === current.userId
-        );
-        if (current.wheelNo !== nearestEntry.wheelNo) {
-          if (existingUserIndex !== -1) {
-            acc[existingUserIndex].amount += current.amount;
-          } else {
-            acc.push({
-              userId: current.userId,
-              amount: current.amount,
-            });
-          }
-        }
+      // let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
+      //   var existingUserIndex = acc.findIndex(
+      //     (item) => item.userId === current.userId
+      //   );
+      //   if (current.wheelNo !== nearestEntry.wheelNo) {
+      //     if (existingUserIndex !== -1) {
+      //       acc[existingUserIndex].amount += current.amount;
+      //     } else {
+      //       acc.push({
+      //         userId: current.userId,
+      //         amount: current.amount,
+      //       });
+      //     }
+      //   }
 
-        return acc;
-      }, []);
-      UserBetAmount.forEach((item) => {
-        SpinnerGameWinnerHistory.findOneAndUpdate(
-          { userId: item.userId },
-          { $inc: { diamondsSpent: item.amount } },
-          { upsert: true }
-        );
-      });
+      //   return acc;
+      // }, []);
+      // UserBetAmount.forEach((item) => {
+      //   SpinnerGameWinnerHistory.findOneAndUpdate(
+      //     { userId: item.userId },
+      //     { $inc: { diamondsSpent: item.amount } },
+      //     { upsert: true }
+      //   );
+      // });
     }
     return {
       totalBet: totalbettAmount,
@@ -669,10 +723,22 @@ async function endBetting() {
   }
 }
 
-function getCards(x){
-if(x==0){
-
-}
+function getCards(x) {
+  let cards;
+  if (x === 0) {
+    cards = generateThreeCardsSameRank();
+  } else if (x === 1) {
+    cards = generatePureSequence();
+  } else if (x === 2) {
+    cards = generateSequence();
+  } else if (x === 3) {
+    cards = generatePureSequence();
+  } else if (x === 4) {
+    cards = generatePureSequence();
+  } else if (x === 5) {
+    cards = generatePureSequence();
+  }
+  return cards;
 }
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
