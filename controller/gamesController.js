@@ -842,6 +842,7 @@ class games {
 
   async getBettingResults(req, res) {
     let Top3Winnersinfo = await Top3Winners.find({});
+    console.log("Top3Winnersinfo:", Top3Winnersinfo);
     Top3Winnersinfo = await Promise.all(
       Top3Winnersinfo.map(async (winner) => {
         const userdata = await User.findOne({ userId: winner.userId });
@@ -963,7 +964,7 @@ class games {
         { $limit: Number(limit) },
       ]);
 
-      console.log("TopWinners",TopWinners);
+      console.log("TopWinners", TopWinners);
       res.send(TopWinners);
     } catch (e) {
       console.log(e);
