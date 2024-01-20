@@ -555,13 +555,13 @@ async function endBetting() {
       (item) => item.userId === current.userId
     );
     // if (current.wheelNo !== nearestEntry.wheelNo) {
-      if (existingUserIndex !== -1) {
-        acc[existingUserIndex].amount += current.amount;
-      } else {
-        acc.push({
-          userId: current.userId,
-          amount: current.amount,
-        });
+    if (existingUserIndex !== -1) {
+      acc[existingUserIndex].amount += current.amount;
+    } else {
+      acc.push({
+        userId: current.userId,
+        amount: current.amount,
+      });
       // }
     }
 
@@ -637,11 +637,12 @@ async function endBetting() {
         nearestEntry.userids.includes(betItem.userId) &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
-       const userspentInfo=UserBetAmount.find(item=>item.userId===betItem.userId)
+        const userspentInfo = UserBetAmount.find(item => item.userId === betItem.userId);
+        console.log(`Creating a bettingGameData entry with userId: ${betItem.userId} | userspentInfo.amount: ${userspentInfo.amount} | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue} | betItem.wheelNo: ${betItem.wheelNo} | betItem: `, betItem);
         await SpinnerGameWinnerHistory.create(
-          { userId: betItem.userId },
           {
-            diamondsSpent:userspentInfo.amount,
+            userId: betItem.userId,
+            diamondsSpent: userspentInfo.amount,
             diamondsEarned: betItem.amount * multiplyvalue,
             wheelNo: betItem.wheelNo,
           }
