@@ -945,11 +945,24 @@ class games {
 
       const todayEnd = new Date();
       todayEnd.setHours(23, 59, 59, 999);
-      const TopWinners = await SpinnerGameWinnerHistory.find({
-        createdAt: { $gte: todayStart, $lt: todayEnd },
-      })
-        .skip(Number(start))
-        .limit(Number(limit));
+      const TopWinners = await SpinnerGameWinnerHistory.aggregate([
+        {
+          $match: { createdAt: { $gte: todayStart, $lt: todayEnd } },
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+
+            foreignField: "userId",
+            as: "userData",
+          },
+        },
+        { $unwind: "$userData" },
+        { $skip: Number(start) },
+        { $limit: Number(limit) },
+      ]);
+
       console.log(TopWinners);
       res.send(TopWinners);
     } catch (e) {
@@ -982,8 +995,8 @@ class games {
       res.status(500).send(e);
     }
   }
-  async removeAgencyfromBd(req,res){
-    const {agencyId}=req.query
+  async removeAgencyfromBd(req, res) {
+    const { agencyId } = req.query;
     try {
       await ParticipantAgencies.deleteOne({ agencyId });
       res.send("agency removed from bd");

@@ -23,7 +23,7 @@ const io = socketIO(server, {
 // );
 const path = require("path");
 const cron = require("node-cron");
-const { generateUniqueId, generateUserId } = require("./utils");
+const { generateUniqueId, generateUserId, getRandomInt } = require("./utils");
 const initializeDB = require("./InitialiseDb/index");
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
@@ -41,12 +41,51 @@ app.use(
   })
 );
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
+const royalBattleCardcombinationsConstants = {
+  SET: "set",
+  PURESEQUENCE: "pure sequence",
+  SEQUENCE: "sequence",
+  COLOR: "color",
+  PAIR: "pair",
+  HIGHCARD: "high card",
+};
+const royalBattleCardcombinations = [
+  royalBattleCardcombinationsConstants.SET,
+  royalBattleCardcombinationsConstants.PURESEQUENCE,
+  royalBattleCardcombinationsConstants.SEQUENCE,
+  royalBattleCardcombinationsConstants.COLOR,
+  royalBattleCardcombinationsConstants.PAIR,
+  royalBattleCardcombinationsConstants.HIGHCARD,
+];
+let royalBattleTotalBetAmount = 0;
+const royalBattleBetInfo = [];
 let bettingInfoArray = [];
 const jackpotInfo = [];
 const rows = 3;
 const cols = 5;
+// Define constants for suits and ranks
+const SUITS = ['HEARTS', 'DIAMONDS', 'CLUBS', 'SPADES'];
+const RANKS = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'JACK', 'QUEEN', 'KING', 'ACE'];
 
-// Initializing a 2D array with zeros
+// Function to generate three cards with the same rank and random suits
+function generateThreeCardsSameRank() {
+  // Choose a random rank
+  const randomRank = RANKS[Math.floor(Math.random() * RANKS.length)];
+
+  const randomSuits = [];
+  while (randomSuits.length < 3) {
+    const randomSuit = SUITS[Math.floor(Math.random() * SUITS.length)];
+    if (!randomSuits.includes(randomSuit)) {
+      randomSuits.push(randomSuit);
+    }
+  }
+
+  const threeCards = randomSuits.map(suit => `${suit}${randomRank}`);
+
+  return threeCards;
+}
+
+
 const jackpotgameGrid = [];
 for (let i = 0; i < rows; i++) {
   jackpotgameGrid[i] = [];
@@ -630,6 +669,11 @@ async function endBetting() {
   }
 }
 
+function getCards(x){
+if(x==0){
+
+}
+}
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
   console.log(`some user with id ${socket.id} connected`);
@@ -908,6 +952,31 @@ io.on("connection", (socket) => {
     console.log("jackPotAmount2", jackPotAmount);
 
     return { jackpotgameGrid, jackPotAmount };
+  });
+  socket.on("royal-battle-bet", async (data) => {
+    royalBattleTotalBetAmount += data.betAmount;
+    const index = royalBattleBetInfo.findIndex(
+      (item) => item.userId === data.userId
+    );
+    if (index === -1) {
+      royalBattleBetInfo.push({
+        userId: data.userId,
+        betAmount: data.betAmount,
+        betItems: data.betItems,
+      });
+    } else {
+      royalBattleBetInfo[index] = {
+        ...royalBattleBetInfo[index],
+        betAmount: royalBattleBetInfo[index] + data.betAmount,
+      };
+    }
+  });
+
+  socket.on("royal-battle-result", async (data) => {
+    const BlueSiderandomNumber = getRandomInt(0, 5);
+    const RedSiderandomNumber = getRandomInt(0, 5);
+    const BluesideCards = getCards(BlueSiderandomNumber);
+    const RedsideCards = getCards(RedSiderandomNumber);
   });
 });
 
