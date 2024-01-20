@@ -130,7 +130,7 @@ class games {
           beans: { $lt: 0 },
         };
         break;
-      case "agent-transfer":
+      case "agentTransfer":
         query = {
           isGift: false,
           sentTo: { $regex: /^Ain/ },
@@ -574,8 +574,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-          currentDate2.getDay() +
-          (currentDate2.getDay() === 0 ? -6 : 1)
+        currentDate2.getDay() +
+        (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
