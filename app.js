@@ -86,13 +86,11 @@ function generateThreeCardsSameRank() {
   // Choose a random rank
 
   const randomSuits = [];
-  const randomRank = RANKS[getRandomInt(0, 12)];
+  const randomRank = getRandomInt(0, 12);
   while (randomSuits.length < 3) {
-    const randomSuit = SUITS[getRandomInt(0, 4)];
-
+    const randomSuit = getRandomInt(0, 3);
     randomSuits.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
   }
-
   return randomSuits;
 }
 
@@ -1101,9 +1099,8 @@ io.on("connection", (socket) => {
   });
 
   socket.on("royal-battle-result", async (data) => {
-    const [BlueSiderandomNumber, RedSiderandomNumber] =
+    let [BlueSiderandomNumber, RedSiderandomNumber] =
       getTwoDifferentRandomNumbersInRange(0, 5);
-
     const BluesideCards = getCards(BlueSiderandomNumber);
     const RedsideCards = getCards(RedSiderandomNumber);
     const winner1 = BlueSiderandomNumber < RedSiderandomNumber ? "BLUE" : "RED";
@@ -1111,6 +1108,14 @@ io.on("connection", (socket) => {
       BlueSiderandomNumber < RedSiderandomNumber
         ? royalBattleCardcombinations[BlueSiderandomNumber]
         : royalBattleCardcombinations[RedSiderandomNumber];
+    console.log(
+      "royalBattleCardcombinations[BlueSiderandomNumber]",
+      royalBattleCardcombinations[BlueSiderandomNumber]
+    );
+    console.log(
+      "royalBattleCardcombinations[RedSiderandomNumber]",
+      royalBattleCardcombinations[RedSiderandomNumber]
+    );
     console.log({ winner1, winner2, BluesideCards, RedsideCards });
     sendGameUpdate("royal-battle-result", socket, {
       winner1,
@@ -1118,7 +1123,14 @@ io.on("connection", (socket) => {
       BluesideCards,
       RedsideCards,
     });
-    return { winner1, winner2, BluesideCards, RedsideCards };
+    royalBattleBetInfo.forEach((betItem) => {
+      const winnerItems = betItem.betItems.filter(
+        (item) => item === winner1 || item === winner2
+      );
+      winnerItems.forEach((winnerItem) => {
+      });
+    });
+    // return { winner1, winner2, BluesideCards, RedsideCards };
   });
 });
 
@@ -1133,5 +1145,5 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-startANewGame();
+// startANewGame();
 console.log("Some change");
