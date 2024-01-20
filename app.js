@@ -1079,23 +1079,23 @@ io.on("connection", (socket) => {
 
     return { jackpotgameGrid, jackPotAmount };
   });
+  //send data like frontend this data={userId,betItems=[{item:blue,amount:100},{item:set,amount:100}]} .send bet data at once for particular user
   socket.on("royal-battle-bet", async (data) => {
-    royalBattleTotalBetAmount += data.betAmount;
-    const index = royalBattleBetInfo.findIndex(
-      (item) => item.userId === data.userId
-    );
-    if (index === -1) {
-      royalBattleBetInfo.push({
-        userId: data.userId,
-        betAmount: data.betAmount,
-        betItems: data.betItems,
-      });
-    } else {
-      royalBattleBetInfo[index] = {
-        ...royalBattleBetInfo[index],
-        betAmount: royalBattleBetInfo[index] + data.betAmount,
-      };
-    }
+    // royalBattleTotalBetAmount += data.betAmount;
+    // const index = royalBattleBetInfo.findIndex(
+    //   (item) => item.userId === data.userId
+    // );
+    // if (index === -1) {
+    royalBattleBetInfo.push({
+      userId: data.userId,
+      betItems: data.betItems,
+    });
+    // } else {
+    //   royalBattleBetInfo[index] = {
+    //     ...royalBattleBetInfo[index],
+    //     betAmount: royalBattleBetInfo[index] + data.betAmount,
+    //   };
+    // }
   });
 
   socket.on("royal-battle-result", async (data) => {
@@ -1116,19 +1116,49 @@ io.on("connection", (socket) => {
       "royalBattleCardcombinations[RedSiderandomNumber]",
       royalBattleCardcombinations[RedSiderandomNumber]
     );
+    royalBattleBetInfo.forEach(async (userbet) => {
+      const winnerItems = userbet.betItems.filter(
+        (betItem) => betItem.item === winner1 || betItem.item === winner2
+      );
+      let returnAmount = 0;
+
+      winnerItems.forEach((winnerItem) => {
+        if (winnerItem.item === "Blue") {
+          returnAmount += 1.95 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Red") {
+          returnAmount += 1.95 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Pair") {
+          returnAmount += 3.5 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Color") {
+          returnAmount += 10 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Sequence") {
+          returnAmount += 15 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Pure Seq") {
+          returnAmount += 100 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Set") {
+          returnAmount += 100 * winnerItem.amount;
+        }
+      });
+      if (returnAmount < 0.9 * royalBattleTotalBetAmount) {
+        await User.updateOne(
+          { userId: userbet.userId },
+          { $inc: { diamonds: returnAmount } }
+        );
+      }
+    });
     console.log({ winner1, winner2, BluesideCards, RedsideCards });
     sendGameUpdate("royal-battle-result", socket, {
       winner1,
       winner2,
       BluesideCards,
       RedsideCards,
-    });
-    royalBattleBetInfo.forEach((betItem) => {
-      const winnerItems = betItem.betItems.filter(
-        (item) => item === winner1 || item === winner2
-      );
-      winnerItems.forEach((winnerItem) => {
-      });
+      // returnAmount,
     });
     // return { winner1, winner2, BluesideCards, RedsideCards };
   });
