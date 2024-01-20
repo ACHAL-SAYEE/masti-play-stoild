@@ -519,6 +519,13 @@ function sendGameUpdate(event, socket = null, data = null) {
 
 async function gameStarts() {
   gameProperties = {};
+  bettingInfoArray = [];
+  try {
+    await Top3Winners.deleteMany({});
+  } catch (e) {
+    console.log(e);
+  }
+  bettingGameparticipants = 0;
   updateGameProperties({ gameStartTime: new Date() });
   sendGameUpdate("game-started");
 }
@@ -538,13 +545,6 @@ async function bettingEnds() {
 async function gameEnds() {
   updateGameProperties({ gameEndTime: new Date() });
   sendGameUpdate("game-ended");
-  bettingInfoArray = [];
-  try {
-    await Top3Winners.deleteMany({});
-  } catch (e) {
-    console.log(e);
-  }
-  bettingGameparticipants = 0;
 }
 
 async function endBetting() {
