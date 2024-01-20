@@ -121,21 +121,45 @@ function generateSequence() {
   return threeCards;
 }
 
-function generateColor(){
+function generateColor() {
+  let SUITSCOLOR;
   const threeCards = [];
-  const color=getRandomInt(0,1)
-  // const startIndex = getRandomInt(0, 10);
-
+  const color = getRandomInt(0, 1) === 0 ? "red" : "black";
+  if (color === "red") {
+    SUITSCOLOR = SUITS.slice(0, 2);
+  } else {
+    SUITSCOLOR = SUITS.slice(2, 4);
+  }
   for (let i = 0; i < 3; i += 1) {
-    let randomSuit = getRandomInt(0, 3);
-    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
+    let randomSuit = getRandomInt(0, 1);
+    threeCards.push(`${SUITSCOLOR[randomSuit]} ${RANKS[getRandomInt(0, 12)]}`);
   }
 
   return threeCards;
+}
+function getTwoDifferentRandomNumbersInRange(min, max) {
+  let number1 = getRandomInt(min, max);
+  let number2;
 
+  do {
+    number2 = getRandomInt(min, max);
+  } while (number2 === number1);
+
+  return [number1, number2];
 }
 
+function generatePair() {
+  const threeCards = [];
 
+ let [randomrank,randomRank2]=getTwoDifferentRandomNumbersInRange(0,12)
+  for (let i = 0; i < 2; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomrank]}`);
+  }
+  threeCards.push(`${SUITS[getRandomInt(0, 3)]} ${RANKS[randomRank2]}`);
+
+  return threeCards;
+}
 const jackpotgameGrid = [];
 for (let i = 0; i < rows; i++) {
   jackpotgameGrid[i] = [];
@@ -652,16 +676,25 @@ async function endBetting() {
         nearestEntry.userids.includes(betItem.userId) &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
-        const userspentInfo = UserBetAmount.find(item => item.userId === betItem.userId);
-        console.log(`Creating a bettingGameData entry with userId: ${betItem.userId} | userspentInfo.amount: ${userspentInfo.amount} | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue} | betItem.wheelNo: ${betItem.wheelNo} | betItem: `, betItem);
-        await SpinnerGameWinnerHistory.create(
-          {
-            userId: betItem.userId,
-            diamondsSpent: userspentInfo.amount,
-            diamondsEarned: betItem.amount * multiplyvalue,
-            wheelNo: betItem.wheelNo,
-          }
+        const userspentInfo = UserBetAmount.find(
+          (item) => item.userId === betItem.userId
         );
+        console.log(
+          `Creating a bettingGameData entry with userId: ${
+            betItem.userId
+          } | userspentInfo.amount: ${
+            userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${
+            betItem.amount * multiplyvalue
+          } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
+          betItem
+        );
+        await SpinnerGameWinnerHistory.create({
+          userId: betItem.userId,
+          diamondsSpent: userspentInfo.amount,
+          diamondsEarned: betItem.amount * multiplyvalue,
+          wheelNo: betItem.wheelNo,
+        });
         console.log("Updating wallet", betItem.amount * multiplyvalue);
         await User.updateOne(
           { userId: betItem.userId },
@@ -750,7 +783,7 @@ function getCards(x) {
   } else if (x === 3) {
     cards = generateColor();
   } else if (x === 4) {
-    cards = generatePureSequence();
+    cards = generatePair();
   } else if (x === 5) {
     cards = generatePureSequence();
   }
