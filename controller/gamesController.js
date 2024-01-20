@@ -963,7 +963,7 @@ class games {
         { $limit: Number(limit) },
       ]);
 
-      console.log(TopWinners);
+      console.log("TopWinners",TopWinners);
       res.send(TopWinners);
     } catch (e) {
       console.log(e);
