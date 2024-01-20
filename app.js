@@ -151,7 +151,7 @@ function getTwoDifferentRandomNumbersInRange(min, max) {
 function generatePair() {
   const threeCards = [];
 
- let [randomrank,randomRank2]=getTwoDifferentRandomNumbersInRange(0,12)
+  let [randomrank, randomRank2] = getTwoDifferentRandomNumbersInRange(0, 12);
   for (let i = 0; i < 2; i += 1) {
     let randomSuit = getRandomInt(0, 3);
     threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomrank]}`);
@@ -1088,10 +1088,24 @@ io.on("connection", (socket) => {
   });
 
   socket.on("royal-battle-result", async (data) => {
-    const BlueSiderandomNumber = getRandomInt(0, 5);
-    const RedSiderandomNumber = getRandomInt(0, 5);
+    const [BlueSiderandomNumber, RedSiderandomNumber] =
+      getTwoDifferentRandomNumbersInRange(0, 5);
+
     const BluesideCards = getCards(BlueSiderandomNumber);
     const RedsideCards = getCards(RedSiderandomNumber);
+    const winner1 = BlueSiderandomNumber < RedSiderandomNumber ? "BLUE" : "RED";
+    const winner2 =
+      BlueSiderandomNumber < RedSiderandomNumber
+        ? royalBattleCardcombinations[BlueSiderandomNumber]
+        : royalBattleCardcombinations[RedSiderandomNumber];
+    console.log({ winner1, winner2, BluesideCards, RedsideCards });
+    sendGameUpdate("royal-battle-result", socket, {
+      winner1,
+      winner2,
+      BluesideCards,
+      RedsideCards,
+    });
+    return { winner1, winner2, BluesideCards, RedsideCards };
   });
 });
 
