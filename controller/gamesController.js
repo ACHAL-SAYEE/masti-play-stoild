@@ -379,7 +379,7 @@ class games {
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
-      const Users = User.find({}).skip(Number(start)).limit(Number(limit));
+      const Users =await  User.find({}).skip(Number(start)).limit(Number(limit));
       res.send(Users);
     } catch (e) {
       console.log(e);
