@@ -574,8 +574,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-        currentDate2.getDay() +
-        (currentDate2.getDay() === 0 ? -6 : 1)
+          currentDate2.getDay() +
+          (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -843,6 +843,10 @@ class games {
   async getBettingResults(req, res) {
     let Top3Winnersinfo = await Top3Winners.findOne({});
     console.log("Top3Winnersinfo:", Top3Winnersinfo);
+    if (Top3Winnersinfo === null) {
+      res.send({ Top3Winnersinfo: [] });
+      return;
+    }
     Top3Winnersinfo = await Promise.all(
       Top3Winnersinfo.Winners.map(async (winner) => {
         const userdata = await User.findOne({ userId: winner.userId });
