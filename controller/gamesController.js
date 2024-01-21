@@ -841,10 +841,10 @@ class games {
   }
 
   async getBettingResults(req, res) {
-    let Top3Winnersinfo = await Top3Winners.find({});
+    let Top3Winnersinfo = await Top3Winners.findOne({});
     console.log("Top3Winnersinfo:", Top3Winnersinfo);
     Top3Winnersinfo = await Promise.all(
-      Top3Winnersinfo.map(async (winner) => {
+      Top3Winnersinfo.Winners.map(async (winner) => {
         const userdata = await User.findOne({ userId: winner.userId });
         return { ...winner, userdata };
       })
