@@ -802,21 +802,24 @@ function getCards(x) {
 }
 //emit some event on client side just after connecting .send userId for storing socketids of connected user
 io.on("connection", (socket) => {
+  // console.log("io",io);
+  // console.log("socket",socket);
+
   console.log(`some user with id ${socket.id} connected`);
 
   socket.on("user-connected", (data) => {
-    socketIds[data.userId] = socket.id;
+    socketIds[socket.id] = data.userId;
   });
   socket.on("disconnect", () => {
     console.log("User disconnected");
-    const disconnectedUserId = Object.keys(socketIds).find(
-      (userId) => socketIds[userId] === socket.id
-    );
+    // const disconnectedUserId = Object.keys(socketIds).find(
+    //   (userId) => socketIds[userId] === socket.id
+    // );
 
-    if (disconnectedUserId) {
-      delete socketIds[disconnectedUserId];
-      console.log(`Socket ID for user ${disconnectedUserId} deleted`);
-    }
+    // if (disconnectedUserId) {
+    delete socketIds[socket.id];
+    // console.log(`Socket ID for user ${disconnectedUserId} deleted`);
+    // }
   });
 
   socket.on("get-status", async (data) => {
@@ -1132,13 +1135,52 @@ io.on("connection", (socket) => {
       "royalBattleCardcombinations[RedSiderandomNumber]",
       royalBattleCardcombinations[RedSiderandomNumber]
     );
-    royalBattleBetInfo.forEach(async (userbet) => {
-      const winnerItems = userbet.betItems.filter(
-        (betItem) => betItem.item === winner1 || betItem.item === winner2
-      );
-      let returnAmount = 0;
-      if (winnerItems.length === 0) {
-        io.to(socketIds[data.userId]).emit("royal-battle-result", {
+    const userbet = royalBattleBetInfo.filter(
+      (x) => x.userId === socketIds[socket.id]
+    );
+    // royalBattleBetInfo.forEach(async (userbet) => {
+    const winnerItems = userbet.betItems.filter(
+      (betItem) => betItem.item === winner1 || betItem.item === winner2
+    );
+    let returnAmount = 0;
+    if (winnerItems.length === 0) {
+      socket.emit("royal-battle-result", {
+        winner1,
+        winner2,
+        BluesideCards,
+        RedsideCards,
+        returnAmount,
+      });
+    } else {
+      winnerItems.forEach((winnerItem) => {
+        if (winnerItem.item === "Blue") {
+          returnAmount += 1.95 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Red") {
+          returnAmount += 1.95 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Pair") {
+          returnAmount += 3.5 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Color") {
+          returnAmount += 10 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Sequence") {
+          returnAmount += 15 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Pure Seq") {
+          returnAmount += 100 * winnerItem.amount;
+        }
+        if (winnerItem.item === "Set") {
+          returnAmount += 100 * winnerItem.amount;
+        }
+      });
+      if (returnAmount < 0.9 * royalBattleTotalBetAmount) {
+        await User.updateOne(
+          { userId: userbet.userId },
+          { $inc: { diamonds: returnAmount } }
+        );
+        socket.emit("royal-battle-result", {
           winner1,
           winner2,
           BluesideCards,
@@ -1146,52 +1188,16 @@ io.on("connection", (socket) => {
           returnAmount,
         });
       } else {
-        winnerItems.forEach((winnerItem) => {
-          if (winnerItem.item === "Blue") {
-            returnAmount += 1.95 * winnerItem.amount;
-          }
-          if (winnerItem.item === "Red") {
-            returnAmount += 1.95 * winnerItem.amount;
-          }
-          if (winnerItem.item === "Pair") {
-            returnAmount += 3.5 * winnerItem.amount;
-          }
-          if (winnerItem.item === "Color") {
-            returnAmount += 10 * winnerItem.amount;
-          }
-          if (winnerItem.item === "Sequence") {
-            returnAmount += 15 * winnerItem.amount;
-          }
-          if (winnerItem.item === "Pure Seq") {
-            returnAmount += 100 * winnerItem.amount;
-          }
-          if (winnerItem.item === "Set") {
-            returnAmount += 100 * winnerItem.amount;
-          }
+        socket.emit("royal-battle-result", {
+          winner1,
+          winner2,
+          BluesideCards,
+          RedsideCards,
+          returnAmount: 0,
         });
-        if (returnAmount < 0.9 * royalBattleTotalBetAmount) {
-          await User.updateOne(
-            { userId: userbet.userId },
-            { $inc: { diamonds: returnAmount } }
-          );
-          io.to(socketIds[data.userId]).emit("royal-battle-result", {
-            winner1,
-            winner2,
-            BluesideCards,
-            RedsideCards,
-            returnAmount,
-          });
-        } else {
-          io.to(socketIds[data.userId]).emit("royal-battle-result", {
-            winner1,
-            winner2,
-            BluesideCards,
-            RedsideCards,
-            returnAmount: 0,
-          });
-        }
       }
-    });
+    }
+    // });
     console.log({ winner1, winner2, BluesideCards, RedsideCards });
     // sendGameUpdate("royal-battle-result", socket, {
     //   winner1,
