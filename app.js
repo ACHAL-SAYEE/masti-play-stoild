@@ -40,6 +40,7 @@ app.use(
     parameterLimit: 50000,
   })
 );
+const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
 const royalBattleCardcombinationsConstants = {
   SET: "set",
@@ -186,7 +187,6 @@ const authenticationController = require("./controller/authentication");
 const bdRoutes = require("./routes/bd");
 const {
   User,
-  royal-battle,
   bettingGameData,
   SpinnerGameWinnerHistory,
 } = require("./models/models");
@@ -802,6 +802,7 @@ function getCards(x) {
 }
 // exports.bettingInfoArray = bettingInfoArray;
 io.on("connection", (socket) => {
+  console.log(socket);
   console.log(`some user with id ${socket.id} connected`);
   socket.on("get-status", async (data) => {
     const userId = data.userId;
