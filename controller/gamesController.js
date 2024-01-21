@@ -845,7 +845,9 @@ class games {
     console.log("Top3Winnersinfo:", Top3Winnersinfo);
     Top3Winnersinfo = await Promise.all(
       Top3Winnersinfo.map(async (winner) => {
+        console.log(winner)
         const userdata = await User.findOne({ userId: winner.userId });
+        console.log("userdata", userdata)
         return { ...winner, userdata };
       })
     );
