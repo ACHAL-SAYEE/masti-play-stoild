@@ -186,7 +186,7 @@ const authenticationController = require("./controller/authentication");
 const bdRoutes = require("./routes/bd");
 const {
   User,
-  Top3Winners,
+  royal-battle,
   bettingGameData,
   SpinnerGameWinnerHistory,
 } = require("./models/models");
