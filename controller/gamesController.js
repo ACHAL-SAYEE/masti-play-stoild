@@ -379,7 +379,7 @@ class games {
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
-      const Users =await  User.find({}).skip(Number(start)).limit(Number(limit));
+      const Users = await User.find({}).skip(Number(start)).limit(Number(limit));
       res.send(Users);
     } catch (e) {
       console.log(e);
@@ -498,8 +498,8 @@ class games {
   async joinAgency(req, res) {
     const { userId, agencyId } = req.body;
     try {
-      const newAgent = new agencyParticipant({ userId, agencyId });
-      await newAgent.save();
+      const newCreator = new agencyParticipant({ userId, agencyId });
+      await newCreator.save();
       const agencyData = await AgencyData.findOne({ agencyId });
       res.send(agencyData);
     } catch (e) {
@@ -574,8 +574,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-          currentDate2.getDay() +
-          (currentDate2.getDay() === 0 ? -6 : 1)
+        currentDate2.getDay() +
+        (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
