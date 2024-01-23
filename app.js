@@ -494,6 +494,7 @@ app.get("/api/agency", gamesController.getAgencyDataOfUser);
 
 app.put("/api/set-comission-rate", gamesController.setComissionRate);
 
+app.get("/api/agent-history",gamesController.getAgentTransactionHistory);
 // app.post("/api/spinner-betting", async (req, res) => {
 //   const { userId, wheelNo, amount } = req.body;
 //   var userExists = bettingInfoArray.some((item) => item.userId === userId);
@@ -522,7 +523,7 @@ app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory); //
 app.get("/api/top-winner", gamesController.getTopWinners); // today's top winners
 
 app.get("/api/gift-history", gamesController.getGiftHistory);
-
+// app.get("/api/agency/participants",gamesController.getAgencyParticipants)
 app.get("/api/bd/all", bdRoutes.getAllBD);
 app.get("/api/bd", bdRoutes.getBD);
 app.get("/api/bd/participants", bdRoutes.getParticipantAgencies);
@@ -757,6 +758,7 @@ async function endBetting() {
         userId: item.userId,
         winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
       }));
+      console.log("top3Entries", top3Entries);
       await Top3Winners.create({ Winners: top3Entries });
 
       // let UserBetAmount = bettingInfoArray.reduce((acc, current) => {
@@ -1101,9 +1103,9 @@ io.on("connection", (socket) => {
       jackPotAmount -= returnValue;
       await User.updateOne({ diamonds: returnValue });
     }
-    console.log(`socket result`, jackpotgameGrid, jackPotAmount);
-    console.log("jackPotAmount2", jackPotAmount);
-
+    console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
+    // console.log("jackPotAmount2", jackPotAmount);
+    socket.emit("jackpot-result", { jackpotgameGrid, jackPotAmount });
     return { jackpotgameGrid, jackPotAmount };
   });
   //send data like frontend this data={userId,betItems=[{item:blue,amount:100},{item:set,amount:100}]} .send bet data at once for particular user

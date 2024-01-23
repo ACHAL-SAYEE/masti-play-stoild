@@ -10,6 +10,7 @@ const {
   bettingGameData,
   Top3Winners,
   CommissionRate,
+  AgentTransactionHistory,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -298,6 +299,12 @@ class games {
         sentby: userId,
         sentTo: `A${userId}`,
       });
+      await AgentTransactionHistory.create({
+        sentBy: userId,
+        sentTo: `A${userId}`,
+        diamondsAdded: beans,
+        mode: "exchange",
+      });
       res.send("beans added to your agent wallet successfully");
     } catch (e) {
       console.log(e);
@@ -379,7 +386,9 @@ class games {
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
-      const Users =await  User.find({}).skip(Number(start)).limit(Number(limit));
+      const Users = await User.find({})
+        .skip(Number(start))
+        .limit(Number(limit));
       res.send(Users);
     } catch (e) {
       console.log(e);
@@ -741,6 +750,12 @@ class games {
           sentTo: userId,
           diamondsAdded: diamonds,
         });
+        await AgentTransactionHistory.create({
+          sentBy: agentId,
+          sentTo: userId,
+          diamondsAdded: diamonds,
+          mode: "transfer",
+        });
         res.send("recharged successfully");
       }
     } catch (e) {
@@ -760,6 +775,12 @@ class games {
       await TransactionHistory.create({
         sentTo: agentId,
         diamondsAdded: diamonds,
+      });
+      await AgentTransactionHistory.create({
+        sentBy: "admin",
+        sentTo: agentId,
+        diamondsAdded: diamonds,
+        mode: "recharge",
       });
       // await monthlyAgentHistory.findOneAndUpdate(
       //   {
@@ -850,7 +871,7 @@ class games {
     Top3Winnersinfo = await Promise.all(
       Top3Winnersinfo.Winners.map(async (winner) => {
         const userdata = await User.findOne({ userId: winner.userId });
-        console.log("userdata", userdata)
+        console.log("userdata", userdata);
         return { ...winner, userdata };
       })
     );
@@ -1008,6 +1029,49 @@ class games {
       res.send("agency removed from bd");
     } catch (e) {
       console.log(e);
+      res.status(500).send(e);
+    }
+  }
+
+  async getAgentTransactionHistory(req, res) {
+    const { mode, userId, agentId, startDate, endDate } = req.query;
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    try {
+      if (userId && startDate) {
+        const history = await AgentTransactionHistory.find({
+          sentBy: agentId,
+          sentTo: userId,
+          mode,
+          createdAt: { $gte: startDateObj, $lte: endDateObj },
+        });
+        res.send(history);
+        return;
+      } else if (userId) {
+        const history = await AgentTransactionHistory.find({
+          sentBy: agentId,
+          sentTo: userId,
+          mode,
+        });
+        res.send(history);
+        return;
+      } else if (startDate) {
+        const history = await AgentTransactionHistory.find({
+          sentBy: agentId,
+          sentTo: userId,
+          mode,
+          createdAt: { $gte: startDateObj, $lte: endDateObj },
+        });
+        res.send(history);
+        return;
+      }
+      const history = await AgentTransactionHistory.find({
+        $or: [{ sentBy: agentId }, { sentTo: agentId }],
+        mode,
+      });
+      res.send(history);
+    } catch (e) {
       res.status(500).send(e);
     }
   }

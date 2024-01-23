@@ -175,6 +175,20 @@ const SpinnerGameWinnerHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const AgentTransactionHistorySchema = new mongoose.Schema(
+  {
+    sentBy: String,
+    sentTo: String,
+    mode: String,
+    diamondsAdded: Number,
+  },
+  { timestamps: true }
+);
+
+const AgentTransactionHistory = mongoose.model(
+  "AgentTransactionHistory",
+  AgentTransactionHistorySchema
+);
 const bettingGameDataSchema = new mongoose.Schema(
   { participants: Number, winners: Number, wheelNo: String },
   { timestamps: true }
@@ -242,3 +256,4 @@ exports.SpinnerGameWinnerHistory = SpinnerGameWinnerHistory;
 exports.bettingGameData = bettingGameData;
 exports.Top3Winners = Top3Winners;
 exports.CommissionRate = CommissionRate;
+exports.AgentTransactionHistory = AgentTransactionHistory;
