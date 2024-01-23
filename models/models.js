@@ -165,6 +165,12 @@ const monthlyAgencyHistorySchema = new mongoose.Schema({
   agencyId: String,
 });
 
+const monthlyBdHistorySchema = new mongoose.Schema({
+  month: Date,
+  beans: { type: Number, default: 0 },
+  bdId: String,
+});
+
 const SpinnerGameWinnerHistorySchema = new mongoose.Schema(
   {
     wheelNo: Number,
@@ -216,6 +222,10 @@ const monthlyAgentHistory = mongoose.model(
   "monthlyAgentHistory",
   monthlyAgentHistorySchema
 );
+const monthlyBdHistory = mongoose.model(
+  "monthlyBdHistory",
+  monthlyBdHistorySchema
+);
 const following = mongoose.model("following", followingDataSchema);
 const Tag = mongoose.model("Tag", TagSchema);
 const LikesInfo = mongoose.model("LikesInfo", likesInfo);
@@ -257,3 +267,4 @@ exports.bettingGameData = bettingGameData;
 exports.Top3Winners = Top3Winners;
 exports.CommissionRate = CommissionRate;
 exports.AgentTransactionHistory = AgentTransactionHistory;
+exports.monthlyBdHistory=monthlyBdHistory

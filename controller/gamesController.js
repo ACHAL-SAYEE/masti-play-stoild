@@ -11,6 +11,7 @@ const {
   Top3Winners,
   CommissionRate,
   AgentTransactionHistory,
+  monthlyBdHistory,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -583,8 +584,8 @@ class games {
       const startOfWeek = new Date(currentDate2);
       startOfWeek.setDate(
         currentDate2.getDate() -
-        currentDate2.getDay() +
-        (currentDate2.getDay() === 0 ? -6 : 1)
+          currentDate2.getDay() +
+          (currentDate2.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -613,9 +614,9 @@ class games {
       } else if (earning < 200000) {
         bonusRate = 0.05;
       } else if (earning < 500000) {
-        bonusRate = 0.07;
-      } else {
         bonusRate = 0.1;
+      } else {
+        bonusRate = 0.15;
       }
       const DiamondsToAdd = 0.68 * diamondsSent;
       const bonusDiamonds = bonusRate * diamondsSent;
@@ -630,25 +631,98 @@ class games {
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
       });
+      let agencyCommision;
+
       if (agencyOfSentTo) {
+        const currentMonthAgencydata = await monthlyAgencyHistory.findOne({
+          agencyId: agencyOfSentTo.agencyId,
+          month: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
+        });
+        if (currentMonthAgencydata === null) {
+          agencyCommision = 0.05;
+        } else {
+          const currentMonthBeans = currentMonthAgencydata.beans;
+
+          if (currentMonthBeans < 1000000000) agencyCommision = 0.05;
+          else if (currentMonthBeans < 5000000000) agencyCommision = 0.1;
+          else if (currentMonthBeans < 10000000000) agencyCommision = 0.15;
+          else if (currentMonthBeans < 30000000000) agencyCommision = 0.17;
+          else if (currentMonthBeans < 50000000000) agencyCommision = 0.19;
+          else if (currentMonthBeans < 50000000000) agencyCommision = 0.21;
+          else agencyCommision = 0.23;
+        }
+
         await AgencyData.updateOne(
           { agencyId: agencyOfSentTo.agencyId },
           {
             $inc: {
-              beansCount: Math.floor(DiamondsToAdd / 10),
-              totalBeansRecieved: Math.floor(DiamondsToAdd / 10),
+              beansCount: Math.floor(DiamondsToAdd * agencyCommision),
+              totalBeansRecieved: Math.floor(DiamondsToAdd * agencyCommision),
             },
           }
         );
-        const bdOfsentTo = await ParticipantAgencies.findOneAndUpdate(
-          { agencyId: agencyOfSentTo.agencyId },
-          { $inc: { contributedBeans: Math.floor(DiamondsToAdd / 100) } }
+        const currentDate = new Date();
+        await monthlyAgencyHistory.findOneAndUpdate(
+          {
+            agencyId: agencyOfSentTo.agencyId,
+            month: new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              1
+            ),
+          },
+          {
+            $inc: { beans: DiamondsToAdd * agencyCommision },
+          },
+          {
+            upsert: true,
+            new: true,
+          }
         );
+        const bdOfsentTo = await ParticipantAgencies.findOne(
+          { agencyId: agencyOfSentTo.agencyId }
+          // { $inc: { contributedBeans: Math.floor(DiamondsToAdd / 100) } }
+        );
+        let BdCommision;
         console.log("bdOfsentTo", bdOfsentTo);
         if (bdOfsentTo) {
+          const currentMonthBddata = await monthlyBdHistory.findOne({
+            bdId: bdOfsentTo.bdId,
+            month: new Date(
+              currentDate.getFullYear(),
+              currentDate.getMonth(),
+              1
+            ),
+          });
+          if (currentMonthBddata === null) {
+            BdCommision = 0.05;
+          } else {
+            const currentMonthBeans = currentMonthBddata.beans;
+
+            if (currentMonthBeans <      40000000000) BdCommision = 0.07;
+            
+            else BdCommision = 0.1;
+          }
           await BdData.updateOne(
             { id: bdOfsentTo.bdId },
-            { $inc: { beans: Math.floor(DiamondsToAdd / 100) } }
+            { $inc: { beans: Math.floor(DiamondsToAdd * BdCommision) } }
+          );
+          await monthlyAgencyHistory.findOneAndUpdate(
+            {
+              bdId: bdOfsentTo.bdId,
+              month: new Date(
+                currentDate.getFullYear(),
+                currentDate.getMonth(),
+                1
+              ),
+            },
+            {
+              $inc: { beans: DiamondsToAdd * BdCommision },
+            },
+            {
+              upsert: true,
+              new: true,
+            }
           );
           // AgencyData.updateOne(
           //   { agencyId: agencyOfSentTo.agencyId },
@@ -656,19 +730,7 @@ class games {
           // );
         }
       }
-      const currentDate = new Date();
-      await monthlyAgencyHistory.findOneAndUpdate(
-        {
-          month: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
-        },
-        {
-          $inc: { beans: DiamondsToAdd + bonusDiamonds },
-        },
-        {
-          upsert: true,
-          new: true,
-        }
-      );
+
       await TransactionHistory.create({
         roomId,
         sentby: sentBy,
