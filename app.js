@@ -190,8 +190,10 @@ const {
   bettingGameData,
   SpinnerGameWinnerHistory,
   Top3Winners,
+  AgencyData,
 } = require("./models/models");
 const { send } = require("process");
+const { BdData } = require("./models/bd");
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -1242,4 +1244,57 @@ async function startANewGame() {
 }
 
 startANewGame();
-console.log("Some change");
+cron.schedule("0 0 1 * *", async () => {
+  try {
+    const allAgencyData = await AgencyData.find({});
+    // allAgencyData.forEach(async (agency) => {
+      for(const agency of allAgencyData){
+      await AgencyData.updateOne(
+        { agencyId: agency.agencyId },
+        { beansCount: 0 }
+      );
+      await User.updateOne(
+        { userId: agency.ownerId },
+        { $inc: { beansCount: agency.beansCount } }
+      );
+    };
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+cron.schedule("0 0 1 * *", async () => {
+  try {
+    const allBdData = await BdData.find({});
+    for (const Bd of allBdData) {
+      await BdData.updateOne({ id: Bd.agencyId }, { beansCount: 0 });
+      await User.updateOne(
+        { userId: Bd.id },
+        { $inc: { beansCount: Bd.beansCount } }
+      );
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+cron.schedule("0 0 * * 1", async () => {
+  try {
+    const allUsersData = await User.find({});
+    for(const user of allUsersData){
+      await User.updateOne(
+        { userId: user.userId },
+        {
+          $inc: { beansCount: user.beansCount },
+          creatorBeans: {
+            total: 0,
+            basic: 0,
+            bonus: 0,
+          },
+        }
+      );
+    }
+  } catch (e) {
+    console.log(e);
+  }
+});
