@@ -581,12 +581,14 @@ class games {
         res.status(400).send("insufficient balance");
         return;
       }
-      const currentDate2 = new Date();
-      const startOfWeek = new Date(currentDate2);
+      const currentDate = new Date();
+
+      // const currentDate2 = new Date();
+      const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
-        currentDate2.getDate() -
-          currentDate2.getDay() +
-          (currentDate2.getDay() === 0 ? -6 : 1)
+        currentDate.getDate() -
+        currentDate.getDay() +
+          (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -596,7 +598,7 @@ class games {
             sentTo,
             createdAt: {
               $gte: startOfWeek,
-              $lt: currentDate2,
+              $lt: currentDate,
             },
           },
         },
@@ -635,6 +637,7 @@ class games {
       let agencyCommision;
 
       if (agencyOfSentTo) {
+        console.log("currentDate.getFullYear()vdsbvvvvvvvvvvvvvvvvvvvvvvvv",currentDate.getFullYear(),currentDate.getMonth())
         const currentMonthAgencydata = await monthlyAgencyHistory.findOne({
           agencyId: agencyOfSentTo.agencyId,
           month: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
@@ -662,13 +665,12 @@ class games {
             },
           }
         );
-        const currentDate = new Date();
         await monthlyAgencyHistory.findOneAndUpdate(
           {
             agencyId: agencyOfSentTo.agencyId,
             month: new Date(
               currentDate.getFullYear(),
-              currentDate.getMonth(),
+              currentDate.getMonth()+1,
               1
             ),
           },
@@ -698,7 +700,7 @@ class games {
             bdId: bdOfsentTo.bdId,
             month: new Date(
               currentDate.getFullYear(),
-              currentDate.getMonth(),
+              currentDate.getMonth()+1,
               1
             ),
           });
@@ -719,7 +721,7 @@ class games {
               bdId: bdOfsentTo.bdId,
               month: new Date(
                 currentDate.getFullYear(),
-                currentDate.getMonth(),
+                currentDate.getMonth()+1,
                 1
               ),
               agencyId: agencyOfSentTo.agencyId,
@@ -819,7 +821,7 @@ class games {
           {
             month: new Date(
               currentDate.getFullYear(),
-              currentDate.getMonth(),
+              currentDate.getMonth()+1,
               1
             ),
           },
