@@ -420,7 +420,7 @@ app.get("/", (req, res) => {
 
 app.post("/api/posts/", postsController.storePost);
 
-app.delete("/api/posts",postsController.deletePost)
+app.delete("/api/posts", postsController.deletePost);
 
 app.put("/api/posts/share", postsController.sharePost);
 
@@ -482,7 +482,10 @@ app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
 
 app.put("/api/send-gift", gamesController.sendGift);
 
-app.get("/api/agency/commissionHistory",gamesController.getAgencyCommissionHistory)
+app.get(
+  "/api/agency/commissionHistory",
+  gamesController.getAgencyCommissionHistory
+);
 
 app.put("/api/agent-recharge", gamesController.recharge);
 
@@ -498,7 +501,7 @@ app.get("/api/agency", gamesController.getAgencyDataOfUser);
 
 app.put("/api/set-comission-rate", gamesController.setComissionRate);
 
-app.get("/api/agent-history",gamesController.getAgentTransactionHistory);
+app.get("/api/agent-history", gamesController.getAgentTransactionHistory);
 // app.post("/api/spinner-betting", async (req, res) => {
 //   const { userId, wheelNo, amount } = req.body;
 //   var userExists = bettingInfoArray.some((item) => item.userId === userId);
@@ -538,6 +541,9 @@ app.post("/api/bd/add-agency", bdRoutes.addAgency);
 app.put("/api/bd/remove-agency", bdRoutes.removeAgency);
 app.delete("/api/agency/agent", gamesController.removeAgentfromAgency);
 app.delete("/api/bd/agency", gamesController.removeAgencyfromBd);
+
+app.get("/api/creator/history", gamesController.getCreatorHistory);
+
 var gameProperties = {
   gameStartTime: null,
   gameEndTime: null,

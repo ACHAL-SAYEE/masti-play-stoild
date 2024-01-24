@@ -50,6 +50,11 @@ const userSchema = new mongoose.Schema({
   role: { type: String, default: "user" },
   isVerified: { type: Boolean, default: false },
   token: { type: String, required: false },
+  creatorBeans: {
+    total: { type: Number, default: 0 },
+    basic: { type: Number, default: 0 },
+    bonus: { type: Number, default: 0 },
+  },
 });
 
 const TagSchema = new mongoose.Schema(
@@ -191,12 +196,30 @@ const AgentTransactionHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const AgencyCommissionHistorySchema = new mongoose.Schema({
-  sentBy: String,
-  commission: Number,
-  roomId: String,
-  agencyId: String,
-},{timestamps:true});
+const AgencyCommissionHistorySchema = new mongoose.Schema(
+  {
+    sentBy: String,
+    commission: Number,
+    roomId: String,
+    agencyId: String,
+  },
+  { timestamps: true }
+);
+
+const CreatorHistorySchema = new mongoose.Schema(
+  {
+    creatorId: String,
+    sentBy: String,
+    roomId: String,
+    beansGifted: {
+      basic: Number,
+      bonus: Number,
+    },
+  },
+  { timestamps: true }
+);
+
+const CreatorHistory = mongoose.model("CreatorHistory", CreatorHistorySchema);
 
 const AgencyCommissionHistory = mongoose.model(
   "AgencyCommissionHistory",
@@ -280,3 +303,4 @@ exports.CommissionRate = CommissionRate;
 exports.AgentTransactionHistory = AgentTransactionHistory;
 exports.monthlyBdHistory = monthlyBdHistory;
 exports.AgencyCommissionHistory = AgencyCommissionHistory;
+exports.CreatorHistory = CreatorHistory;
