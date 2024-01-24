@@ -196,8 +196,12 @@ const AgencyCommissionHistorySchema = new mongoose.Schema({
   commission: Number,
   roomId: String,
   agencyId: String,
-});
+},{timestamps:true});
 
+const AgencyCommissionHistory = mongoose.model(
+  "AgencyCommissionHistory",
+  AgencyCommissionHistorySchema
+);
 const AgentTransactionHistory = mongoose.model(
   "AgentTransactionHistory",
   AgentTransactionHistorySchema
@@ -274,4 +278,5 @@ exports.bettingGameData = bettingGameData;
 exports.Top3Winners = Top3Winners;
 exports.CommissionRate = CommissionRate;
 exports.AgentTransactionHistory = AgentTransactionHistory;
-exports.monthlyBdHistory=monthlyBdHistory
+exports.monthlyBdHistory = monthlyBdHistory;
+exports.AgencyCommissionHistory = AgencyCommissionHistory;

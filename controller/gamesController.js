@@ -12,6 +12,7 @@ const {
   CommissionRate,
   AgentTransactionHistory,
   monthlyBdHistory,
+  AgencyCommissionHistory,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -648,7 +649,7 @@ class games {
           else if (currentMonthBeans < 10000000000) agencyCommision = 0.15;
           else if (currentMonthBeans < 30000000000) agencyCommision = 0.17;
           else if (currentMonthBeans < 50000000000) agencyCommision = 0.19;
-          else if (currentMonthBeans < 50000000000) agencyCommision = 0.21;
+          else if (currentMonthBeans < 70000000000) agencyCommision = 0.21;
           else agencyCommision = 0.23;
         }
 
@@ -679,6 +680,13 @@ class games {
             new: true,
           }
         );
+        await AgencyCommissionHistory.create({
+          roomId,
+          sentBy: sentTo,
+          agencyId: agencyOfSentTo.agencyId,
+          commission: DiamondsToAdd * agencyCommision,
+        });
+
         const bdOfsentTo = await ParticipantAgencies.findOne(
           { agencyId: agencyOfSentTo.agencyId }
           // { $inc: { contributedBeans: Math.floor(DiamondsToAdd / 100) } }
@@ -699,8 +707,7 @@ class games {
           } else {
             const currentMonthBeans = currentMonthBddata.beans;
 
-            if (currentMonthBeans <      40000000000) BdCommision = 0.07;
-            
+            if (currentMonthBeans < 40000000000) BdCommision = 0.07;
             else BdCommision = 0.1;
           }
           await BdData.updateOne(
@@ -715,7 +722,7 @@ class games {
                 currentDate.getMonth(),
                 1
               ),
-          agencyId: agencyOfSentTo.agencyId,
+              agencyId: agencyOfSentTo.agencyId,
             },
             {
               $inc: { beans: DiamondsToAdd * BdCommision },
@@ -744,6 +751,22 @@ class games {
       await res.send("gift sent successfully");
     } catch (e) {
       console.log(e);
+      res.status(500).send(`internal server error: ${e}`);
+    }
+  }
+
+  async getAgencyCommissionHistory(req, res) {
+    const { agencyId, startDate, endDate } = req.query;
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    try {
+      const commissionData = await AgencyCommissionHistory.find({
+        agencyId,
+        createdAt: { $gte: startDateObj, $lte: endDateObj },
+      });
+      res.send(commissionData)
+    } catch (e) {
       res.status(500).send(`internal server error: ${e}`);
     }
   }

@@ -482,6 +482,8 @@ app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
 
 app.put("/api/send-gift", gamesController.sendGift);
 
+app.get("/api/agency/commissionHistory",gamesController.getAgencyCommissionHistory)
+
 app.put("/api/agent-recharge", gamesController.recharge);
 
 app.put("/api/agent-admin-recharge", gamesController.adminRecharge);
