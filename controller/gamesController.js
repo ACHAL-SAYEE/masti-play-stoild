@@ -943,10 +943,18 @@ class games {
   }
 
   async getAgencyParticipants(req, res) {
-    const { agencyId, start, limit } = req.query;
+    const { agencyId, start, limit, searchId } = req.query;
+
     try {
+      let condition;
+      if (searchId) {
+        console.log("ee");
+        condition = { agencyId, userId: { $regex: `.*${searchId}.*` } };
+      } else {
+        condition = { agencyId };
+      }
       const participants = await agencyParticipant.aggregate([
-        { $match: { agencyId } },
+        { $match: condition },
         {
           $lookup: {
             from: "users",

@@ -53,6 +53,17 @@ class PostApis {
     }
   }
 
+  async deletePost(req, res) {
+    const { postId } = req.query;
+    try {
+      await Post.deleteOne({ postId });
+      res.send("post deleted successfully");
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error:${e}`);
+    }
+  }
+
   async sharePost(req, res) {
     const { postId } = req.body;
     try {
@@ -70,7 +81,7 @@ class PostApis {
       res.status(500).json({ message: "Internal Server Error." });
     }
   }
-  
+
   async getHotPosts(req, res) {
     const { userId, limit, start } = req.query;
     // console.log(userId)
@@ -468,7 +479,7 @@ class PostApis {
     }
   }
   async getFollowingUsers(req, res) {
-    console.log("called following")
+    console.log("called following");
 
     const { userId, limit, start } = req.body;
     try {
@@ -478,7 +489,7 @@ class PostApis {
         .limit(Number(limit))
         .select({ followingId: 1, _id: 0, __v: 0 });
       res.send(result);
-      console.log("following result",result)
+      console.log("following result", result);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -561,7 +572,7 @@ class PostApis {
   }
 
   async getFollowingData(req, res) {
-    console.log("called following users data")
+    console.log("called following users data");
     const { userId, limit, start } = req.query;
     try {
       let FollowingData = await following.aggregate([
@@ -594,7 +605,7 @@ class PostApis {
           },
         },
       ]);
-        console.log("FollowingData",FollowingData);
+      console.log("FollowingData", FollowingData);
       FollowingData = FollowingData.map((follower) => follower.userData);
       console.log(FollowingData);
       res.send(FollowingData);
