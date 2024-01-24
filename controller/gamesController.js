@@ -13,6 +13,7 @@ const {
   AgentTransactionHistory,
   monthlyBdHistory,
   AgencyCommissionHistory,
+  CreatorHistory,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -587,7 +588,7 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-        currentDate.getDay() +
+          currentDate.getDay() +
           (currentDate.getDay() === 0 ? -6 : 1)
       );
 
@@ -627,9 +628,19 @@ class games {
         { userId: sentBy },
         { $inc: { diamondsCount: -1 * diamondsSent } }
       );
+      // await User.updateOne(
+      //   { userId: sentTo },
+      //   { $inc: { beansCount: DiamondsToAdd + bonusDiamonds } }
+      // );
       await User.updateOne(
         { userId: sentTo },
-        { $inc: { beansCount: DiamondsToAdd + bonusDiamonds } }
+        {
+          $inc: {
+            "creatorBeans.total": DiamondsToAdd + bonusDiamonds,
+            "creatorBeans.basic": DiamondsToAdd,
+            "creatorBeans.": bonusDiamonds,
+          },
+        }
       );
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
@@ -637,7 +648,7 @@ class games {
       let agencyCommision;
 
       if (agencyOfSentTo) {
-        console.log("currentDate.getFullYear()vdsbvvvvvvvvvvvvvvvvvvvvvvvv",currentDate.getFullYear(),currentDate.getMonth())
+        // console.log("currentDate.getFullYear()vdsbvvvvvvvvvvvvvvvvvvvvvvvv",currentDate.getFullYear(),currentDate.getMonth())
         const currentMonthAgencydata = await monthlyAgencyHistory.findOne({
           agencyId: agencyOfSentTo.agencyId,
           month: new Date(currentDate.getFullYear(), currentDate.getMonth(), 1),
@@ -670,7 +681,7 @@ class games {
             agencyId: agencyOfSentTo.agencyId,
             month: new Date(
               currentDate.getFullYear(),
-              currentDate.getMonth()+1,
+              currentDate.getMonth() + 1,
               1
             ),
           },
@@ -700,7 +711,7 @@ class games {
             bdId: bdOfsentTo.bdId,
             month: new Date(
               currentDate.getFullYear(),
-              currentDate.getMonth()+1,
+              currentDate.getMonth() + 1,
               1
             ),
           });
@@ -721,7 +732,7 @@ class games {
               bdId: bdOfsentTo.bdId,
               month: new Date(
                 currentDate.getFullYear(),
-                currentDate.getMonth()+1,
+                currentDate.getMonth() + 1,
                 1
               ),
               agencyId: agencyOfSentTo.agencyId,
@@ -740,7 +751,15 @@ class games {
           // );
         }
       }
-
+      await CreatorHistory.create({
+        creatorId: sentTo,
+        sentBy,
+        roomId,
+        beansGifted: {
+          basic: DiamondsToAdd,
+          bonus: bonusDiamonds,
+        },
+      });
       await TransactionHistory.create({
         roomId,
         sentby: sentBy,
@@ -757,6 +776,27 @@ class games {
     }
   }
 
+  async getCreatorHistory(req, res) {
+    const { userId, date } = req.query;
+    const dateObj = new Date(date);
+    const startDate = new Date(dateObj);
+    startDate.setHours(0, 0, 0, 0);
+
+    // Set the time to the end of the day (23:59:59.999)
+    const endDate = new Date(dateObj);
+    endDate.setHours(23, 59, 59, 999);
+    try {
+      const history = await CreatorHistory.find({
+        creatorId: userId,
+        createdAt: { $gte: startDate, $lte: endDate },
+      });
+      res.send(history);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error: ${e}`);
+    }
+  }
+
   async getAgencyCommissionHistory(req, res) {
     const { agencyId, startDate, endDate } = req.query;
     const startDateObj = new Date(startDate);
@@ -767,7 +807,7 @@ class games {
         agencyId,
         createdAt: { $gte: startDateObj, $lte: endDateObj },
       });
-      res.send(commissionData)
+      res.send(commissionData);
     } catch (e) {
       res.status(500).send(`internal server error: ${e}`);
     }
@@ -821,7 +861,7 @@ class games {
           {
             month: new Date(
               currentDate.getFullYear(),
-              currentDate.getMonth()+1,
+              currentDate.getMonth() + 1,
               1
             ),
           },
