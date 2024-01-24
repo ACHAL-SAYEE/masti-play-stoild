@@ -715,6 +715,7 @@ class games {
                 currentDate.getMonth(),
                 1
               ),
+          agencyId: agencyOfSentTo.agencyId,
             },
             {
               $inc: { beans: DiamondsToAdd * BdCommision },

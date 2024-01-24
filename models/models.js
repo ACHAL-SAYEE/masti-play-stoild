@@ -191,6 +191,13 @@ const AgentTransactionHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const AgencyCommissionHistorySchema = new mongoose.Schema({
+  sentBy: String,
+  commission: Number,
+  roomId: String,
+  agencyId: String,
+});
+
 const AgentTransactionHistory = mongoose.model(
   "AgentTransactionHistory",
   AgentTransactionHistorySchema
