@@ -420,6 +420,8 @@ app.get("/", (req, res) => {
 
 app.post("/api/posts/", postsController.storePost);
 
+app.delete("/api/posts",postsController.deletePost)
+
 app.put("/api/posts/share", postsController.sharePost);
 
 app.get("/api/hot", postsController.getHotPosts);
