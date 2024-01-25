@@ -782,7 +782,7 @@ class games {
   }
 
   async getCreatorHistory(req, res) {
-    const { userId, date } = req.query;
+    const { userId, date, start, limit } = req.query;
     const dateObj = new Date(date);
     const startDate = new Date(dateObj);
     startDate.setHours(0, 0, 0, 0);
@@ -794,7 +794,9 @@ class games {
       const history = await CreatorHistory.find({
         creatorId: userId,
         createdAt: { $gte: startDate, $lte: endDate },
-      });
+      })
+        .skip(Number(start))
+        .limit(Number(limit));
       res.send(history);
     } catch (e) {
       console.log(e);
