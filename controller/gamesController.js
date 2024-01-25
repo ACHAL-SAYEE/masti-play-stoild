@@ -1209,10 +1209,9 @@ class games {
         res.send(history);
         return;
       } else if (startDate) {
-
         startDateObj = new Date(startDate);
         endDateObj = new Date(endDate);
-        console.log(startDateObj,endDateObj)
+        console.log(startDateObj, endDateObj);
 
         const history = await AgentTransactionHistory.find({
           // sentBy: agentId,
@@ -1230,6 +1229,16 @@ class games {
       });
       res.send(history);
     } catch (e) {
+      res.status(500).send(e);
+    }
+  }
+
+  async getRates(req, res) {
+    try {
+      const rates = await CommissionRate.findOne({});
+      res.send(rates);
+    } catch (e) {
+      console.log(e);
       res.status(500).send(e);
     }
   }
