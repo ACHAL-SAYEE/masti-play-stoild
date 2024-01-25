@@ -546,7 +546,7 @@ app.delete("/api/bd/agency", gamesController.removeAgencyfromBd);
 
 app.get("/api/creator/history", gamesController.getCreatorHistory);
 
-app.get("/api/rates" ,gamesController.getRates)
+app.get("/api/rates", gamesController.getRates);
 
 
 
@@ -716,12 +716,9 @@ async function endBetting() {
           (item) => item.userId === betItem.userId
         );
         console.log(
-          `Creating a bettingGameData entry with userId: ${
-            betItem.userId
-          } | userspentInfo.amount: ${
-            userspentInfo.amount
-          } | betItem.amount * multiplyvalue: ${
-            betItem.amount * multiplyvalue
+          `Creating a bettingGameData entry with userId: ${betItem.userId
+          } | userspentInfo.amount: ${userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
