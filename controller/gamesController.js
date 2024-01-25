@@ -787,7 +787,6 @@ class games {
     const startDate = new Date(dateObj);
     startDate.setHours(0, 0, 0, 0);
 
-    // Set the time to the end of the day (23:59:59.999)
     const endDate = new Date(dateObj);
     endDate.setHours(23, 59, 59, 999);
     try {
@@ -1188,6 +1187,7 @@ class games {
   async getAgentTransactionHistory(req, res) {
     const { mode, userId, agentId, startDate, endDate } = req.query;
     let startDateObj, endDateObj;
+
     try {
       if (userId && startDate) {
         startDateObj = new Date(startDate);
@@ -1209,11 +1209,13 @@ class games {
         res.send(history);
         return;
       } else if (startDate) {
+
         startDateObj = new Date(startDate);
         endDateObj = new Date(endDate);
+        console.log(startDateObj,endDateObj)
+
         const history = await AgentTransactionHistory.find({
           sentBy: agentId,
-          sentTo: userId,
           mode,
           createdAt: { $gte: startDateObj, $lte: endDateObj },
         });
