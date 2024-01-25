@@ -1247,7 +1247,14 @@ class games {
   async getRates(req, res) {
     try {
       const rates = await CommissionRate.findOne({});
-      res.send(rates);
+      console.log(rates)
+      if(rates===null){
+        res.send([])
+      }
+      else{
+        res.send(rates);
+      }
+     
     } catch (e) {
       console.log(e);
       res.status(500).send(e);
