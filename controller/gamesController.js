@@ -1249,7 +1249,7 @@ class games {
       const rates = await CommissionRate.findOne({});
       console.log(rates)
       if(rates===null){
-        res.send([])
+        res.send({});
       }
       else{
         res.send(rates);
