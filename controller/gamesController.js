@@ -1215,7 +1215,9 @@ class games {
         console.log(startDateObj,endDateObj)
 
         const history = await AgentTransactionHistory.find({
-          sentBy: agentId,
+          // sentBy: agentId,
+          $or: [{ sentBy: agentId }, { sentTo: agentId }],
+
           mode,
           createdAt: { $gte: startDateObj, $lte: endDateObj },
         });
