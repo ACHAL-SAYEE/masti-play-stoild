@@ -241,6 +241,7 @@ const Top3WinnersSchema = new mongoose.Schema({
 const CommissionRateSchema = new mongoose.Schema({
   bdRate: Number,
   agencyRate: Number,
+  bonusRate: Number,
 });
 
 const CommissionRate = mongoose.model("CommissionRate", CommissionRateSchema);
