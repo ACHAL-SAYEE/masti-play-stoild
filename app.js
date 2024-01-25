@@ -546,7 +546,7 @@ app.delete("/api/bd/agency", gamesController.removeAgencyfromBd);
 
 app.get("/api/creator/history", gamesController.getCreatorHistory);
 
-app.get("/api/rates" gamesController.getRates)
+app.get("/api/rates" ,gamesController.getRates)
 
 
 
