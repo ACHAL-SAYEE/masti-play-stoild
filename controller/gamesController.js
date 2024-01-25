@@ -1171,11 +1171,11 @@ class games {
 
   async getAgentTransactionHistory(req, res) {
     const { mode, userId, agentId, startDate, endDate } = req.query;
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
-
+    let startDateObj,endDateObj; 
     try {
       if (userId && startDate) {
+        startDateObj= new Date(startDate);
+        endDateObj= new Date(endDate);
         const history = await AgentTransactionHistory.find({
           sentBy: agentId,
           sentTo: userId,
@@ -1193,6 +1193,8 @@ class games {
         res.send(history);
         return;
       } else if (startDate) {
+        startDateObj= new Date(startDate);
+        endDateObj= new Date(endDate);
         const history = await AgentTransactionHistory.find({
           sentBy: agentId,
           sentTo: userId,
