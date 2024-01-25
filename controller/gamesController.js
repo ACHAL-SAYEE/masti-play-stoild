@@ -433,6 +433,7 @@ class games {
   }
 
   async getAllAgencies(req, res) {
+    const { start, limit } = req.query;
     try {
       const Agencies = await User.aggregate([
         { $match: { agentId: { $ne: null } } },
@@ -447,6 +448,10 @@ class games {
         {
           $unwind: "$ownedAgencyData",
         },
+        {
+          $skip: Number(start),
+        },
+        { $limit: Number(limit) },
       ]);
       res.send(Agencies);
     } catch (e) {
@@ -798,16 +803,25 @@ class games {
   }
 
   async getAgencyCommissionHistory(req, res) {
-    const { agencyId, startDate, endDate } = req.query;
-    const startDateObj = new Date(startDate);
-    const endDateObj = new Date(endDate);
+    const { agencyId, startDate, endDate, start, limit } = req.query;
 
     try {
-      const commissionData = await AgencyCommissionHistory.find({
-        agencyId,
-        createdAt: { $gte: startDateObj, $lte: endDateObj },
-      });
-      res.send(commissionData);
+      if (startDate) {
+        const startDateObj = new Date(startDate);
+        const endDateObj = new Date(endDate);
+        const commissionData = await AgencyCommissionHistory.find({
+          agencyId,
+          createdAt: { $gte: startDateObj, $lte: endDateObj },
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
+        res.send(commissionData);
+      } else {
+        const commissionData = await AgencyCommissionHistory.find({
+          agencyId,
+        });
+        res.send(commissionData);
+      }
     } catch (e) {
       res.status(500).send(`internal server error: ${e}`);
     }
@@ -1171,11 +1185,11 @@ class games {
 
   async getAgentTransactionHistory(req, res) {
     const { mode, userId, agentId, startDate, endDate } = req.query;
-    let startDateObj,endDateObj; 
+    let startDateObj, endDateObj;
     try {
       if (userId && startDate) {
-        startDateObj= new Date(startDate);
-        endDateObj= new Date(endDate);
+        startDateObj = new Date(startDate);
+        endDateObj = new Date(endDate);
         const history = await AgentTransactionHistory.find({
           sentBy: agentId,
           sentTo: userId,
@@ -1193,8 +1207,8 @@ class games {
         res.send(history);
         return;
       } else if (startDate) {
-        startDateObj= new Date(startDate);
-        endDateObj= new Date(endDate);
+        startDateObj = new Date(startDate);
+        endDateObj = new Date(endDate);
         const history = await AgentTransactionHistory.find({
           sentBy: agentId,
           sentTo: userId,
