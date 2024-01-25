@@ -1248,7 +1248,7 @@ cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
     // allAgencyData.forEach(async (agency) => {
-      for(const agency of allAgencyData){
+    for (const agency of allAgencyData) {
       await AgencyData.updateOne(
         { agencyId: agency.agencyId },
         { beansCount: 0 }
@@ -1257,7 +1257,7 @@ cron.schedule("0 0 1 * *", async () => {
         { userId: agency.ownerId },
         { $inc: { beansCount: agency.beansCount } }
       );
-    };
+    }
   } catch (e) {
     console.log(e);
   }
@@ -1281,7 +1281,7 @@ cron.schedule("0 0 1 * *", async () => {
 cron.schedule("0 0 * * 1", async () => {
   try {
     const allUsersData = await User.find({});
-    for(const user of allUsersData){
+    for (const user of allUsersData) {
       await User.updateOne(
         { userId: user.userId },
         {
