@@ -593,8 +593,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-          currentDate.getDay() +
-          (currentDate.getDay() === 0 ? -6 : 1)
+        currentDate.getDay() +
+        (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -805,24 +805,25 @@ class games {
 
   async getAgencyCommissionHistory(req, res) {
     const { agencyId, startDate, endDate, start, limit } = req.query;
-
+    let commissionData;
     try {
       if (startDate) {
         const startDateObj = new Date(startDate);
         const endDateObj = new Date(endDate);
-        const commissionData = await AgencyCommissionHistory.find({
+        commissionData = await AgencyCommissionHistory.find({
           agencyId,
           createdAt: { $gte: startDateObj, $lte: endDateObj },
-        })
-          .skip(Number(start))
+        }).skip(Number(start))
           .limit(Number(limit));
-        res.send(commissionData);
       } else {
-        const commissionData = await AgencyCommissionHistory.find({
+        commissionData = await AgencyCommissionHistory.find({
           agencyId,
-        });
-        res.send(commissionData);
+        }).skip(Number(start))
+          .limit(Number(limit));
       }
+      console.log(`start = ${start}, limit = ${limit}`);
+      console.log("commissionData", commissionData);
+      res.send(commissionData);
     } catch (e) {
       res.status(500).send(`internal server error: ${e}`);
     }
