@@ -56,7 +56,9 @@ class PostApis {
   async deletePost(req, res) {
     const { postId } = req.query;
     try {
-      await Post.deleteOne({ postId });
+      await Post.deleteOne({
+        PostId: postId
+      });
       res.send("post deleted successfully");
     } catch (e) {
       console.log(e);
