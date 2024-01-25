@@ -501,7 +501,7 @@ app.get("/api/comments", postsController.getsCommentsOfPost);
 
 app.get("/api/agency", gamesController.getAgencyDataOfUser);
 
-app.put("/api/set-comission-rate", gamesController.setComissionRate);
+app.put("/api/rates", gamesController.setComissionRate);
 
 app.get("/api/agent-history", gamesController.getAgentTransactionHistory);
 // app.post("/api/spinner-betting", async (req, res) => {
