@@ -593,8 +593,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-        currentDate.getDay() +
-        (currentDate.getDay() === 0 ? -6 : 1)
+          currentDate.getDay() +
+          (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -813,12 +813,14 @@ class games {
         commissionData = await AgencyCommissionHistory.find({
           agencyId,
           createdAt: { $gte: startDateObj, $lte: endDateObj },
-        }).skip(Number(start))
+        })
+          .skip(Number(start))
           .limit(Number(limit));
       } else {
         commissionData = await AgencyCommissionHistory.find({
           agencyId,
-        }).skip(Number(start))
+        })
+          .skip(Number(start))
           .limit(Number(limit));
       }
       console.log(`start = ${start}, limit = ${limit}`);
@@ -1186,7 +1188,8 @@ class games {
   }
 
   async getAgentTransactionHistory(req, res) {
-    const { mode, userId, agentId, startDate, endDate } = req.query;
+    const { mode, userId, agentId, startDate, endDate, start, limit } =
+      req.query;
     let startDateObj, endDateObj;
 
     try {
@@ -1198,7 +1201,9 @@ class games {
           sentTo: userId,
           mode,
           createdAt: { $gte: startDateObj, $lte: endDateObj },
-        });
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
         res.send(history);
         return;
       } else if (userId) {
@@ -1206,7 +1211,9 @@ class games {
           sentBy: agentId,
           sentTo: userId,
           mode,
-        });
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
         res.send(history);
         return;
       } else if (startDate) {
@@ -1217,17 +1224,20 @@ class games {
         const history = await AgentTransactionHistory.find({
           // sentBy: agentId,
           $or: [{ sentBy: agentId }, { sentTo: agentId }],
-
           mode,
           createdAt: { $gte: startDateObj, $lte: endDateObj },
-        });
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
         res.send(history);
         return;
       }
       const history = await AgentTransactionHistory.find({
         $or: [{ sentBy: agentId }, { sentTo: agentId }],
         mode,
-      });
+      })
+        .skip(Number(start))
+        .limit(Number(limit));
       res.send(history);
     } catch (e) {
       res.status(500).send(e);
