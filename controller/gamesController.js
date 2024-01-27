@@ -14,6 +14,7 @@ const {
   monthlyBdHistory,
   AgencyCommissionHistory,
   CreatorHistory,
+  GameTransactionHistory,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -167,50 +168,32 @@ class games {
 
   async getDiamondsHistory(req, res) {
     const { userId, start, limit, mode } = req.query;
-
-    let query = {};
-    let selectFields = {
-      _id: 0,
-      __v: 0,
-      beansAdded: 0,
-      updatedAt: 0,
-      sentTo: 0,
-    };
-
-    switch (mode) {
-      case "income":
-        query = {
-          isGift: false,
-          sentTo: userId,
-          paymentType: null,
-          diamondsAdded: { $gt: 0 },
-        };
-        break;
-      case "recharge":
-        query = {
-          isGift: false,
-          sentTo: userId,
-          game: null,
-          diamondsAdded: { $gt: 0 },
-        };
-        break;
-      default:
-        query = {
-          isGift: false,
-          paymentType: null,
-          sentby: userId,
-          diamondsAdded: { $lt: 0 },
-        };
-        break;
-    }
-
+    let result;
     try {
-      const result = await queryDiamondsTransactionHistory(
-        query,
-        start,
-        limit,
-        selectFields
-      );
+      if (mode === "income") {
+        await GameTransactionHistory.find({
+          userId,
+          mode: "income",
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
+      } else if (mode === "outcome") {
+        await GameTransactionHistory.find({
+          userId,
+          mode: "income",
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
+      } else if (mode === "recharge") {
+       //TODO
+      }
+
+      // const result = await queryDiamondsTransactionHistory(
+      //   query,
+      //   start,
+      //   limit,
+      //   selectFields
+      // );
       console.log(result);
       res.send(result);
     } catch (e) {
@@ -1247,14 +1230,12 @@ class games {
   async getRates(req, res) {
     try {
       const rates = await CommissionRate.findOne({});
-      console.log(rates)
-      if(rates===null){
+      console.log(rates);
+      if (rates === null) {
         res.send({});
-      }
-      else{
+      } else {
         res.send(rates);
       }
-     
     } catch (e) {
       console.log(e);
       res.status(500).send(e);
@@ -1264,3 +1245,56 @@ class games {
 
 const gamesController = new games();
 module.exports = gamesController;
+
+// async getDiamondsHistory(req, res) {
+//   const { userId, start, limit, mode } = req.query;
+
+//   let query = {};
+//   let selectFields = {
+//     _id: 0,
+//     __v: 0,
+//     beansAdded: 0,
+//     updatedAt: 0,
+//     sentTo: 0,
+//   };
+
+//   switch (mode) {
+//     case "income":
+//       query = {
+//         isGift: false,
+//         sentTo: userId,
+//         paymentType: null,
+//         diamondsAdded: { $gt: 0 },
+//       };
+//       break;
+//     case "recharge":
+//       query = {
+//         isGift: false,
+//         sentTo: userId,
+//         game: null,
+//         diamondsAdded: { $gt: 0 },
+//       };
+//       break;
+//     default:
+//       query = {
+//         isGift: false,
+//         paymentType: null,
+//         sentby: userId,
+//         diamondsAdded: { $lt: 0 },
+//       };
+//       break;
+//   }
+
+//   try {
+//     const result = await queryDiamondsTransactionHistory(
+//       query,
+//       start,
+//       limit,
+//       selectFields
+//     );
+//     console.log(result);
+//     res.send(result);
+//   } catch (e) {
+//     res.status(500).send("Internal server error");
+//   }
+// }
