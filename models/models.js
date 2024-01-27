@@ -134,6 +134,16 @@ const TransactionHistorySchema = new mongoose.Schema(
   }
 );
 
+const GameTransactionHistorySchema = new mongoose.Schema(
+  {
+    mode: String,
+    userId: String,
+    diamonds: Number,
+    game: String,
+  },
+  { timestamps: true }
+);
+
 const agencyParticipantsSchema = new mongoose.Schema({
   userId: String,
   agencyId: String,
@@ -276,6 +286,10 @@ const monthlyBdHistory = mongoose.model(
   "monthlyBdHistory",
   monthlyBdHistorySchema
 );
+const GameTransactionHistory = mongoose.model(
+  "GameTransactionHistory",
+  GameTransactionHistorySchema
+);
 const following = mongoose.model("following", followingDataSchema);
 const Tag = mongoose.model("Tag", TagSchema);
 const LikesInfo = mongoose.model("LikesInfo", likesInfo);
@@ -320,3 +334,4 @@ exports.AgentTransactionHistory = AgentTransactionHistory;
 exports.monthlyBdHistory = monthlyBdHistory;
 exports.AgencyCommissionHistory = AgencyCommissionHistory;
 exports.CreatorHistory = CreatorHistory;
+exports.GameTransactionHistory = GameTransactionHistory;

@@ -191,6 +191,7 @@ const {
   SpinnerGameWinnerHistory,
   Top3Winners,
   AgencyData,
+  GameTransactionHistory,
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
@@ -548,8 +549,6 @@ app.get("/api/creator/history", gamesController.getCreatorHistory);
 
 app.get("/api/rates", gamesController.getRates);
 
-
-
 var gameProperties = {
   gameStartTime: null,
   gameEndTime: null,
@@ -716,9 +715,12 @@ async function endBetting() {
           (item) => item.userId === betItem.userId
         );
         console.log(
-          `Creating a bettingGameData entry with userId: ${betItem.userId
-          } | userspentInfo.amount: ${userspentInfo.amount
-          } | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue
+          `Creating a bettingGameData entry with userId: ${
+            betItem.userId
+          } | userspentInfo.amount: ${
+            userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${
+            betItem.amount * multiplyvalue
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
@@ -733,6 +735,12 @@ async function endBetting() {
           { userId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
         );
+        await GameTransactionHistory.create({
+          userId: betItem.userId,
+          mode: "outcome",
+          diamonds: betItem.amount * multiplyvalue,
+          game: "spinner-bet-game",
+        });
       }
     });
     let resultArray, betInfoFiltered;
@@ -893,6 +901,12 @@ io.on("connection", (socket) => {
       console.log(
         `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
       );
+      await GameTransactionHistory.create({
+        userId,
+        game: gameName,
+        diamonds: -1 * amount,
+        mode: "outcome",
+      });
       sendGameUpdate("bet-status", socket, {
         diamonds: updatedUser.diamondsCount,
         status: "accepted",
@@ -900,7 +914,7 @@ io.on("connection", (socket) => {
     }
   });
   // TODO: an event for checking the leaderboard
-  socket.on("jackpot-bet", (data) => {
+  socket.on("jackpot-bet", async (data) => {
     console.log("trigger rjvn");
     const index = jackpotInfo.findIndex((pot) => pot.userId == data.userId);
     console.log(index);
@@ -920,6 +934,12 @@ io.on("connection", (socket) => {
         lines: data.lines,
       };
     }
+    await GameTransactionHistory.create({
+      userId: data.userId,
+      game: "jackpot",
+      diamonds: -1 * data.betAmount,
+      mode: "outcome",
+    });
     console.log(jackpotInfo);
   });
   socket.on("spin-jackpot", async (data) => {
@@ -1119,6 +1139,15 @@ io.on("connection", (socket) => {
     console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
     // console.log("jackPotAmount2", jackPotAmount);
     socket.emit("jackpot-result", { jackpotgameGrid, jackPotAmount });
+    if(returnValue>0){
+      await GameTransactionHistory.create({
+        userId: data.userId,
+        mode: "outcome",
+        diamonds: betItem.amount * multiplyvalue,
+        game: "jackpot",
+      });
+    }
+      
     return { jackpotgameGrid, jackPotAmount };
   });
   //send data like frontend this data={userId,betItems=[{item:blue,amount:100},{item:set,amount:100}]} .send bet data at once for particular user
@@ -1131,6 +1160,17 @@ io.on("connection", (socket) => {
     royalBattleBetInfo.push({
       userId: data.userId,
       betItems: data.betItems,
+    });
+
+    let totalBetAmount = 0;
+    data.betItems.forEach((item) => {
+      totalBetAmount += item.amount;
+    });
+    await GameTransactionHistory.create({
+      userId: data.userId,
+      game: "royal-battle-bet",
+      diamonds: -1 * totalBetAmount,
+      mode: "outcome",
     });
     // } else {
     //   royalBattleBetInfo[index] = {
@@ -1210,6 +1250,13 @@ io.on("connection", (socket) => {
           RedsideCards,
           returnAmount,
         });
+        //TODO :update game outcome
+        // await GameTransactionHistory.create({
+        //   userId: data.userId,
+        //   mode: "outcome",
+        //   diamonds: betItem.amount * multiplyvalue,
+        //   game: "royal-battle",
+        // });
       } else {
         socket.emit("royal-battle-result", {
           winner1,
