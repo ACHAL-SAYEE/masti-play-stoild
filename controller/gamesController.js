@@ -185,7 +185,7 @@ class games {
           .skip(Number(start))
           .limit(Number(limit));
       } else if (mode === "recharge") {
-       //TODO
+        //TODO
       }
 
       // const result = await queryDiamondsTransactionHistory(
@@ -383,7 +383,11 @@ class games {
   }
 
   async getAllAgents(req, res) {
+    const todayDate = new Date();
     const { limit, start } = req.query;
+    console.log(Number(start), start);
+    console.log(Number(limit), limit);
+
     try {
       const result = await User.aggregate([
         {
@@ -400,6 +404,37 @@ class games {
         {
           $unwind: "$AgentData",
         },
+        {
+          $lookup: {
+            from: "monthlyagenthistories",
+            localField: "agentId",
+            foreignField: "agentId",
+            as: "monthlyAgentData",
+          },
+        },
+        {
+          $unwind: {
+            path: "$monthlyAgentData",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $addFields: {
+            monthlyDiamonds: "$monthlyAgentData.diamonds",
+          },
+        },
+        {
+          $project: {
+            "monthlyAgentData": 0,
+          },
+        },
+        // {
+        //   $project: {
+        //     monthlyAgentData: 0,
+        //     monthlyDiamonds: "$monthlyAgentData.diamonds",
+        //   },
+        // },
+        // {
         {
           $skip: Number(start),
         },
@@ -860,6 +895,7 @@ class games {
         const currentDate = new Date();
         await monthlyAgentHistory.findOneAndUpdate(
           {
+            agentId,
             month: new Date(
               currentDate.getFullYear(),
               currentDate.getMonth() + 1,
