@@ -425,7 +425,7 @@ class games {
         },
         {
           $project: {
-            "monthlyAgentData": 0,
+            monthlyAgentData: 0,
           },
         },
         // {
@@ -822,27 +822,89 @@ class games {
   }
 
   async getMonthlyCreatorHistory(req, res) {
-    const { userId, date, start, limit } = req.query;
-    const dateObj = new Date(date);
-    const startDate = new Date(dateObj);
-    startDate.setHours(0, 0, 0, 0);
+    const currentDate = new Date();
 
-    const endDate = new Date(dateObj);
-    endDate.setHours(23, 59, 59, 999);
+    const firstDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth(),
+      1
+    );
+    firstDayOfMonth.setHours(0, 0, 0, 0); // Set time to 12:00 AM
+
+    const lastDayOfMonth = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + 1,
+      0
+    );
+    lastDayOfMonth.setHours(23, 59, 59, 999);
+    console.log(firstDayOfMonth, lastDayOfMonth);
+    const { userId } = req.query;
     try {
-      const history = await CreatorHistory.find({
-        creatorId: userId,
-        createdAt: { $gte: startDate, $lte: endDate },
-      })
-        .skip(Number(start))
-        .limit(Number(limit));
+      const history = await CreatorHistory.aggregate([
+        {
+          $match: {
+            creatorId: userId,
+            createdAt: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
+          },
+        },
+        {
+          $group: {
+            _id: "$creatorId",
+            monthlyBasicBeans: { $sum: "$beansGifted.basic" },
+            monthlyBonusBeans: { $sum: "$beansGifted.basic" },
+          },
+        },
+      ]);
+
       res.send(history);
     } catch (e) {
       console.log(e);
       res.status(500).send(`internal server error: ${e}`);
     }
   }
-  
+
+  async getWeeklyCreatorHistory(req, res) {
+    const currentDate = new Date();
+
+    let currentDayOfWeek = currentDate.getDay();
+
+    if (currentDayOfWeek === 0) {
+      currentDayOfWeek = 7;
+    }
+
+    const startDate = new Date(currentDate);
+    startDate.setDate(currentDate.getDate() - currentDayOfWeek + 1);
+    startDate.setHours(0, 0, 0, 0);
+    const endDate = new Date(currentDate);
+    endDate.setDate(startDate.getDate() + 6);
+    endDate.setHours(23, 59, 59, 999);
+    console.log(startDate);
+    console.log(endDate);
+
+    const { userId } = req.query;
+    try {
+      const history = await CreatorHistory.aggregate([
+        {
+          $match: {
+            creatorId: userId,
+            createdAt: { $gte: startDate, $lte: endDate },
+          },
+        },
+        // {
+        //   $group: {
+        //     _id: null,
+        //     monthlyBasicBeans: { $sum: "$beansGifted.basic" },
+        //     monthlyBonusBeans: { $sum: "$beansGifted.basic" },
+        //   },
+        // },
+      ]);
+
+      res.send(history);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error: ${e}`);
+    }
+  }
 
   async getAgencyCommissionHistory(req, res) {
     const { agencyId, startDate, endDate, start, limit } = req.query;

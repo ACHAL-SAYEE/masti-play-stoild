@@ -416,7 +416,7 @@ app.get(
   "/api/creator/monthly-history",
   gamesController.getMonthlyCreatorHistory
 );
-app.get("/api/creator/weekly-history", gamesController.getCreatorHistory);
+app.get("/api/creator/weekly-history", gamesController.getWeeklyCreatorHistory);
 
 app.get("/api/rates", gamesController.getRates);
 
@@ -1328,7 +1328,7 @@ let ludoPlayerIndex;
 
     }
    
-    if (ludoPlayers.) io.to(ludoroomId).emit;
+    // if (ludoPlayers.) io.to(ludoroomId).emit;
   });
 
   socket.on("unlock",()=>{
