@@ -23,7 +23,12 @@ const io = socketIO(server, {
 // );
 const path = require("path");
 const cron = require("node-cron");
-const { generateUniqueId, generateUserId, getRandomInt } = require("./utils");
+const {
+  generateUniqueId,
+  generateUserId,
+  getRandomInt,
+  getcount,
+} = require("./utils");
 const initializeDB = require("./InitialiseDb/index");
 app.use(express.urlencoded({ extended: false }));
 app.use(cors());
@@ -40,147 +45,7 @@ app.use(
     parameterLimit: 50000,
   })
 );
-const socketIds = {};
-const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
-const royalBattleCardcombinationsConstants = {
-  SET: "set",
-  PURESEQUENCE: "pure sequence",
-  SEQUENCE: "sequence",
-  COLOR: "color",
-  PAIR: "pair",
-  HIGHCARD: "high card",
-};
-const royalBattleCardcombinations = [
-  royalBattleCardcombinationsConstants.SET,
-  royalBattleCardcombinationsConstants.PURESEQUENCE,
-  royalBattleCardcombinationsConstants.SEQUENCE,
-  royalBattleCardcombinationsConstants.COLOR,
-  royalBattleCardcombinationsConstants.PAIR,
-  royalBattleCardcombinationsConstants.HIGHCARD,
-];
-let royalBattleTotalBetAmount = 0;
-const royalBattleBetInfo = [];
-let bettingInfoArray = [];
-const jackpotInfo = [];
-const rows = 3;
-const cols = 5;
-// Define constants for suits and ranks
-const SUITS = ["HEARTS", "DIAMONDS", "CLUBS", "SPADES"];
-const RANKS = [
-  "ACE",
-  "KING",
-  "QUEEN",
-  "JACK",
-  "10",
-  "9",
-  "8",
-  "7",
-  "6",
-  "5",
-  "4",
-  "3",
-  "2",
-];
 
-// Function to generate three cards with the same rank and random suits
-function generateThreeCardsSameRank() {
-  // Choose a random rank
-
-  const randomSuits = [];
-  const randomRank = getRandomInt(0, 12);
-  while (randomSuits.length < 3) {
-    const randomSuit = getRandomInt(0, 3);
-    randomSuits.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
-  }
-  return randomSuits;
-}
-
-function generatePureSequence() {
-  let randomSuit = getRandomInt(0, 3);
-
-  const threeCards = [];
-  const startIndex = getRandomInt(0, 10);
-
-  for (let i = 0; i < 3; i += 1) {
-    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
-  }
-
-  return threeCards;
-}
-
-function generateSequence() {
-  const threeCards = [];
-  const startIndex = getRandomInt(0, 10);
-
-  for (let i = 0; i < 3; i += 1) {
-    let randomSuit = getRandomInt(0, 3);
-    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
-  }
-
-  return threeCards;
-}
-
-function generateColor() {
-  let SUITSCOLOR;
-  const threeCards = [];
-  const color = getRandomInt(0, 1) === 0 ? "red" : "black";
-  if (color === "red") {
-    SUITSCOLOR = SUITS.slice(0, 2);
-  } else {
-    SUITSCOLOR = SUITS.slice(2, 4);
-  }
-  for (let i = 0; i < 3; i += 1) {
-    let randomSuit = getRandomInt(0, 1);
-    threeCards.push(`${SUITSCOLOR[randomSuit]} ${RANKS[getRandomInt(0, 12)]}`);
-  }
-
-  return threeCards;
-}
-function getTwoDifferentRandomNumbersInRange(min, max) {
-  let number1 = getRandomInt(min, max);
-  let number2;
-
-  do {
-    number2 = getRandomInt(min, max);
-  } while (number2 === number1);
-
-  return [number1, number2];
-}
-
-function generatePair() {
-  const threeCards = [];
-
-  let [randomrank, randomRank2] = getTwoDifferentRandomNumbersInRange(0, 12);
-  for (let i = 0; i < 2; i += 1) {
-    let randomSuit = getRandomInt(0, 3);
-    threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomrank]}`);
-  }
-  threeCards.push(`${SUITS[getRandomInt(0, 3)]} ${RANKS[randomRank2]}`);
-
-  return threeCards;
-}
-
-function generateHighCard() {
-  const threeCards = [];
-
-  for (let i = 0; i < 3; i += 1) {
-    let randomSuit = getRandomInt(0, 3);
-    let randomRank = getRandomInt(0, 12);
-    threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
-  }
-
-  return threeCards;
-}
-
-const jackpotgameGrid = [];
-for (let i = 0; i < rows; i++) {
-  jackpotgameGrid[i] = [];
-  for (let j = 0; j < cols; j++) {
-    jackpotgameGrid[i][j] = 0;
-  }
-}
-const beansToDiamondsRate = 1;
-let bettingGameparticipants = 0;
 const postsController = require("./controller/postsController");
 const gamesController = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
@@ -233,6 +98,7 @@ const authenticateToken = (request, response, next) => {
 };
 
 initializeDB();
+
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
@@ -546,8 +412,155 @@ app.delete("/api/agency/agent", gamesController.removeAgentfromAgency);
 app.delete("/api/bd/agency", gamesController.removeAgencyfromBd);
 
 app.get("/api/creator/history", gamesController.getCreatorHistory);
+app.get(
+  "/api/creator/monthly-history",
+  gamesController.getMonthlyCreatorHistory
+);
+app.get("/api/creator/weekly-history", gamesController.getCreatorHistory);
 
 app.get("/api/rates", gamesController.getRates);
+
+const socketIds = {};
+const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
+const royalBattleCardcombinationsConstants = {
+  SET: "set",
+  PURESEQUENCE: "pure sequence",
+  SEQUENCE: "sequence",
+  COLOR: "color",
+  PAIR: "pair",
+  HIGHCARD: "high card",
+};
+const royalBattleCardcombinations = [
+  royalBattleCardcombinationsConstants.SET,
+  royalBattleCardcombinationsConstants.PURESEQUENCE,
+  royalBattleCardcombinationsConstants.SEQUENCE,
+  royalBattleCardcombinationsConstants.COLOR,
+  royalBattleCardcombinationsConstants.PAIR,
+  royalBattleCardcombinationsConstants.HIGHCARD,
+];
+let royalBattleTotalBetAmount = 0;
+const royalBattleBetInfo = [];
+let bettingInfoArray = [];
+const jackpotInfo = [];
+const rows = 3;
+const cols = 5;
+// Define constants for suits and ranks
+const SUITS = ["HEARTS", "DIAMONDS", "CLUBS", "SPADES"];
+const RANKS = [
+  "ACE",
+  "KING",
+  "QUEEN",
+  "JACK",
+  "10",
+  "9",
+  "8",
+  "7",
+  "6",
+  "5",
+  "4",
+  "3",
+  "2",
+];
+
+// Function to generate three cards with the same rank and random suits
+function generateThreeCardsSameRank() {
+  // Choose a random rank
+
+  const randomSuits = [];
+  const randomRank = getRandomInt(0, 12);
+  while (randomSuits.length < 3) {
+    const randomSuit = getRandomInt(0, 3);
+    randomSuits.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
+  }
+  return randomSuits;
+}
+
+function generatePureSequence() {
+  let randomSuit = getRandomInt(0, 3);
+
+  const threeCards = [];
+  const startIndex = getRandomInt(0, 10);
+
+  for (let i = 0; i < 3; i += 1) {
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
+  }
+
+  return threeCards;
+}
+
+function generateSequence() {
+  const threeCards = [];
+  const startIndex = getRandomInt(0, 10);
+
+  for (let i = 0; i < 3; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[startIndex + i]}`);
+  }
+
+  return threeCards;
+}
+
+function generateColor() {
+  let SUITSCOLOR;
+  const threeCards = [];
+  const color = getRandomInt(0, 1) === 0 ? "red" : "black";
+  if (color === "red") {
+    SUITSCOLOR = SUITS.slice(0, 2);
+  } else {
+    SUITSCOLOR = SUITS.slice(2, 4);
+  }
+  for (let i = 0; i < 3; i += 1) {
+    let randomSuit = getRandomInt(0, 1);
+    threeCards.push(`${SUITSCOLOR[randomSuit]} ${RANKS[getRandomInt(0, 12)]}`);
+  }
+
+  return threeCards;
+}
+function getTwoDifferentRandomNumbersInRange(min, max) {
+  let number1 = getRandomInt(min, max);
+  let number2;
+
+  do {
+    number2 = getRandomInt(min, max);
+  } while (number2 === number1);
+
+  return [number1, number2];
+}
+
+function generatePair() {
+  const threeCards = [];
+
+  let [randomrank, randomRank2] = getTwoDifferentRandomNumbersInRange(0, 12);
+  for (let i = 0; i < 2; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomrank]}`);
+  }
+  threeCards.push(`${SUITS[getRandomInt(0, 3)]} ${RANKS[randomRank2]}`);
+
+  return threeCards;
+}
+
+function generateHighCard() {
+  const threeCards = [];
+
+  for (let i = 0; i < 3; i += 1) {
+    let randomSuit = getRandomInt(0, 3);
+    let randomRank = getRandomInt(0, 12);
+    threeCards.push(`${SUITS[randomSuit]} ${RANKS[randomRank]}`);
+  }
+
+  return threeCards;
+}
+
+const jackpotgameGrid = [];
+for (let i = 0; i < rows; i++) {
+  jackpotgameGrid[i] = [];
+  for (let j = 0; j < cols; j++) {
+    jackpotgameGrid[i][j] = 0;
+  }
+}
+const beansToDiamondsRate = 1;
+let bettingGameparticipants = 0;
 
 var gameProperties = {
   gameStartTime: null,
@@ -831,6 +844,9 @@ function getCards(x) {
   }
   return cards;
 }
+const ludoroomId = uuidv4();
+let ludoPlayers = 0;
+let LudoplayerPositions = [];
 //emit some event on client side just after connecting .send userId for storing socketids of connected user
 io.on("connection", (socket) => {
   // console.log("io",io);
@@ -1139,7 +1155,7 @@ io.on("connection", (socket) => {
     console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
     // console.log("jackPotAmount2", jackPotAmount);
     socket.emit("jackpot-result", { jackpotgameGrid, jackPotAmount });
-    if(returnValue>0){
+    if (returnValue > 0) {
       await GameTransactionHistory.create({
         userId: data.userId,
         mode: "outcome",
@@ -1147,7 +1163,7 @@ io.on("connection", (socket) => {
         game: "jackpot",
       });
     }
-      
+
     return { jackpotgameGrid, jackPotAmount };
   });
   //send data like frontend this data={userId,betItems=[{item:blue,amount:100},{item:set,amount:100}]} .send bet data at once for particular user
@@ -1278,6 +1294,46 @@ io.on("connection", (socket) => {
     // });
     // return { winner1, winner2, BluesideCards, RedsideCards };
   });
+
+  socket.on("join-ludo-game", (data) => {
+    if (ludoPlayers < 4) {
+      socket.join(ludoroomId);
+      ludoPlayers += 1;
+      LudoplayerPositions.push({
+        userId: data.userId,
+        socketId: socket.id,
+        positions: [0, 0, 0, 0],
+      });
+    }
+  });
+let ludoPlayerIndex;
+  socket.on("roll-dice", () => {
+    const diceNumber = getRandomInt(1, 6);
+    socket.emit("dice-result", diceNumber);
+    let ludoPlayerIndex = ludoPlayers.find(
+      (playerPosition) => playerPosition.socketId === socket.id
+    );
+    const zerosCount = getcount(ludoPlayers[index].positions, 0);
+    if(diceNumber===6){
+      if (zerosCount === 4) {
+        ludoPlayers[ludoPlayerIndex] = { ...ludoPlayers[ludoPlayerIndex], positions: [1, 0, 0, 0] };
+        socket.emit(ludoPlayers[ludoPlayerIndex]);
+        io.to(ludoroomId).emit("update-positions",LudoplayerPositions);
+      }
+      else{
+      socket.emit("choose");
+
+      }
+      
+
+    }
+   
+    if (ludoPlayers.) io.to(ludoroomId).emit;
+  });
+
+  socket.on("unlock",()=>{
+    
+  })
 });
 
 async function startANewGame() {

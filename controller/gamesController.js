@@ -821,6 +821,29 @@ class games {
     }
   }
 
+  async getMonthlyCreatorHistory(req, res) {
+    const { userId, date, start, limit } = req.query;
+    const dateObj = new Date(date);
+    const startDate = new Date(dateObj);
+    startDate.setHours(0, 0, 0, 0);
+
+    const endDate = new Date(dateObj);
+    endDate.setHours(23, 59, 59, 999);
+    try {
+      const history = await CreatorHistory.find({
+        creatorId: userId,
+        createdAt: { $gte: startDate, $lte: endDate },
+      })
+        .skip(Number(start))
+        .limit(Number(limit));
+      res.send(history);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error: ${e}`);
+    }
+  }
+  
+
   async getAgencyCommissionHistory(req, res) {
     const { agencyId, startDate, endDate, start, limit } = req.query;
     let commissionData;
