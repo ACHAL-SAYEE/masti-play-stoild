@@ -593,7 +593,7 @@ class games {
   }
 
   async sendGift(req, res) {
-    const { sentTo, sentBy, diamondsSent, roomId } = req.body;
+    const { sentTo, sentBy, diamondsSent, roomId, giftQuantity } = req.body;
     console.log("sentTo, sentBy, diamondsSent =", sentTo, sentBy, diamondsSent);
     try {
       const sendingUserBalance = await User.findOne({ userId: sentBy });
@@ -645,7 +645,7 @@ class games {
       } else {
         bonusRate = 0.15;
       }
-      const DiamondsToAdd = 0.68 * diamondsSent;
+      const DiamondsToAdd = 0.68 * diamondsSent * giftQuantity;
       const bonusDiamonds = bonusRate * diamondsSent;
       await User.updateOne(
         { userId: sentBy },
