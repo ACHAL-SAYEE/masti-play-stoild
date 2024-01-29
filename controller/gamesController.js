@@ -649,7 +649,7 @@ class games {
       const bonusDiamonds = bonusRate * diamondsSent;
       await User.updateOne(
         { userId: sentBy },
-        { $inc: { diamondsCount: -1 * diamondsSent } }
+        { $inc: { diamondsCount: -1 * diamondsSent * giftQuantity } }
       );
       // await User.updateOne(
       //   { userId: sentTo },
