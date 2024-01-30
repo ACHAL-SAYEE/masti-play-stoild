@@ -16,6 +16,7 @@ const {
   CreatorHistory,
   GameTransactionHistory,
   UserRecharge,
+  UserGift,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -665,6 +666,11 @@ class games {
             "creatorBeans.": bonusDiamonds,
           },
         }
+      );
+      await UserGift.findOneAndUpdate(
+        { userId: sentTo },
+        { $inc: { beansRecieved: parseInt(DiamondsToAdd + bonusDetails) } },
+        { upsert: true }
       );
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
