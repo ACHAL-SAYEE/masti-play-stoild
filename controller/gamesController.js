@@ -661,6 +661,7 @@ class games {
         { userId: sentTo },
         {
           $inc: {
+            beansCount: DiamondsToAdd,
             "creatorBeans.total": DiamondsToAdd + bonusDiamonds,
             "creatorBeans.basic": DiamondsToAdd,
             "creatorBeans.": bonusDiamonds,

@@ -1306,7 +1306,7 @@ io.on("connection", (socket) => {
       });
     }
   });
-let ludoPlayerIndex;
+  let ludoPlayerIndex;
   socket.on("roll-dice", () => {
     const diceNumber = getRandomInt(1, 6);
     socket.emit("dice-result", diceNumber);
@@ -1314,26 +1314,23 @@ let ludoPlayerIndex;
       (playerPosition) => playerPosition.socketId === socket.id
     );
     const zerosCount = getcount(ludoPlayers[index].positions, 0);
-    if(diceNumber===6){
+    if (diceNumber === 6) {
       if (zerosCount === 4) {
-        ludoPlayers[ludoPlayerIndex] = { ...ludoPlayers[ludoPlayerIndex], positions: [1, 0, 0, 0] };
+        ludoPlayers[ludoPlayerIndex] = {
+          ...ludoPlayers[ludoPlayerIndex],
+          positions: [1, 0, 0, 0],
+        };
         socket.emit(ludoPlayers[ludoPlayerIndex]);
-        io.to(ludoroomId).emit("update-positions",LudoplayerPositions);
+        io.to(ludoroomId).emit("update-positions", LudoplayerPositions);
+      } else {
+        socket.emit("choose");
       }
-      else{
-      socket.emit("choose");
-
-      }
-      
-
     }
-   
+
     // if (ludoPlayers.) io.to(ludoroomId).emit;
   });
 
-  socket.on("unlock",()=>{
-    
-  })
+  socket.on("unlock", () => {});
 });
 
 async function startANewGame() {
@@ -1389,7 +1386,7 @@ cron.schedule("0 0 * * 1", async () => {
       await User.updateOne(
         { userId: user.userId },
         {
-          $inc: { beansCount: user.beansCount },
+          $inc: { beansCount: user.creatorBeans.bonus },
           creatorBeans: {
             total: 0,
             basic: 0,
