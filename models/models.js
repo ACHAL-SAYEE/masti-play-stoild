@@ -268,6 +268,12 @@ const CommissionRateSchema = new mongoose.Schema({
     },
   ],
 });
+const UserRechargeSchema = new mongoose.Schema({
+  userId: String,
+  diamondsRecharged: Number,
+});
+
+const UserRecharge = mongoose.model("UserRecharge", UserRechargeSchema);
 
 const CommissionRate = mongoose.model("CommissionRate", CommissionRateSchema);
 const SpinnerGameWinnerHistory = mongoose.model(
@@ -335,3 +341,4 @@ exports.monthlyBdHistory = monthlyBdHistory;
 exports.AgencyCommissionHistory = AgencyCommissionHistory;
 exports.CreatorHistory = CreatorHistory;
 exports.GameTransactionHistory = GameTransactionHistory;
+exports.UserRecharge = UserRecharge;

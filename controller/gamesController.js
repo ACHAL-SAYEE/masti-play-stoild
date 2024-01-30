@@ -15,6 +15,7 @@ const {
   AgencyCommissionHistory,
   CreatorHistory,
   GameTransactionHistory,
+  UserRecharge,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -965,7 +966,8 @@ class games {
   async recharge(req, res) {
     const { userId, agentId, diamonds } = req.body;
     try {
-      const agentData = await Agent.findOne({ agentId: agentId });
+      const agentData = await Agent.findOne({ agentId });
+      console.log("agentData", agentData);
       if (agentData.diamondsCount < diamonds) {
         res.status(400).send("insufficient balance");
       } else {
@@ -1006,6 +1008,13 @@ class games {
           diamondsAdded: diamonds,
           mode: "transfer",
         });
+        await UserRecharge.findOneAndUpdate(
+          {
+            userId,
+          },
+          { $inc: { diamondsRecharged: diamonds } },
+          { upsert: true }
+        );
         res.send("recharged successfully");
       }
     } catch (e) {
