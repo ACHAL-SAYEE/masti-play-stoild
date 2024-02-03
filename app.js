@@ -1306,9 +1306,9 @@ io.on("connection", (socket) => {
       });
     }
   });
-  let ludoPlayerIndex;
+  let ludoPlayerIndex, diceNumber;
   socket.on("roll-dice", () => {
-    const diceNumber = getRandomInt(1, 6);
+    diceNumber = getRandomInt(1, 6);
     socket.emit("dice-result", diceNumber);
     let ludoPlayerIndex = ludoPlayers.find(
       (playerPosition) => playerPosition.socketId === socket.id
@@ -1320,15 +1320,39 @@ io.on("connection", (socket) => {
           ...ludoPlayers[ludoPlayerIndex],
           positions: [1, 0, 0, 0],
         };
-        socket.emit(ludoPlayers[ludoPlayerIndex]);
-        io.to(ludoroomId).emit("update-positions", LudoplayerPositions);
+        socket.emit({ positions: ludoPlayers[ludoPlayerIndex], diceNumber });
+        socket.to(ludoroomId).emit("update-positions", {
+          positions: LudoplayerPositions,
+          diceNumber,
+        });
       } else {
+        socket.emit("choose");
+      }
+    } else {
+      if (zerosCount !== 4) {
         socket.emit("choose");
       }
     }
 
     // if (ludoPlayers.) io.to(ludoroomId).emit;
   });
+
+  socket.on("choose", (data) => {
+    const { userId, pin } = data;
+    let ludoPlayerIndex = ludoPlayers.find(
+      (playerPosition) => playerPosition.socketId === socket.id
+    );
+    let updatedPositions = [...ludoPlayers[ludoPlayerIndex].positions];
+    updatedPositions[pin] += diceNumber;
+    ludoPlayers[ludoPlayerIndex] = {
+      ...ludoPlayers[ludoPlayerIndex],
+      positions: updatedPositions,
+    };
+    socket.emit({ positions: ludoPlayers[ludoPlayerIndex], diceNumber });
+    socket.to(ludoroomId).emit("update-positions", {
+      positions: LudoplayerPositions,
+      diceNumber,
+    });  });
 
   socket.on("unlock", () => {});
 });
