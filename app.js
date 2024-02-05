@@ -1348,11 +1348,34 @@ io.on("connection", (socket) => {
       ...ludoPlayers[ludoPlayerIndex],
       positions: updatedPositions,
     };
+    let matchedPinpPlayerIndex = ludoPlayers.findIndex(
+      (player) =>
+        player.userId != userId &&
+        player.positions[pin] === updatedPositions[pin]
+    );
+    if (matchedPinpPlayerIndex != -1) {
+      let updatedMatchedPlayerPositions = [
+        ...ludoPlayers[matchedPinpPlayerIndex].positions,
+      ];
+      updatedMatchedPlayerPositions[pin] = 0;
+      ludoPlayers[matchedPinpPlayerIndex] = {
+        ...ludoPlayers[matchedPinpPlayerIndex],
+        positions: updatedMatchedPlayerPositions,
+      };
+      io.to(ludoroomId).emit("player-pin-killed", {
+        userId: ludoPlayers[matchedPinpPlayerIndex].userId,
+      });
+      socket.to(ludoroomId).emit("update-positions", {
+        positions: LudoplayerPositions,
+        diceNumber,
+      });
+    }
     socket.emit({ positions: ludoPlayers[ludoPlayerIndex], diceNumber });
     socket.to(ludoroomId).emit("update-positions", {
       positions: LudoplayerPositions,
       diceNumber,
-    });  });
+    });
+  });
 
   socket.on("unlock", () => {});
 });
