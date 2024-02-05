@@ -1321,6 +1321,8 @@ io.on("connection", (socket) => {
         socketId: socket.id,
         positions: [0, 0, 0, 0],
         boardPositions: [0, 0, 0, 0],
+        isInHomeRow: [false, false, false, false],
+        HomeRowPosition: [0, 0, 0, 0],
         color: ludoColors[ludoPlayers - 1],
       });
     }
@@ -1372,43 +1374,72 @@ io.on("connection", (socket) => {
 
   socket.on("move", (data) => {
     const { userId, pin } = data;
+
     let ludoPlayerIndex = LudoplayerPositions.find(
       (playerPosition) => playerPosition.socketId === socket.id
     );
-    let updatedPositions = [...LudoplayerPositions[ludoPlayerIndex].positions];
-    let updatedBoardPositions = [
-      ...LudoplayerPositions[ludoPlayerIndex].boardPositions,
-    ];
-
-    updatedPositions[pin] += diceNumber;
-    updatedBoardPositions[pin] += diceNumber;
-
-    LudoplayerPositions[ludoPlayerIndex] = {
-      ...LudoplayerPositions[ludoPlayerIndex],
-      positions: updatedPositions,
-      boardPositions: updatedBoardPositions,
-    };
-    let matchedPinpPlayerIndex = LudoplayerPositions.findIndex(
-      (player) =>
-        player.userId != userId &&
-        player.boardPositions[pin] === updatedBoardPositions[pin]
-    );
-    if (matchedPinpPlayerIndex != -1) {
-      let updatedMatchedPlayerPositions = [
-        ...LudoplayerPositions[matchedPinpPlayerIndex].positions,
+    if (LudoplayerPositions[ludoPlayerIndex].isInHomeRow[pin] === true) {
+      if (
+        !(
+          LudoplayerPositions[ludoPlayerIndex].HomeRowPosition[pin] +
+            diceNumber >
+          6
+        )
+      ) {
+        LudoplayerPositions[ludoPlayerIndex].HomeRowPosition[pin] += diceNumber;
+      }
+    } else {
+      let updatedPositions = [
+        ...LudoplayerPositions[ludoPlayerIndex].positions,
       ];
-      updatedMatchedPlayerPositions[pin] = 0;
-
-      let updatedMatchedPlayerBoardPositions = [
-        ...LudoplayerPositions[matchedPinpPlayerIndex].positions,
+      let updatedBoardPositions = [
+        ...LudoplayerPositions[ludoPlayerIndex].boardPositions,
       ];
-      updatedMatchedPlayerBoardPositions[pin] = 0;
 
-      LudoplayerPositions[matchedPinpPlayerIndex] = {
-        ...LudoplayerPositions[matchedPinpPlayerIndex],
-        positions: updatedMatchedPlayerPositions,
-        boardPositions: updatedMatchedPlayerBoardPositions,
+      updatedPositions[pin] += diceNumber;
+      updatedBoardPositions[pin] =
+        (updatedBoardPositions[pin] + diceNumber) % 52;
+      let updatedHomePositions =
+        LudoplayerPositions[ludoPlayerIndex].HomeRowPosition;
+      let updatedIsInHomeRow = LudoplayerPositions[ludoPlayerIndex].isInHomeRow;
+      if (updatedPositions[pin] > 52) {
+        updatedHomePositions = [
+          ...LudoplayerPositions[ludoPlayerIndex].HomeRowPosition,
+        ];
+        updatedHomePositions[pin] = updatedPositions[pin] - 52;
+        updatedIsInHomeRow[pin] = true;
+        updatedBoardPositions[pin] = 0;
+      }
+      LudoplayerPositions[ludoPlayerIndex] = {
+        ...LudoplayerPositions[ludoPlayerIndex],
+        positions: updatedPositions,
+        boardPositions: updatedBoardPositions,
+        HomeRowPosition: updatedHomePositions,
+        isInHomeRow: updatedIsInHomeRow,
       };
+      let matchedPinpPlayerIndex = LudoplayerPositions.findIndex(
+        (player) =>
+          player.userId != userId &&
+          player.boardPositions[pin] === updatedBoardPositions[pin]
+      );
+      if (matchedPinpPlayerIndex != -1) {
+        let updatedMatchedPlayerPositions = [
+          ...LudoplayerPositions[matchedPinpPlayerIndex].positions,
+        ];
+        updatedMatchedPlayerPositions[pin] = 0;
+
+        let updatedMatchedPlayerBoardPositions = [
+          ...LudoplayerPositions[matchedPinpPlayerIndex].positions,
+        ];
+        updatedMatchedPlayerBoardPositions[pin] = 0;
+
+        LudoplayerPositions[matchedPinpPlayerIndex] = {
+          ...LudoplayerPositions[matchedPinpPlayerIndex],
+          positions: updatedMatchedPlayerPositions,
+          boardPositions: updatedMatchedPlayerBoardPositions,
+        };
+      }
+
       io.to(ludoroomId).emit("player-pin-killed", {
         userId: LudoplayerPositions[matchedPinpPlayerIndex].userId,
       });
@@ -1458,7 +1489,6 @@ io.on("connection", (socket) => {
       // diceNumber,
     });
   });
-
 });
 
 async function startANewGame() {
