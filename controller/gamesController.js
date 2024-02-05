@@ -604,7 +604,7 @@ class games {
         res.status(400).send("user not found");
         return;
       }
-      if (sendingUserBalance.diamondsCount < giftQuantity * diamondsSent) {
+      if (sendingUserBalance.diamondsCount < diamondsSent) {
         res.status(400).send("insufficient balance");
         return;
       }
