@@ -595,7 +595,8 @@ class games {
   }
 
   async sendGift(req, res) {
-    const { sentTo, sentBy, diamondsSent, roomId, giftQuantity } = req.body;
+    let { sentTo, sentBy, diamondsSent, roomId, Quantity } = req.body;
+    diamondsSent = diamondsSent * Quantity;
     console.log("sentTo, sentBy, diamondsSent =", sentTo, sentBy, diamondsSent);
     try {
       const sendingUserBalance = await User.findOne({ userId: sentBy });
@@ -613,8 +614,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-          currentDate.getDay() +
-          (currentDate.getDay() === 0 ? -6 : 1)
+        currentDate.getDay() +
+        (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -1367,12 +1368,14 @@ class games {
   async getRates(req, res) {
     try {
       const rates = await CommissionRate.findOne({});
-      console.log(rates);
+      console.log(rates)
       if (rates === null) {
         res.send({});
-      } else {
+      }
+      else {
         res.send(rates);
       }
+
     } catch (e) {
       console.log(e);
       res.status(500).send(e);
