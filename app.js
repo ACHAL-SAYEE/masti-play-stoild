@@ -743,6 +743,7 @@ async function endBetting() {
           diamondsEarned: betItem.amount * multiplyvalue,
           wheelNo: betItem.wheelNo,
         });
+        
         console.log("Updating wallet", betItem.amount * multiplyvalue);
         await User.updateOne(
           { userId: betItem.userId },
@@ -1303,6 +1304,7 @@ io.on("connection", (socket) => {
         userId: data.userId,
         socketId: socket.id,
         positions: [0, 0, 0, 0],
+        boardPositions: [0, 0, 0, 0],
       });
     }
   });
