@@ -849,6 +849,21 @@ const ludoroomId = uuidv4();
 let ludoPlayers = 0;
 let LudoplayerPositions = [];
 const ludoColors = ["RED", "GREEN", "YELLOW", "BLUE"];
+
+function getBoardStartPosition(color) {
+  let boardStartPosition;
+  if (LudoplayerPositions[ludoPlayerIndex].color === "RED") {
+    boardStartPosition = 27;
+  } else if (LudoplayerPositions[ludoPlayerIndex].color === "GREEN") {
+    boardStartPosition = 14;
+  } else if (LudoplayerPositions[ludoPlayerIndex].color === "YELLOW") {
+    boardStartPosition = 1;
+  } else {
+    boardStartPosition = 39;
+  }
+  return boardStartPosition;
+}
+
 //emit some event on client side just after connecting .send userId for storing socketids of connected user
 io.on("connection", (socket) => {
   // console.log("io",io);
@@ -1322,16 +1337,10 @@ io.on("connection", (socket) => {
       LudoplayerPositions[ludoPlayerIndex].positions,
       0
     );
-    let boardStartPosition;
-    if (LudoplayerPositions[ludoPlayerIndex].color === "RED") {
-      boardStartPosition = 27;
-    } else if (LudoplayerPositions[ludoPlayerIndex].color === "GREEN") {
-      boardStartPosition = 14;
-    } else if (LudoplayerPositions[ludoPlayerIndex].color === "YELLOW") {
-      boardStartPosition = 1;
-    } else {
-      boardStartPosition = 39;
-    }
+    let boardStartPosition = getBoardStartPosition(
+      LudoplayerPositions[ludoPlayerIndex].color
+    );
+
     if (diceNumber === 6) {
       if (zerosCount === 4) {
         ludoPlayers[ludoPlayerIndex] = {
@@ -1354,14 +1363,14 @@ io.on("connection", (socket) => {
       }
     } else {
       if (zerosCount !== 4) {
-        socket.emit("choose");
+        socket.emit("choose-move-pin");
       }
     }
 
     // if (ludoPlayers.) io.to(ludoroomId).emit;
   });
 
-  socket.on("choose", (data) => {
+  socket.on("move", (data) => {
     const { userId, pin } = data;
     let ludoPlayerIndex = LudoplayerPositions.find(
       (playerPosition) => playerPosition.socketId === socket.id
@@ -1419,7 +1428,37 @@ io.on("connection", (socket) => {
     });
   });
 
-  socket.on("unlock", () => {});
+  socket.on("unlock", (data) => {
+    const { userId, pin } = data;
+    let ludoPlayerIndex = LudoplayerPositions.find(
+      (playerPosition) => playerPosition.socketId === socket.id
+    );
+    let updatedPositions = [...LudoplayerPositions[ludoPlayerIndex].positions];
+    let updatedBoardPositions = [
+      ...LudoplayerPositions[ludoPlayerIndex].boardPositions,
+    ];
+
+    updatedPositions[pin] = 0;
+    updatedBoardPositions[pin] = getBoardStartPosition(
+      LudoplayerPositions[ludoPlayerIndex].color
+    );
+
+    LudoplayerPositions[ludoPlayerIndex] = {
+      ...LudoplayerPositions[ludoPlayerIndex],
+      positions: updatedPositions,
+      boardPositions: updatedBoardPositions,
+    };
+    socket.emit({
+      boardPositions: LudoplayerPositions[ludoPlayerIndex].boardPositions,
+      positions: LudoplayerPositions[ludoPlayerIndex].positions,
+      // diceNumber,
+    });
+    socket.to(ludoroomId).emit("update-positions", {
+      playersInfo: LudoplayerPositions,
+      // diceNumber,
+    });
+  });
+
 });
 
 async function startANewGame() {
