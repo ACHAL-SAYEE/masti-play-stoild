@@ -1171,7 +1171,7 @@ io.on("connection", (socket) => {
     }
     console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
     // console.log("jackPotAmount2", jackPotAmount);
-    socket.emit("jackpot-result", { jackpotgameGrid, jackPotAmount });
+    socket.emit("jackpot-result", {result, jackpotgameGrid, jackPotAmount });
     if (returnValue > 0) {
       await GameTransactionHistory.create({
         userId: data.userId,
