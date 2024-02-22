@@ -52,6 +52,214 @@ async function queryDiamondsTransactionHistory(
     throw e;
   }
 }
+function   getRichLevel(diamonds){
+  if(diamonds<=10000){
+    return 1;
+  }
+  else if(diamonds<=24000){
+    return 2;
+  }
+  else if(diamonds<=50000){
+    return 3;
+  }
+  else if(diamonds<=80000){
+    return 4;
+  }
+  else if(diamonds<=120000){
+    return 5;
+  }
+  else if(diamonds<=180000){
+    return 6;
+  }
+  else if(diamonds<=250000){
+    return 7;
+  }
+  else if(diamonds<=350000){
+    return 8;
+  }
+  else if(diamonds<=480000){
+    return 9;
+  }
+  else if(diamonds<=680000){
+    return 10;
+  } else if(diamonds<=930000){
+    return 11;
+  }
+  else if(diamonds<=1230000){
+    return 12;
+  }
+  else if(diamonds<=1610000){
+    return 13;
+  }
+  else if(diamonds<=2060000){
+    return 14;
+  }
+  else if(diamonds<=2610000){
+    return 15;
+  }
+  else if(diamonds<=3510000){
+    return 16;
+  }
+  else if(diamonds<=4710000){
+    return 17;
+  }
+  else if(diamonds<=5960000){
+    return 18;
+  }
+  else if(diamonds<=7460000){
+    return 19;
+  }
+  else if(diamonds<=9260000){
+    return 20;
+  }
+  else if(diamonds<=11460000){
+    return 21;
+  }
+  else if(diamonds<=13960000){
+    return 22;
+  }
+  else if(diamonds<=16960000){
+    return 23;
+  }
+  else if(diamonds<=20660000){
+    return 24;
+  }
+  else if(diamonds<=25360000){
+    return 25;
+  }
+  else if(diamonds<=31560000){
+    return 26;
+  }
+  else if(diamonds<=38460000){
+    return 27;
+  }
+  else if(diamonds<=45960000){
+    return 28;
+  }
+  else if(diamonds<=54360000){
+    return 29;
+  }
+  else if(diamonds<=63760000){
+    return 30;
+  }
+  else if(diamonds<=74060000){
+    return 31;
+  }
+  else if(diamonds<=85160000){
+    return 32;
+  }
+  else if(diamonds<=106360000){
+    return 33;
+  }
+  else if(diamonds<=188560000){
+    return 34;
+  }
+  else if(diamonds<=288560000){
+    return 35;
+  }
+  else if(diamonds<=408560000){
+    return 36;
+  }
+  else if(diamonds<=578560000){
+    return 37;
+  }
+  else if(diamonds<=778560000){
+    return 38;
+  }
+  else if(diamonds<=1028560000){
+    return 39;
+  }
+  else if(diamonds<=1508560000){
+    return 40;
+  }
+ 
+}
+
+
+function getCharmLevel(diamonds) {
+  if (diamonds <= 20000) {
+      return 1;
+  } else if (diamonds <= 48000) {
+      return 2;
+  } else if (diamonds <= 100000) {
+      return 3;
+  } else if (diamonds <= 160000) {
+      return 4;
+  } else if (diamonds <= 240000) {
+      return 5;
+  } else if (diamonds <= 360000) {
+      return 6;
+  } else if (diamonds <= 500000) {
+      return 7;
+  } else if (diamonds <= 700000) {
+      return 8;
+  } else if (diamonds <= 960000) {
+      return 9;
+  } else if (diamonds <= 1360000) {
+      return 10;
+  } else if (diamonds <= 1860000) {
+      return 11;
+  } else if (diamonds <= 2460000) {
+      return 12;
+  } else if (diamonds <= 3220000) {
+      return 13;
+  } else if (diamonds <= 4120000) {
+      return 14;
+  } else if (diamonds <= 5220000) {
+      return 15;
+  } else if (diamonds <= 7020000) {
+      return 16;
+  } else if (diamonds <= 9420000) {
+      return 17;
+  } else if (diamonds <= 11920000) {
+      return 18;
+  } else if (diamonds <= 14920000) {
+      return 19;
+  } else if (diamonds <= 18520000) {
+      return 20;
+  } else if (diamonds <= 22920000) {
+      return 21;
+  } else if (diamonds <= 27920000) {
+      return 22;
+  } else if (diamonds <= 33920000) {
+      return 23;
+  } else if (diamonds <= 41320000) {
+      return 24;
+  } else if (diamonds <= 50720000) {
+      return 25;
+  } else if (diamonds <= 63120000) {
+      return 26;
+  } else if (diamonds <= 76920000) {
+      return 27;
+  } else if (diamonds <= 91920000) {
+      return 28;
+  } else if (diamonds <= 108720000) {
+      return 29;
+  } else if (diamonds <= 127520000) {
+      return 30;
+  } else if (diamonds <= 148120000) {
+      return 31;
+  } else if (diamonds <= 170320000) {
+      return 32;
+  } else if (diamonds <= 213200000) {
+      return 33;
+  } else if (diamonds <= 377120000) {
+      return 34;
+  } else if (diamonds <= 577120000) {
+      return 35;
+  } else if (diamonds <= 817120000) {
+      return 36;
+  } else if (diamonds <= 1157120000) {
+      return 37;
+  } else if (diamonds <= 1557120000) {
+      return 38;
+  } else if (diamonds <= 2057120000) {
+      return 39;
+  } else {
+     return 40
+  }
+}
+
 
 class games {
   async postData(req, res) {
@@ -669,11 +877,34 @@ class games {
           },
         }
       );
-      await UserGift.findOneAndUpdate(
-        { userId: sentTo },
-        { $inc: { beansRecieved: parseInt(DiamondsToAdd + bonusDetails) } },
-        { upsert: true }
-      );
+
+
+      const ExistingGift=await UserGift.findOne({
+        userId:sentTo,
+      },)
+      let level;
+      if(ExistingGift===null){
+        level=getCharmLevel(DiamondsToAdd)
+        await UserGift.create({userId:sentTo,beansRecieved:DiamondsToAdd,charmLevel:level})
+      }
+      else{
+        level=getCharmLevel(DiamondsToAdd)
+        await UserGift.updateOne({userId:sentTo,},
+          { $inc: { beansRecieved: DiamondsToAdd } ,
+          $set: { charmLevel: level }
+        },
+         )
+      }
+
+      // await UserGift.findOneAndUpdate(
+      //   { userId: sentTo },
+      //   { $inc: { beansRecieved: parseInt(DiamondsToAdd + bonusDetails) } },
+      //   { upsert: true }
+      // );
+
+
+
+
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
       });
@@ -807,6 +1038,48 @@ class games {
       res.status(500).send(`internal server error: ${e}`);
     }
   }
+              async getUserRichLevel(req,res){
+
+              const {userId}=req.query
+                try{
+              const Rechargeres=await UserRecharge.findOne({userId})
+              console.log("Rechargeres",Rechargeres)
+              if(Rechargeres===null){
+                res.json(0)
+              }
+              else{
+                res.json(Rechargeres.richLevel)
+
+              }
+                }
+                catch(e){
+              res.status(500).send(`internal server error ${e}`)
+                }
+              }
+
+              async getUserCharmLevel(req,res){
+
+                const {userId}=req.query
+                  try{
+                const Rechargeres=await UserGift.findOne({userId})
+                console.log("Rechargeres",Rechargeres)
+                if(Rechargeres===null){
+                  res.json(0)
+                }
+                else{
+                  res.json(Rechargeres.charmLevel)
+  
+                }
+                  }
+                  catch(e){
+                res.status(500).send(`internal server error ${e}`)
+                  }
+                }
+              
+
+
+
+
 
   async getCreatorHistory(req, res) {
     const { userId, date, start, limit } = req.query;
@@ -971,6 +1244,10 @@ class games {
     }
   }
 
+
+ 
+
+
   async recharge(req, res) {
     const { userId, agentId, diamonds } = req.body;
     try {
@@ -1016,13 +1293,31 @@ class games {
           diamondsAdded: diamonds,
           mode: "transfer",
         });
-        await UserRecharge.findOneAndUpdate(
-          {
-            userId,
+        const ExistingRecharge=await UserRecharge.findOne({
+          userId,
+        },)
+        let level;
+        if(ExistingRecharge===null){
+          level=getRichLevel(diamonds)
+          await UserRecharge.create({userId,diamondsRecharged:diamonds,richLevel:level})
+        }
+        else{
+          level=getRichLevel(diamonds)
+          await UserRecharge.updateOne({userId,},
+            { $inc: { diamondsRecharged: diamonds } ,
+            $set: { richLevel: level }
+          
           },
-          { $inc: { diamondsRecharged: diamonds } },
-          { upsert: true }
-        );
+           )
+        }
+      //  const rechargeInfo= await UserRecharge.findOneAndUpdate(
+      //     {
+      //       userId,
+      //     },
+      //     { $inc: { diamondsRecharged: diamonds } },
+      //     { upsert: true }
+      //   );
+
         res.send("recharged successfully");
       }
     } catch (e) {

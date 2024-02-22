@@ -420,6 +420,10 @@ app.get("/api/creator/weekly-history", gamesController.getWeeklyCreatorHistory);
 
 app.get("/api/rates", gamesController.getRates);
 
+app.get("/api/richLevel",gamesController.getUserRichLevel)
+app.get("/api/charmLevel",gamesController.getUserCharmLevel)
+
+
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
 const royalBattleCardcombinationsConstants = {

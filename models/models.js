@@ -271,11 +271,13 @@ const CommissionRateSchema = new mongoose.Schema({
 const UserRechargeSchema = new mongoose.Schema({
   userId: String,
   diamondsRecharged: Number,
+  richLevel:Number
 });
 
 const UserGiftSchema = new mongoose.Schema({
   userId: String,
   beansRecieved: Number,
+  charmLevel:Number,
 });
 
 const UserRecharge = mongoose.model("UserRecharge", UserRechargeSchema);
