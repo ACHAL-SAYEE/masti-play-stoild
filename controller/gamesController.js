@@ -52,214 +52,226 @@ async function queryDiamondsTransactionHistory(
     throw e;
   }
 }
-function   getRichLevel(diamonds){
-  if(diamonds<=10000){
+function getRichLevel(diamonds) {
+  if (diamonds > 1508560000) {
+    return 40;
+  } else if (diamonds > 1028560000) {
+    return 39;
+  } else if (diamonds > 778560000) {
+    return 38;
+  } else if (diamonds > 578560000) {
+    return 37;
+  } else if (diamonds > 408560000) {
+    return 36;
+  } else if (diamonds > 288560000) {
+    return 35;
+  } else if (diamonds > 188560000) {
+    return 34;
+  } else if (diamonds > 106360000) {
+    return 33;
+  } else if (diamonds > 85160000) {
+    return 32;
+  } else if (diamonds > 74060000) {
+    return 31;
+  } else if (diamonds > 63760000) {
+    return 30;
+  } else if (diamonds > 54360000) {
+    return 29;
+  } else if (diamonds > 45960000) {
+    return 28;
+  } else if (diamonds > 38460000) {
+    return 27;
+  } else if (diamonds > 31560000) {
+    return 26;
+  } else if (diamonds > 25360000) {
+    return 25;
+  } else if (diamonds > 20660000) {
+    return 24;
+  } else if (diamonds > 16960000) {
+    return 23;
+  } else if (diamonds > 13960000) {
+    return 22;
+  } else if (diamonds > 11460000) {
+    return 21;
+  } else if (diamonds > 9260000) {
+    return 20;
+  } else if (diamonds > 7460000) {
+    return 19;
+  } else if (diamonds > 5960000) {
+    return 18;
+  } else if (diamonds > 4710000) {
+    return 17;
+  } else if (diamonds > 3510000) {
+    return 16;
+  } else if (diamonds > 2610000) {
+    return 15;
+  } else if (diamonds > 2060000) {
+    return 14;
+  } else if (diamonds > 1610000) {
+    return 13;
+  } else if (diamonds > 1230000) {
+    return 12;
+  } else if (diamonds > 930000) {
+    return 11;
+  } else if (diamonds > 680000) {
+    return 10;
+  } else if (diamonds > 480000) {
+    return 9;
+  } else if (diamonds > 350000) {
+    return 8;
+  } else if (diamonds > 250000) {
+    return 7;
+  } else if (diamonds > 180000) {
+    return 6;
+  } else if (diamonds > 120000) {
+    return 5;
+  } else if (diamonds > 80000) {
+    return 4;
+  } else if (diamonds > 50000) {
+    return 3;
+  } else if (diamonds > 24000) {
+    return 2;
+  } else if (diamonds > 10000) {
     return 1;
   }
-  else if(diamonds<=24000){
-    return 2;
+  else{
+    return 0;
   }
-  else if(diamonds<=50000){
-    return 3;
-  }
-  else if(diamonds<=80000){
-    return 4;
-  }
-  else if(diamonds<=120000){
-    return 5;
-  }
-  else if(diamonds<=180000){
-    return 6;
-  }
-  else if(diamonds<=250000){
-    return 7;
-  }
-  else if(diamonds<=350000){
-    return 8;
-  }
-  else if(diamonds<=480000){
-    return 9;
-  }
-  else if(diamonds<=680000){
-    return 10;
-  } else if(diamonds<=930000){
-    return 11;
-  }
-  else if(diamonds<=1230000){
-    return 12;
-  }
-  else if(diamonds<=1610000){
-    return 13;
-  }
-  else if(diamonds<=2060000){
-    return 14;
-  }
-  else if(diamonds<=2610000){
-    return 15;
-  }
-  else if(diamonds<=3510000){
-    return 16;
-  }
-  else if(diamonds<=4710000){
-    return 17;
-  }
-  else if(diamonds<=5960000){
-    return 18;
-  }
-  else if(diamonds<=7460000){
-    return 19;
-  }
-  else if(diamonds<=9260000){
-    return 20;
-  }
-  else if(diamonds<=11460000){
-    return 21;
-  }
-  else if(diamonds<=13960000){
-    return 22;
-  }
-  else if(diamonds<=16960000){
-    return 23;
-  }
-  else if(diamonds<=20660000){
-    return 24;
-  }
-  else if(diamonds<=25360000){
-    return 25;
-  }
-  else if(diamonds<=31560000){
-    return 26;
-  }
-  else if(diamonds<=38460000){
-    return 27;
-  }
-  else if(diamonds<=45960000){
-    return 28;
-  }
-  else if(diamonds<=54360000){
-    return 29;
-  }
-  else if(diamonds<=63760000){
-    return 30;
-  }
-  else if(diamonds<=74060000){
-    return 31;
-  }
-  else if(diamonds<=85160000){
-    return 32;
-  }
-  else if(diamonds<=106360000){
-    return 33;
-  }
-  else if(diamonds<=188560000){
-    return 34;
-  }
-  else if(diamonds<=288560000){
-    return 35;
-  }
-  else if(diamonds<=408560000){
-    return 36;
-  }
-  else if(diamonds<=578560000){
-    return 37;
-  }
-  else if(diamonds<=778560000){
-    return 38;
-  }
-  else if(diamonds<=1028560000){
-    return 39;
-  }
-  else if(diamonds<=1508560000){
-    return 40;
-  }
- 
 }
-
 
 function getCharmLevel(diamonds) {
-  if (diamonds <= 20000) {
-      return 1;
-  } else if (diamonds <= 48000) {
-      return 2;
-  } else if (diamonds <= 100000) {
-      return 3;
-  } else if (diamonds <= 160000) {
-      return 4;
-  } else if (diamonds <= 240000) {
-      return 5;
-  } else if (diamonds <= 360000) {
-      return 6;
-  } else if (diamonds <= 500000) {
-      return 7;
-  } else if (diamonds <= 700000) {
-      return 8;
-  } else if (diamonds <= 960000) {
-      return 9;
-  } else if (diamonds <= 1360000) {
-      return 10;
-  } else if (diamonds <= 1860000) {
-      return 11;
-  } else if (diamonds <= 2460000) {
-      return 12;
-  } else if (diamonds <= 3220000) {
-      return 13;
-  } else if (diamonds <= 4120000) {
-      return 14;
-  } else if (diamonds <= 5220000) {
-      return 15;
-  } else if (diamonds <= 7020000) {
-      return 16;
-  } else if (diamonds <= 9420000) {
-      return 17;
-  } else if (diamonds <= 11920000) {
-      return 18;
-  } else if (diamonds <= 14920000) {
-      return 19;
-  } else if (diamonds <= 18520000) {
-      return 20;
-  } else if (diamonds <= 22920000) {
-      return 21;
-  } else if (diamonds <= 27920000) {
-      return 22;
-  } else if (diamonds <= 33920000) {
-      return 23;
-  } else if (diamonds <= 41320000) {
-      return 24;
-  } else if (diamonds <= 50720000) {
-      return 25;
-  } else if (diamonds <= 63120000) {
-      return 26;
-  } else if (diamonds <= 76920000) {
-      return 27;
-  } else if (diamonds <= 91920000) {
-      return 28;
-  } else if (diamonds <= 108720000) {
-      return 29;
-  } else if (diamonds <= 127520000) {
-      return 30;
-  } else if (diamonds <= 148120000) {
-      return 31;
-  } else if (diamonds <= 170320000) {
-      return 32;
-  } else if (diamonds <= 213200000) {
-      return 33;
-  } else if (diamonds <= 377120000) {
-      return 34;
-  } else if (diamonds <= 577120000) {
-      return 35;
-  } else if (diamonds <= 817120000) {
-      return 36;
-  } else if (diamonds <= 1157120000) {
-      return 37;
-  } else if (diamonds <= 1557120000) {
-      return 38;
-  } else if (diamonds <= 2057120000) {
-      return 39;
+  if (diamonds > 3017120000) {
+    return 40;
+  } else if (diamonds > 2057120000) {
+    return 39;
+  } else if (diamonds > 1557120000) {
+    return 38;
+  } else if (diamonds > 1157120000) {
+    return 37;
+  } else if (diamonds > 817120000) {
+    return 36;
+  } else if (diamonds > 577120000) {
+    return 35;
+  } else if (diamonds > 377120000) {
+    return 34;
+  } else if (diamonds > 212720000) {
+    return 33;
+  } else if (diamonds > 170320000) {
+    return 32;
+  } else if (diamonds > 148120000) {
+    return 31;
+  } else if (diamonds > 127520000) {
+    return 30;
+  } else if (diamonds > 108720000) {
+    return 29;
+  } else if (diamonds > 91920000) {
+    return 28;
+  } else if (diamonds > 76920000) {
+    return 27;
+  } else if (diamonds > 63120000) {
+    return 26;
+  } else if (diamonds > 50720000) {
+    return 25;
+  } else if (diamonds > 41320000) {
+    return 24;
+  } else if (diamonds > 33920000) {
+    return 23;
+  } else if (diamonds > 27920000) {
+    return 22;
+  } else if (diamonds > 22920000) {
+    return 21;
+  } else if (diamonds > 18520000) {
+    return 20;
+  } else if (diamonds > 14920000) {
+    return 19;
+  } else if (diamonds > 11920000) {
+    return 18;
+  } else if (diamonds > 9420000) {
+    return 17;
+  } else if (diamonds > 7020000) {
+    return 16;
+  } else if (diamonds > 5220000) {
+    return 15;
+  } else if (diamonds > 4120000) {
+    return 14;
+  } else if (diamonds > 3220000) {
+    return 13;
+  } else if (diamonds > 2460000) {
+    return 12;
+  } else if (diamonds > 1860000) {
+    return 11;
+  } else if (diamonds > 1360000) {
+    return 10;
+  } else if (diamonds > 960000) {
+    return 9;
+  } else if (diamonds > 700000) {
+    return 8;
+  } else if (diamonds > 500000) {
+    return 7;
+  } else if (diamonds > 360000) {
+    return 6;
+  } else if (diamonds > 240000) {
+    return 5;
+  } else if (diamonds > 160000) {
+    return 4;
+  } else if (diamonds > 100000) {
+    return 3;
+  } else if (diamonds > 48000) {
+    return 2;
+  } else if (diamonds > 20000) {
+    return 1;
   } else {
-     return 40
+    return 0;
   }
 }
 
+
+
+
+
+
+const richLevelNext = {
+  1: { level: 24000, REWARD: "Vip exclusive id nameplate and emoji pack" },
+  2: { level: 50000, REWARD: "Vip exclusive id nameplate and emoji pack" },
+  3: { level: 80000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game" },
+  4: { level: 120000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game" },
+  5: { level: 180000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo" },
+  6: { level: 250000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification" },
+  7: { level: 350000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate" },
+  8: { level: 480000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  9: { level: 680000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  10: { level: 930000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + (vip entry for 5 days)" },
+  11: { level: 1230000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  12: { level: 1610000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  13: { level: 2060000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  14: { level: 2610000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  15: { level: 3510000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + Family Create Option" },
+  16: { level: 4710000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  17: { level: 5960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  18: { level: 7460000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  19: { level: 9260000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
+  20: { level: 11460000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + vip frame and entry (for 7 days)" },
+  21: { level: 13960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  22: { level: 16960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Permanent Entrance effect" },
+  23: { level: 20660000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  24: { level: 25360000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  25: { level: 31560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  26: { level: 38460000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  27: { level: 45960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 1 room background" },
+  28: { level: 54360000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  29: { level: 63760000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  30: { level: 74060000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 2 room background" },
+  31: { level: 85160000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  32: { level: 106360000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Permanent VIP Entry" },
+  33: { level: 188560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
+  34: { level: 288560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + No kick out" },
+  35: { level: 408560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 2 new room background" },
+  36: { level: 578560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + permanent chatbubble" },
+  37: { level: 778560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Bronze frame" },
+  38: { level: 1028560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip silver frame" },
+  39: { level: 1508560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Gold frame" },
+  40: null
+};
 
 class games {
   async postData(req, res) {
@@ -1044,11 +1056,13 @@ class games {
                 try{
               const Rechargeres=await UserRecharge.findOne({userId})
               console.log("Rechargeres",Rechargeres)
+              
+              console.log(Rechargeres)
               if(Rechargeres===null){
                 res.json(0)
               }
               else{
-                res.json(Rechargeres.richLevel)
+                res.send({...Rechargeres._doc,diamondsToNextLevel:richLevelNext[Rechargeres.richLevel].level,richLevelNext:richLevelNext[Rechargeres.richLevel].REWARD})
 
               }
                 }
@@ -1063,11 +1077,14 @@ class games {
                   try{
                 const Rechargeres=await UserGift.findOne({userId})
                 console.log("Rechargeres",Rechargeres)
+                // Rechargeres.diamondsToNextLevel=richLevelNext[Rechargeres.richLevel].level*2
+                // Rechargeres.reward=richLevelNext[Rechargeres.richLevel].REWARD
                 if(Rechargeres===null){
                   res.json(0)
                 }
                 else{
-                  res.json(Rechargeres.charmLevel)
+                  res.send({...Rechargeres._doc,diamondsToNextLevel:richLevelNext[Rechargeres.charmLevel].level*2,richLevelNext:richLevelNext[Rechargeres.charmLevel].REWARD})
+
   
                 }
                   }
