@@ -133,8 +133,7 @@ function getRichLevel(diamonds) {
     return 2;
   } else if (diamonds > 10000) {
     return 1;
-  }
-  else {
+  } else {
     return 0;
   }
 }
@@ -231,6 +230,7 @@ function getCharmLevel(diamonds) {
 
 
 const richLevelNext = {
+  0: { level: 10000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   1: { level: 24000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   2: { level: 50000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   3: { level: 80000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game" },
@@ -1064,10 +1064,11 @@ class games {
         })
       }
       else {
+        console.log("Rechargeres.richLevel", Rechargeres.richLevel)
         res.send({
           ...Rechargeres._doc,
-          diamondsToNextLevel: richLevelNext[Rechargeres.richLevel].level,
-          richLevelNext: richLevelNext[Rechargeres.richLevel].REWARD,
+          diamondsToNextLevel: richLevelNext[Rechargeres.richLevel ? Rechargeres.richLevel : 0].level,
+          richLevelNext: richLevelNext[Rechargeres.richLevel ? Rechargeres.richLevel : 0].REWARD,
         })
 
       }
@@ -1078,7 +1079,6 @@ class games {
   }
 
   async getUserCharmLevel(req, res) {
-
     const { userId } = req.query
     try {
       const Rechargeres = await UserGift.findOne({ userId })
@@ -1091,13 +1091,12 @@ class games {
         })
       }
       else {
+        console.log("Rechargeres.charmLevel", Rechargeres.charmLevel)
         res.send({
           ...Rechargeres._doc,
-          diamondsToNextLevel: richLevelNext[Rechargeres.charmLevel].level * 2,
-          richLevelNext: richLevelNext[Rechargeres.charmLevel].REWARD,
+          diamondsToNextLevel: richLevelNext[Rechargeres.charmLevel ? Rechargeres.charmLevel : 0].level * 2,
+          richLevelNext: richLevelNext[Rechargeres.charmLevel ? Rechargeres.charmLevel : 0].REWARD,
         })
-
-
       }
     }
     catch (e) {
