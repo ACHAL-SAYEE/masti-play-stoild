@@ -134,7 +134,7 @@ function getRichLevel(diamonds) {
   } else if (diamonds > 10000) {
     return 1;
   }
-  else{
+  else {
     return 0;
   }
 }
@@ -891,21 +891,22 @@ class games {
       );
 
 
-      const ExistingGift=await UserGift.findOne({
-        userId:sentTo,
+      const ExistingGift = await UserGift.findOne({
+        userId: sentTo,
       },)
       let level;
-      if(ExistingGift===null){
-        level=getCharmLevel(DiamondsToAdd)
-        await UserGift.create({userId:sentTo,beansRecieved:DiamondsToAdd,charmLevel:level})
+      if (ExistingGift === null) {
+        level = getCharmLevel(DiamondsToAdd)
+        await UserGift.create({ userId: sentTo, beansRecieved: DiamondsToAdd, charmLevel: level })
       }
-      else{
-        level=getCharmLevel(DiamondsToAdd)
-        await UserGift.updateOne({userId:sentTo,},
-          { $inc: { beansRecieved: DiamondsToAdd } ,
-          $set: { charmLevel: level }
-        },
-         )
+      else {
+        level = getCharmLevel(DiamondsToAdd)
+        await UserGift.updateOne({ userId: sentTo, },
+          {
+            $inc: { beansRecieved: DiamondsToAdd },
+            $set: { charmLevel: level }
+          },
+        )
       }
 
       // await UserGift.findOneAndUpdate(
@@ -1050,49 +1051,60 @@ class games {
       res.status(500).send(`internal server error: ${e}`);
     }
   }
-              async getUserRichLevel(req,res){
+  async getUserRichLevel(req, res) {
+    const { userId } = req.query
+    try {
+      const Rechargeres = await UserRecharge.findOne({ userId })
+      console.log("Rechargeres", Rechargeres)
 
-              const {userId}=req.query
-                try{
-              const Rechargeres=await UserRecharge.findOne({userId})
-              console.log("Rechargeres",Rechargeres)
-              
-              console.log(Rechargeres)
-              if(Rechargeres===null){
-                res.json(0)
-              }
-              else{
-                res.send({...Rechargeres._doc,diamondsToNextLevel:richLevelNext[Rechargeres.richLevel].level,richLevelNext:richLevelNext[Rechargeres.richLevel].REWARD})
+      console.log(Rechargeres)
+      if (Rechargeres === null) {
+        res.json({
+          "richLevel": 0
+        })
+      }
+      else {
+        res.send({
+          ...Rechargeres._doc,
+          diamondsToNextLevel: richLevelNext[Rechargeres.richLevel].level,
+          richLevelNext: richLevelNext[Rechargeres.richLevel].REWARD,
+        })
 
-              }
-                }
-                catch(e){
-              res.status(500).send(`internal server error ${e}`)
-                }
-              }
+      }
+    }
+    catch (e) {
+      res.status(500).send(`internal server error ${e}`)
+    }
+  }
 
-              async getUserCharmLevel(req,res){
+  async getUserCharmLevel(req, res) {
 
-                const {userId}=req.query
-                  try{
-                const Rechargeres=await UserGift.findOne({userId})
-                console.log("Rechargeres",Rechargeres)
-                // Rechargeres.diamondsToNextLevel=richLevelNext[Rechargeres.richLevel].level*2
-                // Rechargeres.reward=richLevelNext[Rechargeres.richLevel].REWARD
-                if(Rechargeres===null){
-                  res.json(0)
-                }
-                else{
-                  res.send({...Rechargeres._doc,diamondsToNextLevel:richLevelNext[Rechargeres.charmLevel].level*2,richLevelNext:richLevelNext[Rechargeres.charmLevel].REWARD})
+    const { userId } = req.query
+    try {
+      const Rechargeres = await UserGift.findOne({ userId })
+      console.log("Rechargeres", Rechargeres)
+      // Rechargeres.diamondsToNextLevel=richLevelNext[Rechargeres.richLevel].level*2
+      // Rechargeres.reward=richLevelNext[Rechargeres.richLevel].REWARD
+      if (Rechargeres === null) {
+        res.json({
+          "charmLevel": 0
+        })
+      }
+      else {
+        res.send({
+          ...Rechargeres._doc,
+          diamondsToNextLevel: richLevelNext[Rechargeres.charmLevel].level * 2,
+          richLevelNext: richLevelNext[Rechargeres.charmLevel].REWARD,
+        })
 
-  
-                }
-                  }
-                  catch(e){
-                res.status(500).send(`internal server error ${e}`)
-                  }
-                }
-              
+
+      }
+    }
+    catch (e) {
+      res.status(500).send(`internal server error ${e}`)
+    }
+  }
+
 
 
 
@@ -1262,7 +1274,7 @@ class games {
   }
 
 
- 
+
 
 
   async recharge(req, res) {
@@ -1310,30 +1322,31 @@ class games {
           diamondsAdded: diamonds,
           mode: "transfer",
         });
-        const ExistingRecharge=await UserRecharge.findOne({
+        const ExistingRecharge = await UserRecharge.findOne({
           userId,
         },)
         let level;
-        if(ExistingRecharge===null){
-          level=getRichLevel(diamonds)
-          await UserRecharge.create({userId,diamondsRecharged:diamonds,richLevel:level})
+        if (ExistingRecharge === null) {
+          level = getRichLevel(diamonds)
+          await UserRecharge.create({ userId, diamondsRecharged: diamonds, richLevel: level })
         }
-        else{
-          level=getRichLevel(diamonds)
-          await UserRecharge.updateOne({userId,},
-            { $inc: { diamondsRecharged: diamonds } ,
-            $set: { richLevel: level }
-          
-          },
-           )
+        else {
+          level = getRichLevel(diamonds)
+          await UserRecharge.updateOne({ userId, },
+            {
+              $inc: { diamondsRecharged: diamonds },
+              $set: { richLevel: level }
+
+            },
+          )
         }
-      //  const rechargeInfo= await UserRecharge.findOneAndUpdate(
-      //     {
-      //       userId,
-      //     },
-      //     { $inc: { diamondsRecharged: diamonds } },
-      //     { upsert: true }
-      //   );
+        //  const rechargeInfo= await UserRecharge.findOneAndUpdate(
+        //     {
+        //       userId,
+        //     },
+        //     { $inc: { diamondsRecharged: diamonds } },
+        //     { upsert: true }
+        //   );
 
         res.send("recharged successfully");
       }
