@@ -231,6 +231,7 @@ function getCharmLevel(diamonds) {
 
 
 const richLevelNext = {
+  0:{}
   1: { level: 24000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   2: { level: 50000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   3: { level: 80000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game" },
