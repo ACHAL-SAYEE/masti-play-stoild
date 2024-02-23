@@ -270,7 +270,9 @@ const richLevelNext = {
   37: { level: 778560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Bronze frame" },
   38: { level: 1028560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip silver frame" },
   39: { level: 1508560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Gold frame" },
-  40: null
+  // 40: {level:}
+    40: null
+
 };
 
 class games {
@@ -900,7 +902,7 @@ class games {
         await UserGift.create({ userId: sentTo, beansRecieved: DiamondsToAdd, charmLevel: level })
       }
       else {
-        level = getCharmLevel(DiamondsToAdd)
+        level = getCharmLevel(DiamondsToAdd+ExistingGift.beansRecieved)
         await UserGift.updateOne({ userId: sentTo, },
           {
             $inc: { beansRecieved: DiamondsToAdd },
@@ -1330,7 +1332,7 @@ class games {
           await UserRecharge.create({ userId, diamondsRecharged: diamonds, richLevel: level })
         }
         else {
-          level = getRichLevel(diamonds)
+          level = getRichLevel(diamonds+ExistingRecharge.diamondsRecharged)
           await UserRecharge.updateOne({ userId, },
             {
               $inc: { diamondsRecharged: diamonds },
