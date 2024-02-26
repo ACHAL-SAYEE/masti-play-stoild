@@ -818,7 +818,7 @@ class games {
 
   async sendGift(req, res) {
     let { sentTo, sentBy, diamondsSent, roomId, Quantity } = req.body;
-    diamondsSent = diamondsSent * Quantity;
+    // diamondsSent = diamondsSent * Quantity;
     console.log("sentTo, sentBy, diamondsSent =", sentTo, sentBy, diamondsSent);
     try {
       const sendingUserBalance = await User.findOne({ userId: sentBy });
@@ -826,7 +826,7 @@ class games {
         res.status(400).send("user not found");
         return;
       }
-      if (sendingUserBalance.diamondsCount < diamondsSent) {
+      if (sendingUserBalance.diamondsCount < diamondsSent * Quantity) {
         res.status(400).send("insufficient balance");
         return;
       }
@@ -871,7 +871,7 @@ class games {
         bonusRate = 0.15;
       }
       const DiamondsToAdd = 0.68 * diamondsSent * Quantity;
-      const bonusDiamonds = bonusRate * diamondsSent;
+      const bonusDiamonds = bonusRate * diamondsSent * Quantity;
       await User.updateOne(
         { userId: sentBy },
         { $inc: { diamondsCount: -1 * diamondsSent * Quantity } }
