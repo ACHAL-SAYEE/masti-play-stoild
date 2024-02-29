@@ -271,17 +271,37 @@ const CommissionRateSchema = new mongoose.Schema({
 const UserRechargeSchema = new mongoose.Schema({
   userId: String,
   diamondsRecharged: Number,
-  richLevel:Number
+  richLevel: Number,
 });
 
 const UserGiftSchema = new mongoose.Schema({
   userId: String,
-  beansRecieved: Number,
-  charmLevel:Number,
+  beansRecieved: { type: Number, default: 0 },
+  charmLevel: Number,
+});
+const UserRechargeMonthlySchema = new mongoose.Schema({
+  userId: String,
+  diamondsRecharged: { type: Number, default: 0 },
+  // richLevel: Number,
+  month: Date,
 });
 
+const UserGiftMonthlySchema = new mongoose.Schema({
+  userId: String,
+  beansRecieved: Number,
+  // charmLevel: Number,
+  month: Date,
+});
 const UserRecharge = mongoose.model("UserRecharge", UserRechargeSchema);
 const UserGift = mongoose.model("UserGift", UserGiftSchema);
+const UserRechargeMonthly = mongoose.model(
+  "UserRechargeMonthly",
+  UserRechargeMonthlySchema
+);
+const UserGiftMonthly = mongoose.model(
+  "UserGiftMonthly",
+  UserGiftMonthlySchema
+);
 
 const CommissionRate = mongoose.model("CommissionRate", CommissionRateSchema);
 const SpinnerGameWinnerHistory = mongoose.model(
@@ -351,3 +371,5 @@ exports.CreatorHistory = CreatorHistory;
 exports.GameTransactionHistory = GameTransactionHistory;
 exports.UserRecharge = UserRecharge;
 exports.UserGift = UserGift;
+exports.UserRechargeMonthly = UserRechargeMonthly;
+exports.UserGiftMonthly = UserGiftMonthly;

@@ -422,7 +422,8 @@ app.get("/api/rates", gamesController.getRates);
 
 app.get("/api/richLevel",gamesController.getUserRichLevel)
 app.get("/api/charmLevel",gamesController.getUserCharmLevel)
-
+app.get("/api/monthlyGift",gamesController.getMonthlyGift)
+app.get("/api/monthlyRecharge",gamesController.getMonthlyRecharge)
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];

@@ -17,6 +17,8 @@ const {
   GameTransactionHistory,
   UserRecharge,
   UserGift,
+  UserGiftMonthly,
+  UserRechargeMonthly,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -224,55 +226,196 @@ function getCharmLevel(diamonds) {
   }
 }
 
-
-
-
-
-
 const richLevelNext = {
   0: { level: 10000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   1: { level: 24000, REWARD: "Vip exclusive id nameplate and emoji pack" },
   2: { level: 50000, REWARD: "Vip exclusive id nameplate and emoji pack" },
-  3: { level: 80000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game" },
-  4: { level: 120000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game" },
-  5: { level: 180000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo" },
-  6: { level: 250000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification" },
-  7: { level: 350000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate" },
-  8: { level: 480000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  9: { level: 680000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  10: { level: 930000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + (vip entry for 5 days)" },
-  11: { level: 1230000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  12: { level: 1610000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  13: { level: 2060000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  14: { level: 2610000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  15: { level: 3510000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + Family Create Option" },
-  16: { level: 4710000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  17: { level: 5960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  18: { level: 7460000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  19: { level: 9260000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box" },
-  20: { level: 11460000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + vip frame and entry (for 7 days)" },
-  21: { level: 13960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  22: { level: 16960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Permanent Entrance effect" },
-  23: { level: 20660000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  24: { level: 25360000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  25: { level: 31560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  26: { level: 38460000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  27: { level: 45960000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 1 room background" },
-  28: { level: 54360000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  29: { level: 63760000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  30: { level: 74060000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 2 room background" },
-  31: { level: 85160000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  32: { level: 106360000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Permanent VIP Entry" },
-  33: { level: 188560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement" },
-  34: { level: 288560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + No kick out" },
-  35: { level: 408560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 2 new room background" },
-  36: { level: 578560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + permanent chatbubble" },
-  37: { level: 778560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Bronze frame" },
-  38: { level: 1028560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip silver frame" },
-  39: { level: 1508560000, REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Gold frame" },
+  3: {
+    level: 80000,
+    REWARD: "Vip exclusive id nameplate and emoji pack + teen patti game",
+  },
+  4: {
+    level: 120000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game",
+  },
+  5: {
+    level: 180000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo",
+  },
+  6: {
+    level: 250000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification",
+  },
+  7: {
+    level: 350000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate",
+  },
+  8: {
+    level: 480000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  9: {
+    level: 680000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  10: {
+    level: 930000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + (vip entry for 5 days)",
+  },
+  11: {
+    level: 1230000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  12: {
+    level: 1610000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  13: {
+    level: 2060000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  14: {
+    level: 2610000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  15: {
+    level: 3510000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + Family Create Option",
+  },
+  16: {
+    level: 4710000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  17: {
+    level: 5960000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  18: {
+    level: 7460000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  19: {
+    level: 9260000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box",
+  },
+  20: {
+    level: 11460000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + vip frame and entry (for 7 days)",
+  },
+  21: {
+    level: 13960000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  22: {
+    level: 16960000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Permanent Entrance effect",
+  },
+  23: {
+    level: 20660000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  24: {
+    level: 25360000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  25: {
+    level: 31560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  26: {
+    level: 38460000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  27: {
+    level: 45960000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 1 room background",
+  },
+  28: {
+    level: 54360000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  29: {
+    level: 63760000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  30: {
+    level: 74060000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 2 room background",
+  },
+  31: {
+    level: 85160000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  32: {
+    level: 106360000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Permanent VIP Entry",
+  },
+  33: {
+    level: 188560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement",
+  },
+  34: {
+    level: 288560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + No kick out",
+  },
+  35: {
+    level: 408560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + 2 new room background",
+  },
+  36: {
+    level: 578560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + permanent chatbubble",
+  },
+  37: {
+    level: 778560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Bronze frame",
+  },
+  38: {
+    level: 1028560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip silver frame",
+  },
+  39: {
+    level: 1508560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Gold frame",
+  },
   // 40: {level:}
-    40: null
-
+  40: null,
 };
 
 class games {
@@ -836,8 +979,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-        currentDate.getDay() +
-        (currentDate.getDay() === 0 ? -6 : 1)
+          currentDate.getDay() +
+          (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -892,33 +1035,46 @@ class games {
         }
       );
 
-
       const ExistingGift = await UserGift.findOne({
         userId: sentTo,
-      },)
+      });
       let level;
       if (ExistingGift === null) {
-        level = getCharmLevel(DiamondsToAdd)
-        await UserGift.create({ userId: sentTo, beansRecieved: DiamondsToAdd, charmLevel: level })
-      }
-      else {
-        level = getCharmLevel(DiamondsToAdd+ExistingGift.beansRecieved)
-        await UserGift.updateOne({ userId: sentTo, },
+        level = getCharmLevel(DiamondsToAdd);
+        await UserGift.create({
+          userId: sentTo,
+          beansRecieved: DiamondsToAdd,
+          charmLevel: level,
+        });
+      } else {
+        level = getCharmLevel(DiamondsToAdd + ExistingGift.beansRecieved);
+        await UserGift.updateOne(
+          { userId: sentTo },
           {
             $inc: { beansRecieved: DiamondsToAdd },
-            $set: { charmLevel: level }
-          },
-        )
+            $set: { charmLevel: level },
+          }
+        );
       }
+      const startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
 
+      await UserGiftMonthly.findOneAndUpdate(
+        {
+          userId: sentTo,
+          month: startOfMonth,
+        },
+        { $inc: { beansRecieved: DiamondsToAdd } },
+        { upsert: true }
+      );
       // await UserGift.findOneAndUpdate(
       //   { userId: sentTo },
       //   { $inc: { beansRecieved: parseInt(DiamondsToAdd + bonusDetails) } },
       //   { upsert: true }
       // );
-
-
-
 
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
@@ -1054,62 +1210,60 @@ class games {
     }
   }
   async getUserRichLevel(req, res) {
-    const { userId } = req.query
+    const { userId } = req.query;
     try {
-      const Rechargeres = await UserRecharge.findOne({ userId })
-      console.log("Rechargeres", Rechargeres)
+      const Rechargeres = await UserRecharge.findOne({ userId });
+      console.log("Rechargeres", Rechargeres);
 
-      console.log(Rechargeres)
+      console.log(Rechargeres);
       if (Rechargeres === null) {
         res.json({
-          "richLevel": 0
-        })
-      }
-      else {
-        console.log("Rechargeres.richLevel", Rechargeres.richLevel)
+          richLevel: 0,
+        });
+      } else {
+        console.log("Rechargeres.richLevel", Rechargeres.richLevel);
         res.send({
           ...Rechargeres._doc,
-          diamondsToNextLevel: richLevelNext[Rechargeres.richLevel ? Rechargeres.richLevel : 0].level,
-          richLevelNext: richLevelNext[Rechargeres.richLevel ? Rechargeres.richLevel : 0].REWARD,
-        })
-
+          diamondsToNextLevel:
+            richLevelNext[Rechargeres.richLevel ? Rechargeres.richLevel : 0]
+              .level,
+          richLevelNext:
+            richLevelNext[Rechargeres.richLevel ? Rechargeres.richLevel : 0]
+              .REWARD,
+        });
       }
-    }
-    catch (e) {
-      res.status(500).send(`internal server error ${e}`)
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
     }
   }
 
   async getUserCharmLevel(req, res) {
-    const { userId } = req.query
+    const { userId } = req.query;
     try {
-      const Rechargeres = await UserGift.findOne({ userId })
-      console.log("Rechargeres", Rechargeres)
+      const Rechargeres = await UserGift.findOne({ userId });
+      console.log("Rechargeres", Rechargeres);
       // Rechargeres.diamondsToNextLevel=richLevelNext[Rechargeres.richLevel].level*2
       // Rechargeres.reward=richLevelNext[Rechargeres.richLevel].REWARD
       if (Rechargeres === null) {
         res.json({
-          "charmLevel": 0
-        })
-      }
-      else {
-        console.log("Rechargeres.charmLevel", Rechargeres.charmLevel)
+          charmLevel: 0,
+        });
+      } else {
+        console.log("Rechargeres.charmLevel", Rechargeres.charmLevel);
         res.send({
           ...Rechargeres._doc,
-          diamondsToNextLevel: richLevelNext[Rechargeres.charmLevel ? Rechargeres.charmLevel : 0].level * 2,
-          richLevelNext: richLevelNext[Rechargeres.charmLevel ? Rechargeres.charmLevel : 0].REWARD,
-        })
+          diamondsToNextLevel:
+            richLevelNext[Rechargeres.charmLevel ? Rechargeres.charmLevel : 0]
+              .level * 2,
+          richLevelNext:
+            richLevelNext[Rechargeres.charmLevel ? Rechargeres.charmLevel : 0]
+              .REWARD,
+        });
       }
-    }
-    catch (e) {
-      res.status(500).send(`internal server error ${e}`)
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
     }
   }
-
-
-
-
-
 
   async getCreatorHistory(req, res) {
     const { userId, date, start, limit } = req.query;
@@ -1274,10 +1428,6 @@ class games {
     }
   }
 
-
-
-
-
   async recharge(req, res) {
     const { userId, agentId, diamonds } = req.body;
     try {
@@ -1325,22 +1475,39 @@ class games {
         });
         const ExistingRecharge = await UserRecharge.findOne({
           userId,
-        },)
+        });
         let level;
         if (ExistingRecharge === null) {
-          level = getRichLevel(diamonds)
-          await UserRecharge.create({ userId, diamondsRecharged: diamonds, richLevel: level })
-        }
-        else {
-          level = getRichLevel(diamonds+ExistingRecharge.diamondsRecharged)
-          await UserRecharge.updateOne({ userId, },
+          level = getRichLevel(diamonds);
+          await UserRecharge.create({
+            userId,
+            diamondsRecharged: diamonds,
+            richLevel: level,
+          });
+        } else {
+          level = getRichLevel(diamonds + ExistingRecharge.diamondsRecharged);
+          await UserRecharge.updateOne(
+            { userId },
             {
               $inc: { diamondsRecharged: diamonds },
-              $set: { richLevel: level }
-
-            },
-          )
+              $set: { richLevel: level },
+            }
+          );
         }
+        const startOfMonth = new Date(
+          currentDate.getFullYear(),
+          currentDate.getMonth(),
+          1
+        );
+
+        await UserRechargeMonthly.findOneAndUpdate(
+          {
+            userId,
+            month: startOfMonth,
+          },
+          { $inc: { diamondsRecharged: diamonds } },
+          { upsert: true }
+        );
         //  const rechargeInfo= await UserRecharge.findOneAndUpdate(
         //     {
         //       userId,
@@ -1356,7 +1523,42 @@ class games {
       res.status(500).send("internal server error");
     }
   }
-
+  async getMonthlyGift(req, res) {
+    const { userId } = req.query;
+    try {
+      const currentDate = new Date(); // Get current date
+      const startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+      const result = await UserGiftMonthly.findOne({
+        userId,
+        month: startOfMonth,
+      });
+      res.send(result);
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+    }
+  }
+  async getMonthlyRecharge(req, res) {
+    const { userId } = req.query;
+    try {
+      const currentDate = new Date(); // Get current date
+      const startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
+      const result = await UserRechargeMonthly.findOne({
+        userId,
+        month: startOfMonth,
+      });
+      res.send(result);
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+    }
+  }
   async adminRecharge(req, res) {
     const { agentId, diamonds } = req.body;
     try {
@@ -1694,14 +1896,12 @@ class games {
   async getRates(req, res) {
     try {
       const rates = await CommissionRate.findOne({});
-      console.log(rates)
+      console.log(rates);
       if (rates === null) {
         res.send({});
-      }
-      else {
+      } else {
         res.send(rates);
       }
-
     } catch (e) {
       console.log(e);
       res.status(500).send(e);
