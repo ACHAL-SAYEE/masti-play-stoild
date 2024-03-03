@@ -19,6 +19,7 @@ const {
   UserGift,
   UserGiftMonthly,
   UserRechargeMonthly,
+  SpinnerGameBetInfo,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -1657,21 +1658,36 @@ class games {
   }
 
   async getBettingResults(req, res) {
+    const { userId } = req.query;
     let Top3Winnersinfo = await Top3Winners.findOne({});
     console.log("Top3Winnersinfo:", Top3Winnersinfo);
     if (Top3Winnersinfo === null) {
       res.send({ Top3Winnersinfo: [] });
       return;
     }
-    Top3Winnersinfo = await Promise.all(
-      Top3Winnersinfo.Winners.map(async (winner) => {
-        const userdata = await User.findOne({ userId: winner.userId });
-        console.log("userdata", userdata);
-        return { ...winner, userdata };
-      })
-    );
+    let userdata = [];
+    let winningAmount = [];
+    // Top3Winnersinfo = await Promise.all(
+    //   Top3Winnersinfo.Winners.map(async (winner) => {
+    //     const userdata = await User.findOne({ userId: winner.userId });
+    //     console.log("userdata", userdata);
+    //     return { ...winner, userdata };
+    //   })
+    // );
+    let Winners = Top3Winnersinfo.Winners;
+    for (let i = 0; i < Winners.length; i++) {
+      let userInfo = await User.findOne({
+        userId: Winners[i].userId,
+      });
+
+      userdata.push(userInfo);
+      winningAmount.push(Winners[i].winningAmount);
+    }
+    const betInfo = await SpinnerGameBetInfo.findOne({ userId });
     res.send({
-      Top3Winnersinfo,
+      data: { userdata, winningAmount },
+      price: betInfo.price,
+      wager: betInfo.wager,
     });
   }
 

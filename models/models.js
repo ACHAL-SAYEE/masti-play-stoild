@@ -292,6 +292,16 @@ const UserGiftMonthlySchema = new mongoose.Schema({
   // charmLevel: Number,
   month: Date,
 });
+const SpinnerGameBetInfoSchema = new mongoose.Schema({
+  userId: String,
+  price:{ type: Number, default: 0 },
+  wager: Number,
+});
+const SpinnerGameBetInfo = mongoose.model(
+  "SpinnerGameBetInfo",
+  SpinnerGameBetInfoSchema
+);
+
 const UserRecharge = mongoose.model("UserRecharge", UserRechargeSchema);
 const UserGift = mongoose.model("UserGift", UserGiftSchema);
 const UserRechargeMonthly = mongoose.model(
@@ -373,3 +383,4 @@ exports.UserRecharge = UserRecharge;
 exports.UserGift = UserGift;
 exports.UserRechargeMonthly = UserRechargeMonthly;
 exports.UserGiftMonthly = UserGiftMonthly;
+exports.SpinnerGameBetInfo = SpinnerGameBetInfo;
