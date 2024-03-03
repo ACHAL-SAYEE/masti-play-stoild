@@ -574,24 +574,33 @@ class games {
     console.log("email =", email);
     console.log("userId =", userId);
     try {
-      let result;
+      let result,ownedAgency, ownedBd;
+      
       if (email) {
         result = await User.findOne({ email: email }).select({
           _id: 0,
           __v: 0,
         });
+        ownedAgency = await AgencyData.findOne({ ownerId: result.userId });
+        ownedBd = await BdData.findOne({ owner: result.userId });
       } else {
         result = await User.findOne({ userId: userId }).select({
           _id: 0,
           __v: 0,
         });
+        ownedAgency = await AgencyData.findOne({ ownerId: userId });
+        ownedBd = await BdData.findOne({ owner: userId });
       }
       if (result === null) {
         res.status(400).send("user not found");
         return;
       }
       console.log(result);
-      res.send(result);
+      res.send({
+        ...result._doc,
+        ownedAgencyBata: ownedAgency,
+        ownedBdData: ownedBd,
+      });
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
