@@ -57,6 +57,7 @@ const {
   Top3Winners,
   AgencyData,
   GameTransactionHistory,
+  SpinnerGameBetInfo,
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
@@ -420,10 +421,10 @@ app.get("/api/creator/weekly-history", gamesController.getWeeklyCreatorHistory);
 
 app.get("/api/rates", gamesController.getRates);
 
-app.get("/api/richLevel",gamesController.getUserRichLevel)
-app.get("/api/charmLevel",gamesController.getUserCharmLevel)
-app.get("/api/monthlyGift",gamesController.getMonthlyGift)
-app.get("/api/monthlyRecharge",gamesController.getMonthlyRecharge)
+app.get("/api/richLevel", gamesController.getUserRichLevel);
+app.get("/api/charmLevel", gamesController.getUserCharmLevel);
+app.get("/api/monthlyGift", gamesController.getMonthlyGift);
+app.get("/api/monthlyRecharge", gamesController.getMonthlyRecharge);
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -606,6 +607,7 @@ async function gameStarts() {
   bettingInfoArray = [];
   try {
     await Top3Winners.deleteMany({});
+    await SpinnerGameBetInfo.deleteMany({})
   } catch (e) {
     console.log(e);
   }
@@ -725,13 +727,13 @@ async function endBetting() {
     }
     bettingInfoArray.forEach(async (betItem) => {
       console.log("betItem:", betItem);
+      const userspentInfo = UserBetAmount.find(
+        (item) => item.userId === betItem.userId
+      );
       if (
         nearestEntry.userids.includes(betItem.userId) &&
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
-        const userspentInfo = UserBetAmount.find(
-          (item) => item.userId === betItem.userId
-        );
         console.log(
           `Creating a bettingGameData entry with userId: ${
             betItem.userId
@@ -760,6 +762,27 @@ async function endBetting() {
           diamonds: betItem.amount * multiplyvalue,
           game: "spinner-bet-game",
         });
+        await SpinnerGameBetInfo.findOneAndUpdate(
+          {
+            userId: betItem.userId,
+          },
+          {
+            $set: { wager: userspentInfo.amount },
+            $inc: { price: betItem.amount * multiplyvalue },
+          },
+          { upsert: true }
+        );
+      } else {
+        await SpinnerGameBetInfo.findOneAndUpdate(
+          {
+            userId: betItem.userId,
+          },
+          {
+            wager: userspentInfo.amount,
+            price: 0,
+          },
+          { upsert: true }
+        );
       }
     });
     let resultArray, betInfoFiltered;
@@ -1176,7 +1199,7 @@ io.on("connection", (socket) => {
     }
     console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
     // console.log("jackPotAmount2", jackPotAmount);
-    socket.emit("jackpot-result", {result, jackpotgameGrid, jackPotAmount });
+    socket.emit("jackpot-result", { result, jackpotgameGrid, jackPotAmount });
     if (returnValue > 0) {
       await GameTransactionHistory.create({
         userId: data.userId,
