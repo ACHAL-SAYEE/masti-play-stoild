@@ -416,7 +416,11 @@ const richLevelNext = {
       "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Gold frame",
   },
   // 40: {level:}
-  40: null,
+  40: {
+    level: 1508560000,
+    REWARD:
+      "Vip exclusive id nameplate and emoji pack + teen patti game + jackpot game + Happy zoo + vip exclusive room entry notification + display floating vip id nameplate + vip gift in gift box + level up announcement + Vip Gold frame",
+  },
 };
 
 class games {
