@@ -578,8 +578,8 @@ class games {
     console.log("email =", email);
     console.log("userId =", userId);
     try {
-      let result,ownedAgency, ownedBd;
-      
+      let result, ownedAgency, ownedBd;
+
       if (email) {
         result = await User.findOne({ email: email }).select({
           _id: 0,
@@ -1934,6 +1934,79 @@ class games {
     } catch (e) {
       console.log(e);
       res.status(500).send(e);
+    }
+  }
+
+  async getUserInfo(req, res) {
+    const { userId } = req.query;
+    try {
+      const result = await User.findOne({ userId });
+      res.send({ beans: result.beansCount, diamonds: result.diamondsCount });
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async removeFrame(req, res) {
+    const { userId } = req.query;
+    try {
+      await User.updateOne({ userId }, { frame: null });
+      res.send("frame removed successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async addFrame(req, res) {
+    const { userId, frame } = req.query;
+    try {
+      await User.updateOne({ userId }, { frame });
+      res.send("frame added successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async changeDiamonds(req, res) {
+    const { userId, mode, diamonds } = req.query;
+    try {
+      if (mode == "add") {
+        await User.updateOne({ userId }, { $inc: { diamondsCount: diamonds } });
+      } else {
+        const user = await User.findOne({ userId });
+        if (user.diamondsCount - diamonds < 0) {
+        } else {
+          await User.updateOne({ userId }, { diamondsCount: 0 });
+        }
+        await User.updateOne(
+          { userId },
+          { $inc: { diamondsCount: -1 * diamonds } }
+        );
+      }
+      res.send(`diamonds ${mode}ed successfully`);
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async banUser(req, res) {
+    const { userId } = req.query;
+    try {
+      await User.updateOne({ userId }, { isBanned: true });
+      res.send("user banned successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async unbanUser(req, res) {
+    const { userId } = req.query;
+    try {
+      await User.updateOne({ userId }, { isBanned: false });
+      res.send("user unbanned successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
     }
   }
 }

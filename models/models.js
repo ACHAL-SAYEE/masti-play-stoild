@@ -55,6 +55,10 @@ const userSchema = new mongoose.Schema({
     basic: { type: Number, default: 0 },
     bonus: { type: Number, default: 0 },
   },
+  isBanned: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const TagSchema = new mongoose.Schema(
@@ -294,7 +298,7 @@ const UserGiftMonthlySchema = new mongoose.Schema({
 });
 const SpinnerGameBetInfoSchema = new mongoose.Schema({
   userId: String,
-  price:{ type: Number, default: 0 },
+  price: { type: Number, default: 0 },
   wager: Number,
 });
 const SpinnerGameBetInfo = mongoose.model(

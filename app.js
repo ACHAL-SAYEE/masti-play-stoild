@@ -425,7 +425,13 @@ app.get("/api/richLevel", gamesController.getUserRichLevel);
 app.get("/api/charmLevel", gamesController.getUserCharmLevel);
 app.get("/api/monthlyGift", gamesController.getMonthlyGift);
 app.get("/api/monthlyRecharge", gamesController.getMonthlyRecharge);
-
+app.get("/api/admin/userInfo",gamesController.getUserInfo)
+app.delete("/api/admin/removeFrame",gamesController.removeFrame)
+app.put("/api/admin/removeFrame",gamesController.addFrame)
+app.put("/api/admin/changeDiamond",gamesController.changeDiamonds)
+app.put("/api/admin/banUser",gamesController.banUser)
+app.put("/api/admin/unbanUser",gamesController.unbanUser)
+// app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
 const royalBattleCardcombinationsConstants = {
