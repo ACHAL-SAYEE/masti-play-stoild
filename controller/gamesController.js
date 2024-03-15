@@ -2009,6 +2009,22 @@ class games {
       console.log(e);
     }
   }
+  async acceptBeansWithDraw(req, res) {
+    const { userId, upiId, bankDetails, beans } = req.query;
+    try {
+      const currentBeans = await User.findOne({ userId });
+      if (currentBeans.beansCount < beans) {
+        res.status(400).send("insufficient balance");
+        return;
+      }
+      await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
+
+      res.send("beans withdrawed successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
 }
 
 const gamesController = new games();
