@@ -50,6 +50,7 @@ const userSchema = new mongoose.Schema({
   role: { type: String, default: "user" },
   isVerified: { type: Boolean, default: false },
   token: { type: String, required: false },
+
   creatorBeans: {
     total: { type: Number, default: 0 },
     basic: { type: Number, default: 0 },
@@ -58,6 +59,10 @@ const userSchema = new mongoose.Schema({
   isBanned: {
     type: Boolean,
     default: false,
+  },
+  pinnedRooms: {
+    type: [String],
+    default: null,
   },
 });
 

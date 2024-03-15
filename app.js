@@ -427,7 +427,7 @@ app.get("/api/monthlyGift", gamesController.getMonthlyGift);
 app.get("/api/monthlyRecharge", gamesController.getMonthlyRecharge);
 app.get("/api/admin/userInfo",gamesController.getUserInfo)
 app.delete("/api/admin/removeFrame",gamesController.removeFrame)
-app.put("/api/admin/removeFrame",gamesController.addFrame)
+app.put("/api/admin/addFrame",gamesController.addFrame)
 app.put("/api/admin/changeDiamond",gamesController.changeDiamonds)
 app.put("/api/admin/banUser",gamesController.banUser)
 app.put("/api/admin/unbanUser",gamesController.unbanUser)
