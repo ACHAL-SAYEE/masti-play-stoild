@@ -343,6 +343,20 @@ const GameTransactionHistory = mongoose.model(
   "GameTransactionHistory",
   GameTransactionHistorySchema
 );
+const withDrawalRequestSchema = new mongoose.Schema({
+  name: String,
+  userId: String,
+  upiId: {type:String,default:null},
+  adminId: String,
+  beans: Number,
+  accountNumber: { type: String, default: null },
+  ifsc: { type: String, default: null },
+  bankNumber: { type: String, default: null },
+});
+const withDrawalRequest = mongoose.model(
+  "withDrawalRequest",
+  withDrawalRequestSchema
+);
 const following = mongoose.model("following", followingDataSchema);
 const Tag = mongoose.model("Tag", TagSchema);
 const LikesInfo = mongoose.model("LikesInfo", likesInfo);
@@ -393,3 +407,4 @@ exports.UserGift = UserGift;
 exports.UserRechargeMonthly = UserRechargeMonthly;
 exports.UserGiftMonthly = UserGiftMonthly;
 exports.SpinnerGameBetInfo = SpinnerGameBetInfo;
+exports.withDrawalRequest=withDrawalRequest

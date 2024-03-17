@@ -432,6 +432,9 @@ app.put("/api/admin/changeDiamond",gamesController.changeDiamonds)
 app.put("/api/admin/banUser",gamesController.banUser)
 app.put("/api/admin/unbanUser",gamesController.unbanUser)
 app.put("/api/admin/accept",gamesController.acceptBeansWithDraw)
+app.post("/api/admin/sendWithDrawReq",gamesController.sendWithDrawalRequest)
+app.post("/api/admin/getUserReqs",gamesController.getWithDrawalRequests)
+
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];

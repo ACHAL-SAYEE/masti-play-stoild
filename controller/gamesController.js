@@ -20,6 +20,7 @@ const {
   UserGiftMonthly,
   UserRechargeMonthly,
   SpinnerGameBetInfo,
+  withDrawalRequest,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const beansToDiamondsRate = 1;
@@ -2020,6 +2021,47 @@ class games {
       await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
 
       res.send("beans withdrawed successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async sendWithDrawalRequest(req, res) {
+    const {
+      userId,
+      adminId,
+      upiId,
+      accountNumber,
+      beans,
+      ifsc,
+      bankNumber,
+      name,
+    } = req.body;
+    try {
+      if (upiId === undefined) {
+        await withDrawalRequest.create({
+          userId,
+          adminId,
+          accountNumber,
+          ifsc,
+          bankNumber,
+          name,
+          beans,
+        });
+      } else {
+        await withDrawalRequest.create({ userId, adminId, upiId, name, beans });
+      }
+      res.send("request sent to admin successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async getWithDrawalRequests(req, res) {
+    const { adminId } = req.body;
+    try {
+      const withdrawalReqs = await withDrawalRequest.find({ adminId });
+      res.send(withdrawalReqs);
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);
