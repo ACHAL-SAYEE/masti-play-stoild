@@ -544,23 +544,27 @@ class games {
     let result;
     try {
       if (mode === "income") {
-        await GameTransactionHistory.find({
+        result = await GameTransactionHistory.find({
           userId,
           mode: "income",
         })
           .skip(Number(start))
           .limit(Number(limit));
       } else if (mode === "outcome") {
-        await GameTransactionHistory.find({
+        result = await GameTransactionHistory.find({
           userId,
           mode: "income",
         })
           .skip(Number(start))
           .limit(Number(limit));
       } else if (mode === "recharge") {
-        //TODO
+        result = await GameTransactionHistory.find({
+          userId,
+          mode: "recharge",
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
       }
-
       // const result = await queryDiamondsTransactionHistory(
       //   query,
       //   start,
@@ -570,7 +574,7 @@ class games {
       console.log(result);
       res.send(result);
     } catch (e) {
-      res.status(500).send("Internal server error");
+      res.status(500).send(`Internal server error ${e}`);
     }
   }
 
