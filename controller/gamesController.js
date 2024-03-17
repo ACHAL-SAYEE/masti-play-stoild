@@ -994,8 +994,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-          currentDate.getDay() +
-          (currentDate.getDay() === 0 ? -6 : 1)
+        currentDate.getDay() +
+        (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -2010,8 +2010,9 @@ class games {
       console.log(e);
     }
   }
+
   async acceptBeansWithDraw(req, res) {
-    const { userId, upiId, bankDetails, beans } = req.query;
+    const { _id, userId, beans } = req.body;
     try {
       const currentBeans = await User.findOne({ userId });
       if (currentBeans.beansCount < beans) {
@@ -2019,17 +2020,36 @@ class games {
         return;
       }
       await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
-
-      res.send("beans withdrawed successfully");
+      // updating status to 1 (approved)
+      await withDrawalRequest.findOneAndUpdate(
+        { _id },
+        { status: 1 }
+      );
+      res.send("Withdrawal request approved!");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);
     }
   }
+
+  async rejectBeansWithDraw(req, res) {
+    const { _id } = req.body;
+    try {
+      // updating status to 2 (rejected)
+      await withDrawalRequest.findOneAndUpdate(
+        { _id },
+        { status: 2 }
+      );
+      res.send("Withdrawal request rejected!");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+
   async sendWithDrawalRequest(req, res) {
     const {
       userId,
-      adminId,
       upiId,
       accountNumber,
       beans,
@@ -2037,11 +2057,18 @@ class games {
       bankNumber,
       name,
     } = req.body;
+    console.log("userId", userId);
+    console.log("upiId", upiId);
+    console.log("accountNumber", accountNumber);
+    console.log("beans", beans);
+    console.log("ifsc", ifsc);
+    console.log("bankNumber", bankNumber);
+    console.log("name", name);
     try {
-      if (upiId === undefined) {
+      if (upiId === undefined || upiId === "" || upiId === null) {
+        console.log("Upi id was not given");
         await withDrawalRequest.create({
           userId,
-          adminId,
           accountNumber,
           ifsc,
           bankNumber,
@@ -2049,18 +2076,22 @@ class games {
           beans,
         });
       } else {
-        await withDrawalRequest.create({ userId, adminId, upiId, name, beans });
+        console.log("Upi id was given");
+        await withDrawalRequest.create({ userId, upiId, name, beans });
       }
-      res.send("request sent to admin successfully");
+      res.send("Withdrawal request sent to admin successfully!");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);
     }
   }
+
   async getWithDrawalRequests(req, res) {
-    const { adminId } = req.body;
+    const status = req.query.status;
     try {
-      const withdrawalReqs = await withDrawalRequest.find({ adminId });
+      const withdrawalReqs = await withDrawalRequest.find(
+        status ? { status } : {}
+      );
       res.send(withdrawalReqs);
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
