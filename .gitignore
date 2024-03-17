@@ -1,4 +1,4 @@
 node_modules/
 .vscode/
 
-/InitialiseDb\index.js
+InitialiseDb\index.js
