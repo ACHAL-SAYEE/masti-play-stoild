@@ -191,6 +191,7 @@ app.post("/api/user", async (req, res) => {
     photo,
     phoneNumber,
   } = req.body;
+  console.log("FEWYHGBREWSGBREHUGREGBREGUYBRREURBUREBUITHNBUI45UIN");
   try {
     var existingUserInfo;
     if (phoneNumber) {
@@ -425,16 +426,16 @@ app.get("/api/richLevel", gamesController.getUserRichLevel);
 app.get("/api/charmLevel", gamesController.getUserCharmLevel);
 app.get("/api/monthlyGift", gamesController.getMonthlyGift);
 app.get("/api/monthlyRecharge", gamesController.getMonthlyRecharge);
-app.get("/api/admin/userInfo", gamesController.getUserInfo)
-app.delete("/api/admin/removeFrame", gamesController.removeFrame)
-app.put("/api/admin/addFrame", gamesController.addFrame)
-app.put("/api/admin/changeDiamond", gamesController.changeDiamonds)
-app.put("/api/admin/banUser", gamesController.banUser)
-app.put("/api/admin/unbanUser", gamesController.unbanUser)
-app.put("/api/admin/accept", gamesController.acceptBeansWithDraw)
-app.put("/api/admin/reject", gamesController.rejectBeansWithDraw)
-app.post("/api/admin/sendWithDrawReq", gamesController.sendWithDrawalRequest)
-app.get("/api/admin/getUserReqs", gamesController.getWithDrawalRequests)
+app.get("/api/admin/userInfo", gamesController.getUserInfo);
+app.delete("/api/admin/removeFrame", gamesController.removeFrame);
+app.put("/api/admin/addFrame", gamesController.addFrame);
+app.put("/api/admin/changeDiamond", gamesController.changeDiamonds);
+app.put("/api/admin/banUser", gamesController.banUser);
+app.put("/api/admin/unbanUser", gamesController.unbanUser);
+app.put("/api/admin/accept", gamesController.acceptBeansWithDraw);
+app.put("/api/admin/reject", gamesController.rejectBeansWithDraw);
+app.post("/api/admin/sendWithDrawReq", gamesController.sendWithDrawalRequest);
+app.get("/api/admin/getUserReqs", gamesController.getWithDrawalRequests);
 
 // app.delete("/api/admin/dele")
 const socketIds = {};
@@ -618,7 +619,7 @@ async function gameStarts() {
   bettingInfoArray = [];
   try {
     await Top3Winners.deleteMany({});
-    await SpinnerGameBetInfo.deleteMany({})
+    await SpinnerGameBetInfo.deleteMany({});
   } catch (e) {
     console.log(e);
   }
@@ -746,9 +747,12 @@ async function endBetting() {
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
         console.log(
-          `Creating a bettingGameData entry with userId: ${betItem.userId
-          } | userspentInfo.amount: ${userspentInfo.amount
-          } | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue
+          `Creating a bettingGameData entry with userId: ${
+            betItem.userId
+          } | userspentInfo.amount: ${
+            userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${
+            betItem.amount * multiplyvalue
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
@@ -1418,7 +1422,7 @@ io.on("connection", (socket) => {
       if (
         !(
           LudoplayerPositions[ludoPlayerIndex].HomeRowPosition[pin] +
-          diceNumber >
+            diceNumber >
           6
         )
       ) {
