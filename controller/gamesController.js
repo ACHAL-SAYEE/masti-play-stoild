@@ -998,8 +998,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-        currentDate.getDay() +
-        (currentDate.getDay() === 0 ? -6 : 1)
+          currentDate.getDay() +
+          (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -2025,10 +2025,7 @@ class games {
       }
       await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
       // updating status to 1 (approved)
-      await withDrawalRequest.findOneAndUpdate(
-        { _id },
-        { status: 1 }
-      );
+      await withDrawalRequest.findOneAndUpdate({ _id }, { status: 1 });
       res.send("Withdrawal request approved!");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
@@ -2040,10 +2037,7 @@ class games {
     const { _id } = req.body;
     try {
       // updating status to 2 (rejected)
-      await withDrawalRequest.findOneAndUpdate(
-        { _id },
-        { status: 2 }
-      );
+      await withDrawalRequest.findOneAndUpdate({ _id }, { status: 2 });
       res.send("Withdrawal request rejected!");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
@@ -2052,15 +2046,8 @@ class games {
   }
 
   async sendWithDrawalRequest(req, res) {
-    const {
-      userId,
-      upiId,
-      accountNumber,
-      beans,
-      ifsc,
-      bankNumber,
-      name,
-    } = req.body;
+    const { userId, upiId, accountNumber, beans, ifsc, bankNumber, name } =
+      req.body;
     console.log("userId", userId);
     console.log("upiId", upiId);
     console.log("accountNumber", accountNumber);
@@ -2093,9 +2080,51 @@ class games {
   async getWithDrawalRequests(req, res) {
     const status = req.query.status;
     try {
-      const withdrawalReqs = await withDrawalRequest.find(
-        status ? { status } : {}
-      );
+      // const withdrawalReqs = await withDrawalRequest.find(
+      //   status ? { status } : {}
+      // );
+      const withdrawalReqs = await withDrawalRequest.aggregate([
+        {
+          $match: status
+            ? {
+                status,
+              }
+            : {},
+        },
+        {
+          $lookup: {
+            from: "users",
+            localField: "userId",
+            foreignField: "userId",
+            as: "userData",
+          },
+        },
+      //   {
+      //     $project: {
+      //         withDrawalRequest: "$ROOT", // Include all fields from withDrawalRequest
+      //         "withDrawalRequest.userData.beansCount": 1, // Include only beansCount from userData
+      //         _id: 0 // Exclude the _id field from the output
+      //     }
+      // }
+      {
+        "$project": {
+          "_id": 0,
+          "userId": 1,
+          "name": 1,
+          "upiId": 1,
+          "beans": 1,
+          "accountNumber": 1,
+          "ifsc": 1,
+
+          "bankNumber": 1,
+
+          "status": 1,
+
+          beansCount: { $arrayElemAt: ["$userData.beansCount", 0] }, // Retrieve the first element of the beansCount array
+
+        }
+      }
+      ]);
       res.send(withdrawalReqs);
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
