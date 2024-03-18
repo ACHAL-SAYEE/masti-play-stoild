@@ -590,8 +590,10 @@ class games {
           _id: 0,
           __v: 0,
         });
-        ownedAgency = await AgencyData.findOne({ ownerId: result.userId });
-        ownedBd = await BdData.findOne({ owner: result.userId });
+        if (result !== null) {
+          ownedAgency = await AgencyData.findOne({ ownerId: result.userId });
+          ownedBd = await BdData.findOne({ owner: result.userId });
+        }
       } else {
         result = await User.findOne({ userId: userId }).select({
           _id: 0,
@@ -612,7 +614,7 @@ class games {
       });
     } catch (e) {
       console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send(`internal server error${e}`);
     }
   }
 
@@ -2083,41 +2085,41 @@ class games {
       const withdrawalReqs = await withDrawalRequest.find(
         status ? { status } : {}
       );
-  //     const withdrawalReqs = await withDrawalRequest.aggregate([
-  //       {
-  //         $match: status
-  //           ? {
-  //               status,
-  //             }
-  //           : {},
-  //       },
-  //       {
-  //         $lookup: {
-  //           from: "users",
-  //           localField: "userId",
-  //           foreignField: "userId",
-  //           as: "userData",
-  //         },
-  //       },
-  //    {
-  //     $unwind:'$userData'
-  //    },
-  //    {
-  //     $addFields: {
-  //         accountBeans: '$userData.beansCount',
-  //         withdrawalBeans:'$beans'
+      //     const withdrawalReqs = await withDrawalRequest.aggregate([
+      //       {
+      //         $match: status
+      //           ? {
+      //               status,
+      //             }
+      //           : {},
+      //       },
+      //       {
+      //         $lookup: {
+      //           from: "users",
+      //           localField: "userId",
+      //           foreignField: "userId",
+      //           as: "userData",
+      //         },
+      //       },
+      //    {
+      //     $unwind:'$userData'
+      //    },
+      //    {
+      //     $addFields: {
+      //         accountBeans: '$userData.beansCount',
+      //         withdrawalBeans:'$beans'
 
-  //     }
-  // },
-  // {
-  //   $project:{
-  //     _id:0,
-  //     userData:0,
-  //     beans:0
-  //   }
-  // }
-    
-  //     ]);
+      //     }
+      // },
+      // {
+      //   $project:{
+      //     _id:0,
+      //     userData:0,
+      //     beans:0
+      //   }
+      // }
+
+      //     ]);
       res.send(withdrawalReqs);
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
