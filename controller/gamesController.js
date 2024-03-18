@@ -2099,31 +2099,24 @@ class games {
             as: "userData",
           },
         },
-      //   {
-      //     $project: {
-      //         withDrawalRequest: "$ROOT", // Include all fields from withDrawalRequest
-      //         "withDrawalRequest.userData.beansCount": 1, // Include only beansCount from userData
-      //         _id: 0 // Exclude the _id field from the output
-      //     }
-      // }
-      {
-        "$project": {
-          "_id": 0,
-          "userId": 1,
-          "name": 1,
-          "upiId": 1,
-          "beans": 1,
-          "accountNumber": 1,
-          "ifsc": 1,
+     {
+      $unwind:'$userData'
+     },
+     {
+      $addFields: {
+          accountBeans: '$userData.beansCount',
+          withdrawalBeans:'$beans'
 
-          "bankNumber": 1,
-
-          "status": 1,
-
-          beansCount: { $arrayElemAt: ["$userData.beansCount", 0] }, // Retrieve the first element of the beansCount array
-
-        }
       }
+  },
+  {
+    $project:{
+      _id:0,
+      userData:0,
+      beans:0
+    }
+  }
+    
       ]);
       res.send(withdrawalReqs);
     } catch (e) {
