@@ -832,7 +832,7 @@ class games {
       res.send(result);
     } catch (e) {
       console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send(`internal server error${e}`);
     }
   }
 
