@@ -621,7 +621,7 @@ class games {
   async convert(req, res) {
     const { diamonds, beans, userId } = req.query;
     try {
-      if (diamonds == null) {
+      if (diamonds == undefined) {
         console.log("entered2");
         const DiamondsToAdd = beans * beansToDiamondsRate;
         const result2 = await User.updateOne(
