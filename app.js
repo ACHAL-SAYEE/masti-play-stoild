@@ -465,7 +465,7 @@ app.post("/api/jackpot-bet", async (req, res) => {
       mode: "outcome",
     });
     console.log(jackpotInfo);
-    res.send("");
+    res.send("jackpot betted successfully");
   } catch (e) {
     res.status(500).send(`internal server error ${e}`);
   }
@@ -572,9 +572,11 @@ app.get("/api/spin-jackpot",async(req,res)=>{
   const selectedLines = linePatterns.slice(0, lines);
 
   const generatedLines = selectedLines.map(generateLine);
-
-  const result = generatedLines.map(checkContinuousValues);
-  let returnValue = 0;
+  let result = generatedLines.map(checkContinuousValues);
+  result= result.flatMap(subArray => Object.assign({}, ...subArray));
+  console.log("result1234",result)
+       
+  let returnValue = 0;    
   result.forEach((value) => {
     const key = Object.keys(value)[0];
     if (key === 1) {
@@ -680,6 +682,7 @@ app.get("/api/spin-jackpot",async(req,res)=>{
 
   return { jackpotgameGrid, jackPotAmount };
 })
+app.put("/api/update-jackpot",gamesController.updateJackPot)
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];

@@ -2126,8 +2126,15 @@ class games {
       console.log(e);
     }
   }
-  async betJackPot(req,res){
-   
+  async updateJackPot(req, res) {
+    const { userId, diamonds } = req.body;
+    try {
+      await User.updateOne({ userId }, { diamondsCount: diamonds });
+      res.send("diamonds updated successfully");
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
   }
 }
 
