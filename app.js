@@ -683,6 +683,7 @@ app.get("/api/spin-jackpot",async(req,res)=>{
   return { jackpotgameGrid, jackPotAmount };
 })
 app.put("/api/update-jackpot",gamesController.updateJackPot)
+app.get("/api/getDiamonds",gamesController.getDiamonds)
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];

@@ -2136,6 +2136,17 @@ class games {
       console.log(e);
     }
   }
+  async getDiamonds(req,res){
+    const{userId}=req.query
+    try{
+
+      let result=await User.findOne({userId})
+      res.json(result.diamondsCount)
+    }catch(e){
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
 }
 
 const gamesController = new games();
