@@ -2126,6 +2126,9 @@ class games {
       console.log(e);
     }
   }
+  async betJackPot(req,res){
+   
+  }
 }
 
 const gamesController = new games();

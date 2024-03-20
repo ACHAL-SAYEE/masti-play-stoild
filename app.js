@@ -436,7 +436,250 @@ app.put("/api/admin/accept", gamesController.acceptBeansWithDraw);
 app.put("/api/admin/reject", gamesController.rejectBeansWithDraw);
 app.post("/api/admin/sendWithDrawReq", gamesController.sendWithDrawalRequest);
 app.get("/api/admin/getUserReqs", gamesController.getWithDrawalRequests);
+app.post("/api/jackpot-bet", async (req, res) => {
+  const { userId, lines, betAmount } = req.body;
+  try {
+    console.log("trigger rjvn");
+    const index = jackpotInfo.findIndex((pot) => pot.userId == userId);
+    console.log(index);
+    if (index == -1) {
+      jackpotInfo.push({
+        userId: userId,
+        UserBetAmount: betAmount,
+        lines: lines,
+        jackPotAmount: lines * betAmount,
+      });
+    } else {
+      // jackpotInfo[index].jackPotAmount +
+      jackpotInfo[index] = {
+        jackPotAmount: lines * betAmount,
+        userId: userId,
+        UserBetAmount: betAmount,
+        lines: lines,
+      };
+    }
+    await GameTransactionHistory.create({
+      userId: userId,
+      game: "jackpot",
+      diamonds: -1 * betAmount,
+      mode: "outcome",
+    });
+    console.log(jackpotInfo);
+    res.send("");
+  } catch (e) {
+    res.status(500).send(`internal server error ${e}`);
+  }
+});
+app.get("/api/spin-jackpot",async(req,res)=>{
+  const {userId}=req.query
+  const jackpotUserInfo = jackpotInfo.find(
+    (item) => item.userId === userId
+  );
+  console.log("jackpotUserInfo", jackpotUserInfo);
+  let { lines, betAmount, jackPotAmount } = jackpotUserInfo;
+  console.log("jackPotAmount1", jackPotAmount);
+  const generateLine = (indices) =>
+    indices.map((index) => jackpotgameGrid[index[0]][index[1]]);
 
+  const checkContinuousValues = (line) => {
+    const result = [];
+    let currentSymbol = line[0];
+    let count = 1;
+
+    for (let i = 1; i < line.length; i++) {
+      if (line[i] === currentSymbol) {
+        count++;
+      } else {
+        result.push({ [currentSymbol]: count });
+        break;
+      }
+    }
+    return result;
+  };
+
+  const rows = 3;
+  const cols = 5;
+  const jackpotgameGrid = Array.from({ length: rows }, () =>
+    Array.from({ length: cols }, () => Math.floor(Math.random() * 11) + 1)
+  );
+
+  const linePatterns = [
+    [
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 4],
+    ],
+    [
+      [1, 0],
+      [1, 1],
+      [1, 2],
+      [1, 3],
+      [1, 4],
+    ],
+    [
+      [2, 0],
+      [2, 1],
+      [2, 2],
+      [2, 3],
+      [2, 4],
+    ],
+    [
+      [0, 0],
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [2, 4],
+    ],
+    [
+      [0, 3],
+      [0, 4],
+      [1, 2],
+      [2, 1],
+      [2, 0],
+    ],
+    [
+      [1, 0],
+      [2, 1],
+      [1, 2],
+      [0, 3],
+      [1, 4],
+    ],
+    [
+      [1, 0],
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [1, 4],
+    ],
+    [
+      [0, 0],
+      [1, 1],
+      [2, 2],
+      [0, 3],
+      [1, 4],
+    ],
+    [
+      [2, 0],
+      [1, 1],
+      [0, 2],
+      [1, 3],
+      [2, 4],
+    ],
+  ];
+
+  const selectedLines = linePatterns.slice(0, lines);
+
+  const generatedLines = selectedLines.map(generateLine);
+
+  const result = generatedLines.map(checkContinuousValues);
+  let returnValue = 0;
+  result.forEach((value) => {
+    const key = Object.keys(value)[0];
+    if (key === 1) {
+      if (value[key] === 3) {
+        returnValue += betAmount * 60;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 120;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 360;
+      }
+    } else if (key === 2) {
+      if (value[key] === 3) {
+        returnValue += betAmount * 40;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 80;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 240;
+      }
+    } else if (key === 3) {
+      if (value[key] === 3) {
+        returnValue += betAmount * 25;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 50;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 150;
+      }
+    } else if (key === 4) {
+      if (value[key] === 2) {
+        returnValue += betAmount * 6;
+      } else if (value[key] === 3) {
+        returnValue += betAmount * 20;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 40;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 120;
+      }
+    } else if (key === 5) {
+      if (value[key] === 2) {
+        returnValue += betAmount * 5;
+      } else if (value[key] === 3) {
+        returnValue += betAmount * 15;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 30;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 90;
+      }
+    } else if (key === 6) {
+      if (value[key] === 2) {
+        returnValue += betAmount * 3;
+      } else if (value[key] === 3) {
+        returnValue += betAmount * 12;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 24;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 72;
+      }
+    } else if (key === 7) {
+      if (value[key] === 2) {
+        returnValue += betAmount * 2;
+      } else if (value[key] === 3) {
+        returnValue += betAmount * 10;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 20;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 60;
+      }
+    } else if (key === 8) {
+      if (value[key] === 2) {
+        returnValue += betAmount * 1;
+      } else if (value[key] === 3) {
+        returnValue += betAmount * 6;
+      } else if (value[key] === 4) {
+        returnValue += betAmount * 12;
+      } else if (value[key] === 5) {
+        returnValue += betAmount * 36;
+      }
+    }
+  });
+  const rannum = Math.random();
+  if (returnValue < 0.9 * jackpotUserInfo.jackPotAmount && rannum <= 0.5) {
+    const jackpotUserInfoindex = jackpotInfo.findIndex(
+      (item) => item.userId === userId
+    );
+    jackpotInfo[jackpotUserInfoindex] = {
+      ...jackpotInfo[jackpotUserInfoindex],
+      jackPotAmount: jackpotInfo[jackpotUserInfoindex] - returnValue,
+    };
+    jackPotAmount -= returnValue;
+    await User.updateOne({ diamonds: returnValue });
+  }
+  console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
+  // console.log("jackPotAmount2", jackPotAmount);
+  // socket.emit("jackpot-result", { result, jackpotgameGrid, jackPotAmount });
+  res.send( { result, jackpotgameGrid, jackPotAmount })
+  if (returnValue > 0) {
+    await GameTransactionHistory.create({
+      userId: userId,
+      mode: "outcome",
+      diamonds: betItem.amount * multiplyvalue,
+      game: "jackpot",
+    });
+  }
+
+  return { jackpotgameGrid, jackPotAmount };
+})
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -1015,6 +1258,7 @@ io.on("connection", (socket) => {
     });
     console.log(jackpotInfo);
   });
+
   socket.on("spin-jackpot", async (data) => {
     const jackpotUserInfo = jackpotInfo.find(
       (item) => item.userId === data.userId
