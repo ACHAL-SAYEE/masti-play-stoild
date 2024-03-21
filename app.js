@@ -683,7 +683,7 @@ app.get("/api/spin-jackpot",async(req,res)=>{
   return { jackpotgameGrid, jackPotAmount };
 })
 app.put("/api/update-jackpot",gamesController.updateJackPot)
-app.post("/api/update-jackpot2",gamesController.updateJackPot)
+app.post("/api/update-jackpot",gamesController.updateJackPot)
 
 app.get("/api/getDiamonds",gamesController.getDiamonds)
 // app.delete("/api/admin/dele")
