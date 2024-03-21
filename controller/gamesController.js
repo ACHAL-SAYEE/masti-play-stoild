@@ -760,9 +760,12 @@ class games {
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
-      const Users = await User.find({})
-        .skip(Number(start))
-        .limit(Number(limit));
+      let Users;
+      if (limit == undefined && start == undefined) {
+        Users = await User.find({});
+      } else {
+        Users = await User.find({}).skip(Number(start)).limit(Number(limit));
+      }
       res.send(Users);
     } catch (e) {
       console.log(e);
@@ -2136,13 +2139,12 @@ class games {
       console.log(e);
     }
   }
-  async getDiamonds(req,res){
-    const{userId}=req.query
-    try{
-
-      let result=await User.findOne({userId})
-      res.json(result.diamondsCount)
-    }catch(e){
+  async getDiamonds(req, res) {
+    const { userId } = req.query;
+    try {
+      let result = await User.findOne({ userId });
+      res.json(result.diamondsCount);
+    } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);
     }
