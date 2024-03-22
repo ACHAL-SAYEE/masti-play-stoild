@@ -619,11 +619,12 @@ class games {
   }
 
   async convert(req, res) {
-    const { diamonds, beans, userId } = req.query;
+    let { diamonds, beans, userId } = req.query;
     try {
       let valCheck = await User.findOne({ userId });
 
       if (diamonds == undefined) {
+        beans=Number(beans)
         console.log("entered2");
         const DiamondsToAdd = beans * beansToDiamondsRate;
         if (valCheck.beansCount < beans) {
@@ -638,6 +639,8 @@ class games {
 
         
       } else {
+        diamonds=Number(diamonds)
+
         console.log("entered");
         const BeansToAdd = diamonds / beansToDiamondsRate;
         if (valCheck.diamondsCount < diamonds) {
