@@ -621,33 +621,41 @@ class games {
   async convert(req, res) {
     const { diamonds, beans, userId } = req.query;
     try {
+      let valCheck = await User.findOne({ userId });
+
       if (diamonds == undefined) {
         console.log("entered2");
         const DiamondsToAdd = beans * beansToDiamondsRate;
-        const result2 = await User.updateOne(
-          { userId: userId },
-          { $inc: { diamondsCount: DiamondsToAdd, beansCount: -1 * beans } }
-        );
-        const result = await User.findOne({ userId: userId }).select({
-          _id: 0,
-          __v: 0,
-        });
-        console.log(result);
-        res.send(result);
+        if (valCheck.beansCount < beans) {
+          res.status(400).send("insufficient beans balance please recharge");
+          return;
+        } else {
+          const result2 = await User.updateOne(
+            { userId: userId },
+            { $inc: { diamondsCount: DiamondsToAdd, beansCount: -1 * beans } }
+          );
+        }
+
+        
       } else {
         console.log("entered");
         const BeansToAdd = diamonds / beansToDiamondsRate;
+        if (valCheck.diamondsCount < diamonds) {
+          res.status(400).send("insufficient diamonds balance please recharge");
+          return;
+        }
         const result2 = await User.updateOne(
           { userId: userId },
           { $inc: { diamondsCount: -1 * diamonds, beansCount: BeansToAdd } }
         );
-        const result = await User.findOne({ userId: userId }).select({
-          _id: 0,
-          __v: 0,
-        });
-        console.log(result);
-        res.send(result);
+      
       }
+      const result = await User.findOne({ userId: userId }).select({
+        _id: 0,
+        __v: 0,
+      });
+      console.log(result);
+      res.send(result);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
@@ -762,7 +770,10 @@ class games {
     try {
       let Users;
       if (limit == undefined && start == undefined) {
-        Users = await User.find({});
+        Users = await User.find(
+          {},
+          { _id: 0, __v: 0, creatorBeans: 0, pinnedRooms: 0, isBanned: 0 }
+        );
       } else {
         Users = await User.find({}).skip(Number(start)).limit(Number(limit));
       }
