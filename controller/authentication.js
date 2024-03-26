@@ -22,19 +22,19 @@ const { BdData, ParticipantAgencies } = require("../models/bd");
 
 class Authentication {
   async sendOtp(req, res) {
+    const {phoneNo}=req.body
     const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
     const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
     console.log(req.headers);
-    otpMap[req.headers.phone] = { otp, timestamp: Date.now() };
+    otpMap[phoneNo] = { otp, timestamp: Date.now() };
     console.log("otpMap", otpMap);
 
     req1.query({
-      authorization:
-        "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
+      authorization:"ykbUo6AfCTeqhvD4PRSin5r7NHImMzXZVpjdt098alxO1wQBJc5YRUNfmtPdFeh7j3z6gvBEnx4lM2ru",
+        // "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
       variables_values: otp.toString(),
-      // message: `your otp from achal is ${otp.toString()}`,
       route: "otp",
-      numbers: req.headers.phone,
+      numbers: phoneNo,
     });
     console.log("OTP Sending request sent!");
 
@@ -45,7 +45,7 @@ class Authentication {
     req1.end(function (res1) {
       if (res1.error) {
         console.log("Error: ", res1.error);
-        res.status(500).send(res1.error);
+        res.status(500).send(res1.body.message);
       } else {
         console.log("successful");
         const obj = {
@@ -61,13 +61,14 @@ class Authentication {
 
   async verifyOtp(req, res) {
     console.log("Verifying otp");
-    const phone = req.headers.phone;
-    const otp = req.headers.otp;
+    const {otp,phoneNo}=req.body
+    // const phone = req.headers.phone;
+    // const otp = req.headers.otp;
     // const expectedOtp = '123456';
-    console.log(`phone = ${phone}`);
+    console.log(`phone = ${phoneNo}`);
     console.log(`otpMap = `, otpMap);
-    if (otpMap[phone] != null) {
-      const storedData = otpMap[phone]["otp"];
+    if (otpMap[phoneNo] != null) {
+      const storedData = otpMap[phoneNo]["otp"];
       console.log(`storedData = ${storedData}`);
       console.log(`typeof storedData = ${typeof storedData}`);
       console.log(`otp = ${otp}`);
