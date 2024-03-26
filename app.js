@@ -686,6 +686,7 @@ app.put("/api/update-jackpot",gamesController.updateJackPot)
 app.post("/api/update-jackpot",gamesController.updateJackPot)
 
 app.get("/api/getDiamonds",gamesController.getDiamonds)
+app.get("/api/admin/creators",gamesController.getAllCreators)
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
