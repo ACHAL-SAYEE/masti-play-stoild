@@ -172,7 +172,7 @@ function ensureWheelNumbers(array) {
   return resultArray;
 }
 
-app.post("/otp", authenticationController.sendOtp);
+app.post("/get-otp", authenticationController.sendOtp);
 
 app.post("/verify-otp", authenticationController.verifyOtp);
 
