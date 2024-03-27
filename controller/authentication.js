@@ -23,40 +23,59 @@ const { BdData, ParticipantAgencies } = require("../models/bd");
 class Authentication {
   async sendOtp(req, res) {
     const {phoneNo}=req.body
-    const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
-    const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
-    console.log(req.headers);
-    otpMap[phoneNo] = { otp, timestamp: Date.now() };
-    console.log("otpMap", otpMap);
+    try{
+      const userExists=await User.findOne({phoneNumber:phoneNo});
+      // if(userExists!=null){
+      //   res.status(400).send("phone number is already taken")
+      //   return
+      // }
+      const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
+      const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+      console.log(req.headers);
+      otpMap[phoneNo] = { otp, timestamp: Date.now() };
+      console.log("otpMap", otpMap);
+  
+      req1.query({
+        authorization:"ykbUo6AfCTeqhvD4PRSin5r7NHImMzXZVpjdt098alxO1wQBJc5YRUNfmtPdFeh7j3z6gvBEnx4lM2ru",
+          // "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
+        variables_values: otp.toString(),
+        route: "otp",
+        numbers: phoneNo,
+      });
+      console.log("OTP Sending request sent!");
+  
+      req1.headers({
+        "cache-control": "no-cache",
+      });
+  
+      req1.end(function (res1) {
+        if (res1.error) {
+          console.log("Error: ", res1.error);
+          res.status(500).send(res1.body.message);
+        } else {
+          console.log("successful");
+          const obj = {
+            return: res1.body.return,
+            request_id: res1.body.request_id,
+            message: res1.body.message,
+            
+            // otp: otp.toString(),
+          };
+          if(userExists!==null){
+            res.send({...obj,userExists:true})
+          }
+          else{
+            res.status(200).json({obj,userExists:false});
 
-    req1.query({
-      authorization:"ykbUo6AfCTeqhvD4PRSin5r7NHImMzXZVpjdt098alxO1wQBJc5YRUNfmtPdFeh7j3z6gvBEnx4lM2ru",
-        // "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
-      variables_values: otp.toString(),
-      route: "otp",
-      numbers: phoneNo,
-    });
-    console.log("OTP Sending request sent!");
+          }
+        }
+      });
 
-    req1.headers({
-      "cache-control": "no-cache",
-    });
-
-    req1.end(function (res1) {
-      if (res1.error) {
-        console.log("Error: ", res1.error);
-        res.status(500).send(res1.body.message);
-      } else {
-        console.log("successful");
-        const obj = {
-          return: res1.body.return,
-          request_id: res1.body.request_id,
-          message: res1.body.message,
-          // otp: otp.toString(),
-        };
-        res.status(200).json(obj);
-      }
-    });
+    }catch(e){
+      console.log(e)
+      res.status(500).send(`internal server error ${e}`)
+    }
+   
   }
 
   async verifyOtp(req, res) {
