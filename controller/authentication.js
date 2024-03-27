@@ -62,12 +62,16 @@ class Authentication {
             // otp: otp.toString(),
           };
           if(userExists!==null){
-            res.send({...obj,userExists:true})
+            obj.userExists=true;
+           
           }
           else{
-            res.status(200).json({obj,userExists:false});
+            obj.userExists=false;
+
+            // res.status(200).json({obj,userExists:false});
 
           }
+          res.send(obj)
         }
       });
 
