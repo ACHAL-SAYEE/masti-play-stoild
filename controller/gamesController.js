@@ -479,61 +479,92 @@ class games {
     }
   }
 
+  // async getBeansHistory(req, res) {
+  //   const { userId, start, limit, mode } = req.query;
+
+  //   let query = {};
+  //   let selectFields = {
+  //     _id: 0,
+  //     __v: 0,
+  //     diamondsAdded: 0,
+  //     updatedAt: 0,
+  //     sentTo: 0,
+  //   };
+
+  //   switch (mode) {
+  //     case "income":
+  //       query = {
+  //         isGift: false,
+  //         sentTo: userId,
+  //         paymentType: null,
+  //         beansAdded: { $gt: 0 },
+  //       };
+  //       break;
+  //     case "cashout":
+  //       query = {
+  //         isGift: false,
+  //         amount: { $gt: 0 },
+  //         sentTo: userId,
+  //         beans: { $lt: 0 },
+  //       };
+  //       break;
+  //     case "agentTransfer":
+  //       query = {
+  //         isGift: false,
+  //         sentTo: { $regex: /^Ain/ },
+  //         sentby: userId,
+  //         beansAdded: { $gt: 0 },
+  //       };
+  //       break;
+  //     default:
+  //       query = {
+  //         isGift: false,
+  //         beansAdded: { $lt: 0 },
+  //         diamondsAdded: { $gt: 0 },
+  //       };
+  //       break;
+  //   }
+
+  //   try {
+  //     const result = await queryBeansTransactionHistory(
+  //       query,
+  //       start,
+  //       limit,
+  //       selectFields
+  //     );
+  //     console.log(result);
+  //     res.send(result);
+  //   } catch (e) {
+  //     res.status(500).send("Internal server error");
+  //   }
+  // }
   async getBeansHistory(req, res) {
     const { userId, start, limit, mode } = req.query;
-
-    let query = {};
-    let selectFields = {
-      _id: 0,
-      __v: 0,
-      diamondsAdded: 0,
-      updatedAt: 0,
-      sentTo: 0,
-    };
-
-    switch (mode) {
-      case "income":
-        query = {
-          isGift: false,
-          sentTo: userId,
-          paymentType: null,
-          beansAdded: { $gt: 0 },
-        };
-        break;
-      case "cashout":
-        query = {
-          isGift: false,
-          amount: { $gt: 0 },
-          sentTo: userId,
-          beans: { $lt: 0 },
-        };
-        break;
-      case "agentTransfer":
-        query = {
-          isGift: false,
-          sentTo: { $regex: /^Ain/ },
-          sentby: userId,
-          beansAdded: { $gt: 0 },
-        };
-        break;
-      default:
-        query = {
-          isGift: false,
-          beansAdded: { $lt: 0 },
-          diamondsAdded: { $gt: 0 },
-        };
-        break;
-    }
-
     try {
-      const result = await queryBeansTransactionHistory(
-        query,
-        start,
-        limit,
-        selectFields
-      );
-      console.log(result);
-      res.send(result);
+      if (mode == "income") {
+        let gift = await TransactionHistory.find({
+          sentTo: userId,
+          isGift: true,
+        });
+        gift = gift.map((item) => {
+          return { ...item._doc, diamondsAdded: 0 };
+        });
+        res.send(gift.slice(start, start + limit));
+      } else if (mode == "cashout") {
+        let result = await TransactionHistory.find({
+          sentTo: userId,
+          amount: { $ne: 0 },
+        });
+        res.send(result.slice(start,start+limit));
+      } else if (mode == "agentTransfer") {
+        res.send([]);
+      } else {
+        // let result = await TransactionHistory.find({
+        //   sentTo: userId,
+        //   amount: { $ne: 0 },
+        // });
+        res.send([]);
+      }
     } catch (e) {
       res.status(500).send("Internal server error");
     }
@@ -544,23 +575,42 @@ class games {
     let result;
     try {
       if (mode === "income") {
-        result = await GameTransactionHistory.find({
-          userId,
-          mode: "income",
+        result = await TransactionHistory.find({
+          sentTo: userId,
+          game: { $ne: null },
         })
           .skip(Number(start))
           .limit(Number(limit));
+        // let Gift=await TransactionHistory.find({sentTo:userId})
+        // result = await TransactionHistory.find({
+        //   $or:[{sentTo:userId,isGift:false}]
+        // })
+        res.send(result);
+        return;
       } else if (mode === "outcome") {
-        result = await GameTransactionHistory.find({
-          userId,
-          mode: "income",
-        })
-          .skip(Number(start))
-          .limit(Number(limit));
+        let Gift = await TransactionHistory.find({
+          sentby: userId,
+          isGift: true,
+          // mode: "income",
+        });
+        Gift = Gift.map((item) => {
+          return {
+            ...item._doc,
+            diamondsAdded: -1 * item.diamondsAdded,
+            beansAdded: 0,
+          };
+        });
+        let nonGift = await TransactionHistory.find({
+          sentTo: userId,
+          game: { $ne: null },
+        });
+        let result = [...Gift, ...nonGift];
+        res.send(result.slice(start, start + limit));
       } else if (mode === "recharge") {
-        result = await GameTransactionHistory.find({
-          userId,
-          mode: "recharge",
+        result = await TransactionHistory.find({
+          sentTo: userId,
+          game: null,
+          isGift: false,
         })
           .skip(Number(start))
           .limit(Number(limit));
@@ -635,6 +685,7 @@ class games {
             { userId: userId },
             { $inc: { diamondsCount: DiamondsToAdd, beansCount: -1 * beans } }
           );
+          await TransactionHistory.create({sentTo:userId,diamondsAdded:DiamondsToAdd,beansAdded:-1 *beans})
         }
       } else {
         diamonds = Number(diamonds);
@@ -649,6 +700,8 @@ class games {
           { userId: userId },
           { $inc: { diamondsCount: -1 * diamonds, beansCount: BeansToAdd } }
         );
+        await TransactionHistory.create({sentTo:userId,beansAdded:BeansToAdd,diamondsAdded:-1 *diamonds})
+
       }
       const result = await User.findOne({ userId: userId }).select({
         _id: 0,
@@ -1085,7 +1138,7 @@ class games {
             beansCount: DiamondsToAdd,
             "creatorBeans.total": DiamondsToAdd + bonusDiamonds,
             "creatorBeans.basic": DiamondsToAdd,
-            "creatorBeans.": bonusDiamonds,
+            "creatorBeans.bonus": bonusDiamonds,
           },
         }
       );
@@ -1253,10 +1306,18 @@ class games {
         roomId,
         sentby: sentBy,
         sentTo,
-        diamondsAdded: DiamondsToAdd,
-        // beansAdded: (9 * Number(diamondsSent)) / 10,
+        diamondsAdded: diamondsSent * Quantity,
+        beansAdded: DiamondsToAdd,
         isGift: true,
       });
+      // await TransactionHistory.create({
+      //   roomId,
+      //   sentby: sentBy,
+      //   sentTo,
+      //   diamondsAdded: DiamondsToAdd,
+      //   // beansAdded: (9 * Number(diamondsSent)) / 10,
+      //   isGift: true,
+      // });
 
       await res.send("gift sent successfully");
     } catch (e) {
@@ -2074,8 +2135,14 @@ class games {
         return;
       }
       await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
+      // await TransactionHistory.create({sent})
       // updating status to 1 (approved)
       await withDrawalRequest.findOneAndUpdate({ _id }, { status: 1 });
+      await TransactionHistory.create({
+        sentTo: userId,
+        beansAdded: -1 * beans,
+        amount: beans,
+      });
       res.send("Withdrawal request approved!");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);

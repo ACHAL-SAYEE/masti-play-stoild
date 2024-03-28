@@ -58,6 +58,7 @@ const {
   AgencyData,
   GameTransactionHistory,
   SpinnerGameBetInfo,
+  TransactionHistory,
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
@@ -200,7 +201,7 @@ app.post("/api/user", async (req, res) => {
       });
     } else {
       existingUserInfo = await User.findOne({ $or: [{ email }] });
-      console.log(existingUserInfo)
+      console.log(existingUserInfo);
     }
     if (existingUserInfo) {
       res.status(400).send("email or phoneNumber is already taken");
@@ -459,11 +460,11 @@ app.post("/api/jackpot-bet", async (req, res) => {
         lines: lines,
       };
     }
-    await GameTransactionHistory.create({
+    await TransactionHistory.create({
       userId: userId,
       game: "jackpot",
-      diamonds: -1 * betAmount,
-      mode: "outcome",
+      diamondsAdded: -1 * betAmount,
+      // mode: "outcome",
     });
     console.log(jackpotInfo);
     res.send("jackpot betted successfully");
@@ -471,11 +472,9 @@ app.post("/api/jackpot-bet", async (req, res) => {
     res.status(500).send(`internal server error ${e}`);
   }
 });
-app.get("/api/spin-jackpot",async(req,res)=>{
-  const {userId}=req.query
-  const jackpotUserInfo = jackpotInfo.find(
-    (item) => item.userId === userId
-  );
+app.get("/api/spin-jackpot", async (req, res) => {
+  const { userId } = req.query;
+  const jackpotUserInfo = jackpotInfo.find((item) => item.userId === userId);
   console.log("jackpotUserInfo", jackpotUserInfo);
   let { lines, betAmount, jackPotAmount } = jackpotUserInfo;
   console.log("jackPotAmount1", jackPotAmount);
@@ -574,10 +573,10 @@ app.get("/api/spin-jackpot",async(req,res)=>{
 
   const generatedLines = selectedLines.map(generateLine);
   let result = generatedLines.map(checkContinuousValues);
-  result= result.flatMap(subArray => Object.assign({}, ...subArray));
-  console.log("result1234",result)
-       
-  let returnValue = 0;    
+  result = result.flatMap((subArray) => Object.assign({}, ...subArray));
+  console.log("result1234", result);
+
+  let returnValue = 0;
   result.forEach((value) => {
     const key = Object.keys(value)[0];
     if (key === 1) {
@@ -671,23 +670,23 @@ app.get("/api/spin-jackpot",async(req,res)=>{
   console.log(`socket result`, result, jackpotgameGrid, jackPotAmount);
   // console.log("jackPotAmount2", jackPotAmount);
   // socket.emit("jackpot-result", { result, jackpotgameGrid, jackPotAmount });
-  res.send( { result, jackpotgameGrid, jackPotAmount })
+  res.send({ result, jackpotgameGrid, jackPotAmount });
   if (returnValue > 0) {
-    await GameTransactionHistory.create({
-      userId: userId,
-      mode: "outcome",
-      diamonds: betItem.amount * multiplyvalue,
+    await TransactionHistory.create({
+      sentby: userId,
+      sentTo: null,
+      diamondsAdded: -1 * betItem.amount * multiplyvalue,
       game: "jackpot",
     });
   }
 
   return { jackpotgameGrid, jackPotAmount };
-})
-app.put("/api/update-jackpot",gamesController.updateJackPot)
-app.post("/api/update-jackpot",gamesController.updateJackPot)
+});
+app.put("/api/update-jackpot", gamesController.updateJackPot);
+app.post("/api/update-jackpot", gamesController.updateJackPot);
 
-app.get("/api/getDiamonds",gamesController.getDiamonds)
-app.get("/api/admin/creators",gamesController.getAllCreators)
+app.get("/api/getDiamonds", gamesController.getDiamonds);
+app.get("/api/admin/creators", gamesController.getAllCreators);
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -1019,10 +1018,11 @@ async function endBetting() {
           { userId: betItem.userId },
           { $inc: { diamondsCount: betItem.amount * multiplyvalue } }
         );
-        await GameTransactionHistory.create({
-          userId: betItem.userId,
-          mode: "outcome",
-          diamonds: betItem.amount * multiplyvalue,
+        await TransactionHistory.create({
+          sentby: betItem.userId,
+          sentTo:null,
+          // mode: "outcome",
+          diamondsAdded: -1 * betItem.amount * multiplyvalue,
           game: "spinner-bet-game",
         });
         await SpinnerGameBetInfo.findOneAndUpdate(
@@ -1225,11 +1225,11 @@ io.on("connection", (socket) => {
       console.log(
         `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
       );
-      await GameTransactionHistory.create({
-        userId,
+      await TransactionHistory.create({
+        sentby:userId,
         game: gameName,
-        diamonds: -1 * amount,
-        mode: "outcome",
+        diamondsAdded: -1 * amount,
+        // mode: "outcome",
       });
       sendGameUpdate("bet-status", socket, {
         diamonds: updatedUser.diamondsCount,
@@ -1258,11 +1258,11 @@ io.on("connection", (socket) => {
         lines: data.lines,
       };
     }
-    await GameTransactionHistory.create({
-      userId: data.userId,
+    await TransactionHistory.create({
+      sentby: data.userId,
       game: "jackpot",
-      diamonds: -1 * data.betAmount,
-      mode: "outcome",
+      diamondsAdded: -1 * data.betAmount,
+      // mode: "outcome",
     });
     console.log(jackpotInfo);
   });
@@ -1465,10 +1465,10 @@ io.on("connection", (socket) => {
     // console.log("jackPotAmount2", jackPotAmount);
     socket.emit("jackpot-result", { result, jackpotgameGrid, jackPotAmount });
     if (returnValue > 0) {
-      await GameTransactionHistory.create({
-        userId: data.userId,
-        mode: "outcome",
-        diamonds: betItem.amount * multiplyvalue,
+      await TransactionHistory.create({
+        sentby: data.userId,
+        // mode: "outcome",
+        diamondsAdded: -1 * betItem.amount * multiplyvalue,
         game: "jackpot",
       });
     }
@@ -1491,11 +1491,11 @@ io.on("connection", (socket) => {
     data.betItems.forEach((item) => {
       totalBetAmount += item.amount;
     });
-    await GameTransactionHistory.create({
-      userId: data.userId,
+    await TransactionHistory.create({
+      sentby: data.userId,
       game: "royal-battle-bet",
-      diamonds: -1 * totalBetAmount,
-      mode: "outcome",
+      diamondsAdded: -1 * totalBetAmount,
+      // mode: "outcome",
     });
     // } else {
     //   royalBattleBetInfo[index] = {

@@ -162,6 +162,7 @@ const GameTransactionHistorySchema = new mongoose.Schema(
     userId: String,
     diamonds: Number,
     game: String,
+    
   },
   { timestamps: true }
 );
