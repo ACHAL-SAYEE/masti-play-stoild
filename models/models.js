@@ -4,7 +4,7 @@ const userSchema = new mongoose.Schema({
   userId: String,
   agentId: { type: String, default: null },
   name: String,
-  email: String,
+  email: { type: String, default: null },
   photo: {
     type: String,
     default: null,
@@ -64,6 +64,19 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: null,
   },
+  bannedAt: {
+    type: Date,
+    default: null,
+  },
+  bannedPeriod: {
+    type: String,
+    default: null,
+  },
+  activeTime:{
+    type:Number,
+    default:0
+  }
+  
 });
 
 const TagSchema = new mongoose.Schema(
@@ -343,17 +356,20 @@ const GameTransactionHistory = mongoose.model(
   "GameTransactionHistory",
   GameTransactionHistorySchema
 );
-const withDrawalRequestSchema = new mongoose.Schema({
-  name: String,
-  userId: String,
-  upiId: { type: String, default: null },
-  // adminId: String,
-  beans: Number,
-  accountNumber: { type: String, default: null },
-  ifsc: { type: String, default: null },
-  bankNumber: { type: String, default: null },
-  status: { type: String, default: 0 },
-}, { timestamps: true });
+const withDrawalRequestSchema = new mongoose.Schema(
+  {
+    name: String,
+    userId: String,
+    upiId: { type: String, default: null },
+    // adminId: String,
+    beans: Number,
+    accountNumber: { type: String, default: null },
+    ifsc: { type: String, default: null },
+    bankNumber: { type: String, default: null },
+    status: { type: String, default: 0 },
+  },
+  { timestamps: true }
+);
 const withDrawalRequest = mongoose.model(
   "withDrawalRequest",
   withDrawalRequestSchema
@@ -408,4 +424,4 @@ exports.UserGift = UserGift;
 exports.UserRechargeMonthly = UserRechargeMonthly;
 exports.UserGiftMonthly = UserGiftMonthly;
 exports.SpinnerGameBetInfo = SpinnerGameBetInfo;
-exports.withDrawalRequest = withDrawalRequest
+exports.withDrawalRequest = withDrawalRequest;

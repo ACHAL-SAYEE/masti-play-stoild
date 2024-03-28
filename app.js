@@ -191,7 +191,7 @@ app.post("/api/user", async (req, res) => {
     photo,
     phoneNumber,
   } = req.body;
-  console.log("FEWYHGBREWSGBREHUGREGBREGUYBRREURBUREBUITHNBUI45UIN");
+  // console.log("FEWYHGBREWSGBREHUGREGBREGUYBRREURBUREBUITHNBUI45UIN");
   try {
     var existingUserInfo;
     if (phoneNumber) {
@@ -200,6 +200,7 @@ app.post("/api/user", async (req, res) => {
       });
     } else {
       existingUserInfo = await User.findOne({ $or: [{ email }] });
+      console.log(existingUserInfo)
     }
     if (existingUserInfo) {
       res.status(400).send("email or phoneNumber is already taken");
@@ -1081,7 +1082,7 @@ async function endBetting() {
       let top3Entries = resultArray.slice(0, 3);
       top3Entries = top3Entries.map((item) => ({
         userId: item.userId,
-        winningAmount: bettingWheelValues[item.wheelNo - 1] * item.amount,
+        winningAmount: item.amount,
       }));
       console.log("top3Entries", top3Entries);
       await Top3Winners.create({ Winners: top3Entries });
