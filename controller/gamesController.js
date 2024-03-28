@@ -555,14 +555,27 @@ class games {
           sentTo: userId,
           amount: { $ne: 0 },
         });
-        res.send(result.slice(start,start+limit));
+        res.send(result.slice(start, start + limit));
       } else if (mode == "agentTransfer") {
         res.send([]);
       } else {
-        // let result = await TransactionHistory.find({
-        //   sentTo: userId,
-        //   amount: { $ne: 0 },
-        // });
+        let result = await TransactionHistory.find({
+          $or: [
+            {
+              sentTo: userId,
+              diamondsAdded: { $lt: 0 },
+              beansAdded: { $gt: 0 },
+              isGift:false
+            },
+            {
+              sentTo: userId,
+              diamondsAdded: { $gt: 0 },
+              beansAdded: { $lt: 0 },
+              isGift:false
+
+            },
+          ],
+        });
         res.send([]);
       }
     } catch (e) {
@@ -685,7 +698,11 @@ class games {
             { userId: userId },
             { $inc: { diamondsCount: DiamondsToAdd, beansCount: -1 * beans } }
           );
-          await TransactionHistory.create({sentTo:userId,diamondsAdded:DiamondsToAdd,beansAdded:-1 *beans})
+          await TransactionHistory.create({
+            sentTo: userId,
+            diamondsAdded: DiamondsToAdd,
+            beansAdded: -1 * beans,
+          });
         }
       } else {
         diamonds = Number(diamonds);
@@ -700,8 +717,11 @@ class games {
           { userId: userId },
           { $inc: { diamondsCount: -1 * diamonds, beansCount: BeansToAdd } }
         );
-        await TransactionHistory.create({sentTo:userId,beansAdded:BeansToAdd,diamondsAdded:-1 *diamonds})
-
+        await TransactionHistory.create({
+          sentTo: userId,
+          beansAdded: BeansToAdd,
+          diamondsAdded: -1 * diamonds,
+        });
       }
       const result = await User.findOne({ userId: userId }).select({
         _id: 0,
