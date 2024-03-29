@@ -5,6 +5,7 @@ const {
   AgencyData,
   agencyParticipant,
 } = require("../models/models");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const otpMap = {};
 const { OAuth2Client } = require("google-auth-library");
@@ -22,9 +23,9 @@ const { BdData, ParticipantAgencies } = require("../models/bd");
 
 class Authentication {
   async sendOtp(req, res) {
-    const {phoneNo}=req.body
-    try{
-      const userExists=await User.findOne({phoneNumber:phoneNo});
+    const { phoneNo } = req.body;
+    try {
+      const userExists = await User.findOne({ phoneNumber: phoneNo });
       // if(userExists!=null){
       //   res.status(400).send("phone number is already taken")
       //   return
@@ -34,20 +35,21 @@ class Authentication {
       console.log(req.headers);
       otpMap[phoneNo] = { otp, timestamp: Date.now() };
       console.log("otpMap", otpMap);
-  
+
       req1.query({
-        authorization:"ykbUo6AfCTeqhvD4PRSin5r7NHImMzXZVpjdt098alxO1wQBJc5YRUNfmtPdFeh7j3z6gvBEnx4lM2ru",
-          // "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
+        authorization:
+          "ykbUo6AfCTeqhvD4PRSin5r7NHImMzXZVpjdt098alxO1wQBJc5YRUNfmtPdFeh7j3z6gvBEnx4lM2ru",
+        // "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
         variables_values: otp.toString(),
         route: "otp",
         numbers: phoneNo,
       });
       console.log("OTP Sending request sent!");
-  
+
       req1.headers({
         "cache-control": "no-cache",
       });
-  
+
       req1.end(function (res1) {
         if (res1.error) {
           console.log("Error: ", res1.error);
@@ -58,33 +60,92 @@ class Authentication {
             return: res1.body.return,
             request_id: res1.body.request_id,
             message: res1.body.message,
-            
+
             // otp: otp.toString(),
           };
-          if(userExists!==null){
-            obj.userExists=true;
-           
-          }
-          else{
-            obj.userExists=false;
+          if (userExists !== null) {
+            obj.userExists = true;
+          } else {
+            obj.userExists = false;
 
             // res.status(200).json({obj,userExists:false});
-
           }
-          res.send(obj)
+          res.send(obj);
         }
       });
-
-    }catch(e){
-      console.log(e)
-      res.status(500).send(`internal server error ${e}`)
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error ${e}`);
     }
-   
+  }
+
+  async getAdminOtp(req, res) {
+    const { phoneNo } = req.body;
+    try {
+      const userExists = await User.findOne({ phoneNumber: phoneNo });
+      if (userExists === null) {
+        res.status(400).send("invalid phoneNo");
+        return;
+      } else {
+        if (userExists.role !== "admin") {
+          res
+            .status(401)
+            .send("unauthorised.please enter valid admin phone number");
+          return;
+        }
+      }
+      const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
+      const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
+      console.log(req.headers);
+      otpMap[phoneNo] = { otp, timestamp: Date.now() };
+      console.log("otpMap", otpMap);
+
+      req1.query({
+        authorization:
+          "ykbUo6AfCTeqhvD4PRSin5r7NHImMzXZVpjdt098alxO1wQBJc5YRUNfmtPdFeh7j3z6gvBEnx4lM2ru",
+        // "BDZTf24xkW9pv6UYeaoq01JsR3bPMrNCIOzFSh7QydGH5icgl84noFbjAcINLwxPgkp1QWBfDsOURHS2",
+        variables_values: otp.toString(),
+        route: "otp",
+        numbers: phoneNo,
+      });
+      console.log("OTP Sending request sent!");
+
+      req1.headers({
+        "cache-control": "no-cache",
+      });
+
+      req1.end(function (res1) {
+        if (res1.error) {
+          console.log("Error: ", res1.error);
+          res.status(500).send(res1.body.message);
+        } else {
+          console.log("successful");
+          const obj = {
+            return: res1.body.return,
+            request_id: res1.body.request_id,
+            message: res1.body.message,
+
+            // otp: otp.toString(),
+          };
+          if (userExists !== null) {
+            obj.userExists = true;
+          } else {
+            obj.userExists = false;
+
+            // res.status(200).json({obj,userExists:false});
+          }
+          res.send(obj);
+        }
+      });
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error ${e}`);
+    }
   }
 
   async verifyOtp(req, res) {
     console.log("Verifying otp");
-    const {otp,phoneNo}=req.body
+    const { otp, phoneNo } = req.body;
     // const phone = req.headers.phone;
     // const otp = req.headers.otp;
     // const expectedOtp = '123456';
@@ -110,7 +171,43 @@ class Authentication {
       res.status(404).json({ message: "Phone number not found" });
     }
   }
-
+  async verifyAdminOtp(req, res) {
+    console.log("Verifying otp");
+    const { otp, phoneNo } = req.body;
+    // const phone = req.headers.phone;
+    // const otp = req.headers.otp;
+    // const expectedOtp = '123456';
+    console.log(`phone = ${phoneNo}`);
+    console.log(`otpMap = `, otpMap);
+    if (otpMap[phoneNo] != null) {
+      const storedData = otpMap[phoneNo]["otp"];
+      console.log(`storedData = ${storedData}`);
+      console.log(`typeof storedData = ${typeof storedData}`);
+      console.log(`otp = ${otp}`);
+      console.log(`typeof otp = ${typeof otp}`);
+      const { storedOtp, timestamp } = storedData;
+      // if (storedData.toString().isEqual(otp)) {
+      if (parseInt(otp, 10) == storedData) {
+        //  && Date.now() - timestamp < 600000
+        const currUser = await User.findOne({ phoneNumber: phoneNo });
+        const payload = {
+          phoneNo,
+          userId: currUser.userId,
+        };
+        const jwtToken = jwt.sign(payload, "MY_SECRET_TOKEN", {
+          expiresIn: "30d",
+        });
+        // 300000 milliseconds (5 minutes) is the validity window for the OTP
+        res
+          .status(200)
+          .json({ message: "OTP verification successful", token: jwtToken });
+      } else {
+        res.status(401).json({ message: "Invalid OTP or OTP expired" });
+      }
+    } else {
+      res.status(404).json({ message: "Phone number not found" });
+    }
+  }
   async register(req, res) {
     const {
       email,

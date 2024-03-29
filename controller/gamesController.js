@@ -565,14 +565,13 @@ class games {
               sentTo: userId,
               diamondsAdded: { $lt: 0 },
               beansAdded: { $gt: 0 },
-              isGift:false
+              isGift: false,
             },
             {
               sentTo: userId,
               diamondsAdded: { $gt: 0 },
               beansAdded: { $lt: 0 },
-              isGift:false
-
+              isGift: false,
             },
           ],
         });
@@ -845,7 +844,7 @@ class games {
       if (limit == undefined && start == undefined) {
         Users = await User.find(
           {},
-          { _id: 0, __v: 0, creatorBeans: 0, pinnedRooms: 0, isBanned: 0 }
+          { _id: 0, __v: 0, creatorBeans: 0, pinnedRooms: 0, isVerified: 0 }
         );
       } else {
         Users = await User.find({}).skip(Number(start)).limit(Number(limit));
@@ -2126,10 +2125,22 @@ class games {
     }
   }
   async banUser(req, res) {
-    const { userId,bannedPeriod } = req.query;
+    const { userId, bannedPeriod } = req.body;
     try {
-      await User.updateOne({ userId }, { isBanned: true,bannedAt:new Date(),bannedPeriod });
-      res.send("user banned successfully");
+      if (bannedPeriod === "unban") {
+        console.log("unbanning")
+        await User.updateOne(
+          { userId },
+          { isBanned: false, bannedAt: null, bannedPeriod: null }
+        );
+        res.send("user banned successfully");
+      } else {
+        await User.updateOne(
+          { userId },
+          { isBanned: true, bannedAt: new Date(), bannedPeriod }
+        );
+        res.send("user banned successfully");
+      }
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);

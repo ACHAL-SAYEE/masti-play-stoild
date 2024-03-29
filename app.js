@@ -176,6 +176,7 @@ function ensureWheelNumbers(array) {
 app.post("/get-otp", authenticationController.sendOtp);
 
 app.post("/verify-otp", authenticationController.verifyOtp);
+app.post("/admin/verify-otp", authenticationController.verifyAdminOtp);
 
 app.post("/api/register", authenticationController.register);
 
@@ -687,6 +688,7 @@ app.post("/api/update-jackpot", gamesController.updateJackPot);
 
 app.get("/api/getDiamonds", gamesController.getDiamonds);
 app.get("/api/admin/creators", gamesController.getAllCreators);
+app.post("/api/admin/get-otp",authenticationController.getAdminOtp)
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
