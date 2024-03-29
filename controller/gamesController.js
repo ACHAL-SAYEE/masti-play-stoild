@@ -2126,9 +2126,9 @@ class games {
     }
   }
   async banUser(req, res) {
-    const { userId } = req.query;
+    const { userId,bannedPeriod } = req.query;
     try {
-      await User.updateOne({ userId }, { isBanned: true });
+      await User.updateOne({ userId }, { isBanned: true,bannedAt:new Date(),bannedPeriod });
       res.send("user banned successfully");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
