@@ -575,7 +575,7 @@ class games {
             },
           ],
         });
-        res.send([]);
+        res.send(result);
       }
     } catch (e) {
       res.status(500).send("Internal server error");
