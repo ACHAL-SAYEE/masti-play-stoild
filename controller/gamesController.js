@@ -2128,18 +2128,33 @@ class games {
     const { userId, bannedPeriod } = req.body;
     try {
       if (bannedPeriod === "unban") {
-        console.log("unbanning")
+        console.log("unbanning");
         await User.updateOne(
           { userId },
           { isBanned: false, bannedAt: null, bannedPeriod: null }
         );
-        res.send("user banned successfully");
+        res.send("user unbanned successfully");
       } else {
         await User.updateOne(
           { userId },
           { isBanned: true, bannedAt: new Date(), bannedPeriod }
         );
         res.send("user banned successfully");
+        if (bannedPeriod === "24hours") {
+          setTimeout(async () => {
+            await User.updateMany(
+              { userId },
+              { isBanned: false, bannedAt: null, bannedPeriod: null }
+            );
+          }, 24 * 60 * 60 * 1000);
+        } else if (bannedPeriod === "7days") {
+          setTimeout(async () => {
+            await User.updateMany(
+              { userId },
+              { isBanned: false, bannedAt: null, bannedPeriod: null }
+            );
+          }, 7 * 24 * 60 * 60 * 1000);
+        }
       }
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
