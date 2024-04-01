@@ -689,17 +689,14 @@ app.get("/api/spin-jackpot", async (req, res) => {
 });
 app.put("/api/update-jackpot", gamesController.updateJackPot);
 // app.post("/api/update-jackpot", gamesController.updateJackPot);
-
+app.get("/get-jackpot",gamesController.getJackPotAmount);
 app.get("/api/getDiamonds", authenticateToken, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
   authenticateToken,
   gamesController.getAllCreators
 );
-app.post(
-  "/api/admin/get-otp",
-  authenticationController.getAdminOtp
-);
+app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
