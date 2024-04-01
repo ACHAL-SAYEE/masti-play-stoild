@@ -78,16 +78,16 @@ const upload = multer({
 });
 
 const authenticateToken = (request, response, next) => {
-  let iChatJwtToken;
+  let mastiToken;
   const authHeader = request.headers["authorization"];
   if (authHeader !== undefined) {
-    iChatJwtToken = authHeader.split(" ")[1];
+    mastiToken = authHeader.split(" ")[1];
   }
-  if (iChatJwtToken === undefined) {
+  if (mastiToken === undefined) {
     response.status(401);
     response.send("Invalid JWT Token");
   } else {
-    jwt.verify(iChatJwtToken, "MY_SECRET_TOKEN", async (error, payload) => {
+    jwt.verify(mastiToken, "MY_SECRET_TOKEN", async (error, payload) => {
       if (error) {
         response.status(401);
         response.send("Invalid JWT Token");
@@ -432,8 +432,12 @@ app.get("/api/monthlyRecharge", gamesController.getMonthlyRecharge);
 app.get("/api/admin/userInfo", gamesController.getUserInfo);
 app.delete("/api/admin/removeFrame", gamesController.removeFrame);
 app.put("/api/admin/addFrame", gamesController.addFrame);
-app.put("/api/admin/changeDiamond", gamesController.changeDiamonds);
-app.put("/api/admin/banUser", gamesController.banUser);
+app.put(
+  "/api/admin/changeDiamond",
+  authenticateToken,
+  gamesController.changeDiamonds
+);
+app.put("/api/admin/banUser", authenticateToken, gamesController.banUser);
 app.put("/api/admin/unbanUser", gamesController.unbanUser);
 app.put("/api/admin/accept", gamesController.acceptBeansWithDraw);
 app.put("/api/admin/reject", gamesController.rejectBeansWithDraw);
@@ -686,9 +690,16 @@ app.get("/api/spin-jackpot", async (req, res) => {
 app.put("/api/update-jackpot", gamesController.updateJackPot);
 app.post("/api/update-jackpot", gamesController.updateJackPot);
 
-app.get("/api/getDiamonds", gamesController.getDiamonds);
-app.get("/api/admin/creators", gamesController.getAllCreators);
-app.post("/api/admin/get-otp",authenticationController.getAdminOtp)
+app.get("/api/getDiamonds", authenticateToken, gamesController.getDiamonds);
+app.get(
+  "/api/admin/creators",
+  authenticateToken,
+  gamesController.getAllCreators
+);
+app.post(
+  "/api/admin/get-otp",
+  authenticationController.getAdminOtp
+);
 // app.delete("/api/admin/dele")
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -1022,7 +1033,7 @@ async function endBetting() {
         );
         await TransactionHistory.create({
           sentby: betItem.userId,
-          sentTo:null,
+          sentTo: null,
           // mode: "outcome",
           diamondsAdded: -1 * betItem.amount * multiplyvalue,
           game: "spinner-bet-game",
@@ -1228,7 +1239,7 @@ io.on("connection", (socket) => {
         `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
       );
       await TransactionHistory.create({
-        sentby:userId,
+        sentby: userId,
         game: gameName,
         diamondsAdded: -1 * amount,
         // mode: "outcome",

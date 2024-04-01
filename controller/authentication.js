@@ -174,6 +174,7 @@ class Authentication {
   async verifyAdminOtp(req, res) {
     console.log("Verifying otp");
     const { otp, phoneNo } = req.body;
+    console.log(otp,phoneNo)
     // const phone = req.headers.phone;
     // const otp = req.headers.otp;
     // const expectedOtp = '123456';
