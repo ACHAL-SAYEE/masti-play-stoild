@@ -64,9 +64,9 @@ const userSchema = new mongoose.Schema({
     type: [String],
     default: null,
   },
-  isBanned:{
-    type:Boolean,
-    default:false,
+  isBanned: {
+    type: Boolean,
+    default: false,
   },
   bannedAt: {
     type: Date,
@@ -76,11 +76,10 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   },
-  activeTime:{
-    type:Number,
-    default:0
-  }
-  
+  activeTime: {
+    type: Number,
+    default: 0,
+  },
 });
 
 const TagSchema = new mongoose.Schema(
@@ -166,7 +165,6 @@ const GameTransactionHistorySchema = new mongoose.Schema(
     userId: String,
     diamonds: Number,
     game: String,
-    
   },
   { timestamps: true }
 );
@@ -375,6 +373,11 @@ const withDrawalRequestSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+const JackPotLossSchema = new mongoose.Schema({
+  userId: String,
+  lossAmount: { type: Number, default: 0 },
+});
+const JackPotLoss = mongoose.model("JackPotLoss", JackPotLossSchema);
 const withDrawalRequest = mongoose.model(
   "withDrawalRequest",
   withDrawalRequestSchema
@@ -430,3 +433,4 @@ exports.UserRechargeMonthly = UserRechargeMonthly;
 exports.UserGiftMonthly = UserGiftMonthly;
 exports.SpinnerGameBetInfo = SpinnerGameBetInfo;
 exports.withDrawalRequest = withDrawalRequest;
+exports.JackPotLoss =JackPotLoss ;
