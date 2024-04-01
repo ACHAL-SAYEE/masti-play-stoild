@@ -2142,14 +2142,14 @@ class games {
         res.send("user banned successfully");
         if (bannedPeriod === "24hours") {
           setTimeout(async () => {
-            await User.updateMany(
+            await User.updateOne(
               { userId },
               { isBanned: false, bannedAt: null, bannedPeriod: null }
             );
           }, 24 * 60 * 60 * 1000);
         } else if (bannedPeriod === "7days") {
           setTimeout(async () => {
-            await User.updateMany(
+            await User.updateOne(
               { userId },
               { isBanned: false, bannedAt: null, bannedPeriod: null }
             );
