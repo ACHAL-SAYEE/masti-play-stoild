@@ -2288,34 +2288,34 @@ class games {
       console.log(e);
     }
   }
-  // async updateJackPot(req, res) {
-  //   const { userId, result,winAmount,lossAmount } = req.body;
-  //   try {
-  //     await User.updateOne({ userId }, { diamondsCount: diamonds });
-  //     res.send("diamonds updated successfully");
-  //   } catch (e) {
-  //     res.status(500).send(`internal server error ${e}`);
-  //     console.log(e);
-  //   }
-  // }
   async updateJackPot(req, res) {
-    const { userId, result, winAmount, lossAmount } = req.body;
+    const { userId, diamonds } = req.body;
     try {
-      if (result == "loss") {
-        await JackPotLoss.findOneAndUpdate(
-          { userId },
-          { $inc: { lossAmount } },
-          { upsert: true }
-        );
-      } else {
-        await User.updateOne({ userId }, { diamondsCount: winAmount });
-      }
+      await User.updateOne({ userId }, { diamondsCount: diamonds });
       res.send("diamonds updated successfully");
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);
     }
   }
+  // async updateJackPot(req, res) {
+  //   const { userId, result, winAmount, lossAmount } = req.body;
+  //   try {
+  //     if (result == "loss") {
+  //       await JackPotLoss.findOneAndUpdate(
+  //         { userId },
+  //         { $inc: { lossAmount } },
+  //         { upsert: true }
+  //       );
+  //     } else {
+  //       await User.updateOne({ userId }, { diamondsCount: winAmount });
+  //     }
+  //     res.send("diamonds updated successfully");
+  //   } catch (e) {
+  //     res.status(500).send(`internal server error ${e}`);
+  //     console.log(e);
+  //   }
+  // }
   async getJackPotAmount(req, res) {
     const { userId } = req.body;
 

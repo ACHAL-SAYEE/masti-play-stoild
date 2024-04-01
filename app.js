@@ -688,8 +688,8 @@ app.get("/api/spin-jackpot", async (req, res) => {
   return { jackpotgameGrid, jackPotAmount };
 });
 app.put("/api/update-jackpot", gamesController.updateJackPot);
-// app.post("/api/update-jackpot", gamesController.updateJackPot);
-app.get("/get-jackpot",gamesController.getJackPotAmount);
+app.post("/api/update-jackpot", gamesController.updateJackPot);
+app.get("/get-jackpot", gamesController.getJackPotAmount);
 app.get("/api/getDiamonds", authenticateToken, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
@@ -1164,13 +1164,49 @@ function getBoardStartPosition(color) {
   }
   return boardStartPosition;
 }
-
+const sheepGameRooms = [];
+const userSheepRooms = {};
 //emit some event on client side just after connecting .send userId for storing socketids of connected user
 io.on("connection", (socket) => {
   // console.log("io",io);
   // console.log("socket",socket);
+  socket.on("join-sheepgame", (data) => {
+    // console.log("data1234",data,typeof(data))
+    const { userId } = data;
+    if (userId === undefined) return;
+    if (userSheepRooms[userId]) return;
+    let sheepIndex = sheepGameRooms.findIndex((room) => {
+      return room.player1 === null || room.player2 === null;
+    });
+    if (sheepIndex == -1) {
+      const roomId = uuidv4();
+      sheepGameRooms.push({ roomId, player1: userId, player2: null });
+      socket.join(roomId);
+      userSheepRooms[userId] = roomId;
+      socket.emit("waiting");
+      console.log("sheepGameRooms", sheepGameRooms);
+      console.log("userSheepRooms", userSheepRooms);
+    } else {
+      let existingRoom = sheepGameRooms[sheepIndex];
+      socket.join(existingRoom.roomId);
+      sheepGameRooms[sheepIndex] = {
+        ...sheepGameRooms[sheepIndex],
+        player2: userId,
+      };
+      userSheepRooms[userId] = existingRoom.roomId;
 
+      socket.to(existingRoom.roomId).emit("new-user-joined", userId);
+      socket.emit("opponent", existingRoom.player1);
+      console.log("sheepGameRooms", sheepGameRooms);
+      console.log("userSheepRooms", userSheepRooms);
+    }
+  });
   console.log(`some user with id ${socket.id} connected`);
+  socket.on("send-message", (data) => {
+    const { userId, message } = data;
+    console.log(" userId,message", userId, message, userSheepRooms[userId]);
+    socket.to(userSheepRooms[userId]).emit("new-message", message);
+  });
 
   socket.on("user-connected", (data) => {
     socketIds[socket.id] = data.userId;
@@ -1804,7 +1840,7 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-startANewGame();
+// startANewGame();
 cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
