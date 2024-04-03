@@ -21,6 +21,21 @@ const io = socketIO(server, {
 // const io = socketIO(server
 
 // );
+// const firebase = require('firebase-admin');
+// const firebaseConfig = require('./firebaseConfig.json');
+
+// // Initialize Firebase with your configuration
+// firebase.initializeApp(firebaseConfig);
+// const admin = require('firebase-admin');
+// const serviceAccount = require(__dirname + "/mastiplay-31ca8-firebase-adminsdk-7chw1-9d85969a11.json");
+
+// admin.initializeApp({
+//   credential: admin.credential.cert(firebaseConfig),
+//   databaseURL: "https://mastiplay-31ca8-default-rtdb.firebaseio.com"
+// });
+
+// const db = admin.firestore();
+// const usersCollection = db.collection('users');
 const path = require("path");
 const cron = require("node-cron");
 const {
@@ -1070,6 +1085,7 @@ async function endBetting() {
           item.wheelNo === nearestEntry.wheelNo &&
           nearestEntry.userids.includes(item.userId)
       );
+      
       resultArray = betInfoFiltered.reduce((acc, current) => {
         var existingUser = acc.findIndex(
           (item) => item.userId === current.userId
@@ -1088,7 +1104,18 @@ async function endBetting() {
         return acc;
       }, []);
       resultArray.sort((a, b) => b.amount - a.amount);
+      for(let i=0;i<resultArray.length;i++){
+        await TransactionHistory.create({
+          sentby: null,
+          sentTo: resultArray[i].userId,
+          // mode: "outcome",
+          diamondsAdded:  resultArray[i].amount * multiplyvalue,
+          game: "spinner-bet-game",
+        })
+      }
+// resultArray.forEach((result)=>{
 
+// })
       let top3Entries = resultArray.slice(0, 3);
       top3Entries = top3Entries.map((item) => ({
         userId: item.userId,
@@ -1212,7 +1239,7 @@ io.on("connection", (socket) => {
     socketIds[socket.id] = data.userId;
   });
   socket.on("disconnect", () => {
-    console.log("User disconnected");
+    console.log("User disconnected",socket.id);
     // const disconnectedUserId = Object.keys(socketIds).find(
     //   (userId) => socketIds[userId] === socket.id
     // );
@@ -1840,7 +1867,7 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-// startANewGame();
+startANewGame();
 cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
