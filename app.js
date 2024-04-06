@@ -1085,7 +1085,7 @@ async function endBetting() {
           item.wheelNo === nearestEntry.wheelNo &&
           nearestEntry.userids.includes(item.userId)
       );
-      
+
       resultArray = betInfoFiltered.reduce((acc, current) => {
         var existingUser = acc.findIndex(
           (item) => item.userId === current.userId
@@ -1104,18 +1104,18 @@ async function endBetting() {
         return acc;
       }, []);
       resultArray.sort((a, b) => b.amount - a.amount);
-      for(let i=0;i<resultArray.length;i++){
+      for (let i = 0; i < resultArray.length; i++) {
         await TransactionHistory.create({
           sentby: null,
           sentTo: resultArray[i].userId,
           // mode: "outcome",
-          diamondsAdded:  resultArray[i].amount * multiplyvalue,
+          diamondsAdded: resultArray[i].amount * multiplyvalue,
           game: "spinner-bet-game",
-        })
+        });
       }
-// resultArray.forEach((result)=>{
+      // resultArray.forEach((result)=>{
 
-// })
+      // })
       let top3Entries = resultArray.slice(0, 3);
       top3Entries = top3Entries.map((item) => ({
         userId: item.userId,
@@ -1197,9 +1197,14 @@ const userSheepRooms = {};
 io.on("connection", (socket) => {
   // console.log("io",io);
   // console.log("socket",socket);
+
   socket.on("join-sheepgame", (data) => {
     // console.log("data1234",data,typeof(data))
     const { userId } = data;
+    // if (socket.id in socketIds) {
+    //   return;
+    // }
+    if (socketIds[socket.id] !== userId) return;
     if (userId === undefined) return;
     if (userSheepRooms[userId]) return;
     let sheepIndex = sheepGameRooms.findIndex((room) => {
@@ -1234,20 +1239,63 @@ io.on("connection", (socket) => {
     console.log(" userId,message", userId, message, userSheepRooms[userId]);
     socket.to(userSheepRooms[userId]).emit("new-message", message);
   });
+  socket.on("sheep-game-over", async (data) => {
+    const { userId, diamonds } = data;
+    let currRoomId = userSheepRooms[userId];
+    let sheepGameRoomsIndex = sheepGameRooms.findIndex((gameroom) => {
+      return (gameroom.roomId = currRoomId);
+    });
+    if (sheepGameRoomsIndex !== -1) {
+      if (sheepGameRooms[sheepGameRoomsIndex].player1 === userId) {
+        delete userSheepRooms[sheepGameRooms[sheepGameRoomsIndex].player2];
+      } else {
+        delete userSheepRooms[sheepGameRooms[sheepGameRoomsIndex].player1];
+      }
+      delete userSheepRooms[userId];
+      sheepGameRooms.splice(sheepGameRoomsIndex, 1);
+      if (diamonds) {
+        await User.updateOne({ userId }, { diamondsCount: diamonds });
+      }
+    }
+    console.log("sheepGameRooms", sheepGameRooms);
+    console.log("userSheepRooms", userSheepRooms);
+  });
 
   socket.on("user-connected", (data) => {
+    console.log("user-connected", data);
     socketIds[socket.id] = data.userId;
+    console.log("socketIds", socketIds);
   });
   socket.on("disconnect", () => {
-    console.log("User disconnected",socket.id);
+    console.log("User disconnected", socket.id);
     // const disconnectedUserId = Object.keys(socketIds).find(
     //   (userId) => socketIds[userId] === socket.id
     // );
 
     // if (disconnectedUserId) {
-    delete socketIds[socket.id];
     // console.log(`Socket ID for user ${disconnectedUserId} deleted`);
     // }
+    let disconnectedSocketId = socket.id;
+    let disconnectedUserId = socketIds[socket.id];
+    delete socketIds[disconnectedSocketId];
+    let disconnectedUserRoom = userSheepRooms[disconnectedUserId];
+    delete userSheepRooms[disconnectedUserId];
+    let disconnectedIndex = sheepGameRooms.findIndex((room) => room.roomId===disconnectedUserRoom);
+    if (disconnectedIndex != -1) {
+      if (sheepGameRooms[disconnectedIndex].player1 == disconnectedUserId) {
+        sheepGameRooms[disconnectedIndex].player1 = null;
+        if (sheepGameRooms[disconnectedIndex].player2 === null) {
+          sheepGameRooms.splice(disconnectedIndex, 1);
+        }
+      } else {
+        sheepGameRooms[disconnectedIndex].player2 = null;
+        if (sheepGameRooms[disconnectedIndex].player1 === null) {
+          sheepGameRooms.splice(disconnectedIndex, 1);
+        }
+      }
+    }
+    console.log("sheepGameRooms", sheepGameRooms);
+    console.log("userSheepRooms", userSheepRooms);
   });
 
   socket.on("get-status", async (data) => {
