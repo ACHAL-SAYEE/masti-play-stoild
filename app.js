@@ -210,13 +210,16 @@ app.post("/api/user", async (req, res) => {
   } = req.body;
   // console.log("FEWYHGBREWSGBREHUGREGBREGUYBRREURBUREBUITHNBUI45UIN");
   try {
-    var existingUserInfo;
-    if (phoneNumber) {
+    let existingUserInfo;
+    if(phoneNumber && email){
       existingUserInfo = await User.findOne({
         $or: [{ email }, { phoneNumber }],
       });
+    }
+    else if (phoneNumber) {
+      existingUserInfo = await User.findOne({phoneNumber});
     } else {
-      existingUserInfo = await User.findOne({ $or: [{ email }] });
+      existingUserInfo = await User.findOne({  email  });
       console.log(existingUserInfo);
     }
     if (existingUserInfo) {
