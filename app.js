@@ -705,7 +705,7 @@ app.get("/api/spin-jackpot", async (req, res) => {
 app.put("/api/update-jackpot", gamesController.updateJackPot);
 app.post("/api/update-jackpot", gamesController.updateJackPot);
 app.get("/get-jackpot", gamesController.getJackPotAmount);
-app.get("/api/getDiamonds", authenticateToken, gamesController.getDiamonds);
+app.get("/api/getDiamonds", gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
   authenticateToken,
@@ -1915,7 +1915,7 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-startANewGame();
+// startANewGame();
 cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
