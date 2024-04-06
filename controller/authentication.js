@@ -190,7 +190,9 @@ class Authentication {
       // if (storedData.toString().isEqual(otp)) {
       if (parseInt(otp, 10) == storedData) {
         //  && Date.now() - timestamp < 600000
-        const currUser = await User.findOne({ phoneNumber: phoneNo });
+        let phoneNo1=phoneNo+"@gmail.com"
+        
+        const currUser = await User.findOne({ email: phoneNo1 });
         const payload = {
           phoneNo,
           userId: currUser.userId,
