@@ -24,21 +24,22 @@ const {
   JackPotLoss,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
+const admin = require("firebase-admin");
+
 const beansToDiamondsRate = 1;
 // const { bettingInfoArray, bettingWheelValues } = require("../app");
 
 const { generateUniqueId, generateUserId } = require("../utils");
+// const { admin } = require("../app");
 const firebaseConfig = require("../firebaseConfig.json");
-
-// // Initialize Firebase with your configuration
-// firebase.initializeApp(firebaseConfig);
-const admin = require("firebase-admin");
-// const serviceAccount = require(__dirname + "/mastiplay-31ca8-firebase-adminsdk-7chw1-9d85969a11.json");
 
 admin.initializeApp({
   credential: admin.credential.cert(firebaseConfig),
   databaseURL: "https://mastiplay-31ca8-default-rtdb.firebaseio.com",
 });
+// console.log("admin", admin);
+// // Initialize Firebase with your configuration
+// firebase.initializeApp(firebaseConfig);
 
 async function queryBeansTransactionHistory(query, start, limit, selectFields) {
   try {
@@ -2141,16 +2142,17 @@ class games {
   async banUser(req, res) {
     const { userId, bannedPeriod } = req.body;
     try {
-      let userDetails=await User.findOne({userId})
+      let userDetails = await User.findOne({ userId });
       let userRecord = await admin.auth().getUserByEmail(userDetails.email);
-      userRecord=userRecord.toJSON()
+      userRecord = userRecord.toJSON();
+      console.log("userRecord", userRecord);
       if (bannedPeriod === "unban") {
         console.log("unbanning");
         await User.updateOne(
           { userId },
           { isBanned: false, bannedAt: null, bannedPeriod: null }
         );
-        await admin.auth().updateUser(userRecord.uid, { disabled: false })
+        await admin.auth().updateUser(userRecord.uid, { disabled: false });
 
         res.send("user unbanned successfully");
       } else {
@@ -2158,10 +2160,10 @@ class games {
           { userId },
           { isBanned: true, bannedAt: new Date(), bannedPeriod }
         );
-       
-        admin.auth().updateUser(userRecord.uid, { disabled: true })
 
-        console.log(userRecord)
+        admin.auth().updateUser(userRecord.uid, { disabled: true });
+
+        console.log(userRecord);
         // .then(function (userRecord) {
         //   console.log("Successfully fetched user data:", userRecord.toJSON());
         // })
@@ -2171,15 +2173,12 @@ class games {
 
         res.send("user banned successfully");
         if (bannedPeriod === "24hours") {
-         
           setTimeout(async () => {
             await User.updateOne(
               { userId },
               { isBanned: false, bannedAt: null, bannedPeriod: null }
-
             );
-            await admin.auth().updateUser(userRecord.uid, { disabled: false })
-
+            await admin.auth().updateUser(userRecord.uid, { disabled: false });
           }, 24 * 60 * 60 * 1000);
         } else if (bannedPeriod === "7days") {
           setTimeout(async () => {
@@ -2187,10 +2186,8 @@ class games {
               { userId },
               { isBanned: false, bannedAt: null, bannedPeriod: null }
             );
-            await admin.auth().updateUser(userRecord.uid, { disabled: false })
-
+            await admin.auth().updateUser(userRecord.uid, { disabled: false });
           }, 7 * 24 * 60 * 60 * 1000);
-
         }
       }
     } catch (e) {
@@ -2422,8 +2419,8 @@ class games {
 }
 
 const gamesController = new games();
-module.exports = gamesController;
-
+exports.gamesController = gamesController;
+exports.admin = admin;
 // async getDiamondsHistory(req, res) {
 //   const { userId, start, limit, mode } = req.query;
 

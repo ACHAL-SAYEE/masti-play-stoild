@@ -13,6 +13,8 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
+const admin = require("firebase-admin");
+
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server, {
@@ -60,9 +62,16 @@ app.use(
     parameterLimit: 50000,
   })
 );
+// const serviceAccount = require(__dirname + "/mastiplay-31ca8-firebase-adminsdk-7chw1-9d85969a11.json");
+// const firebaseConfig = require("./firebaseConfig.json");
+
+// admin.initializeApp({
+//   credential: admin.credential.cert(firebaseConfig),
+//   databaseURL: "https://mastiplay-31ca8-default-rtdb.firebaseio.com",
+// });
 
 const postsController = require("./controller/postsController");
-const gamesController = require("./controller/gamesController");
+const { gamesController } = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
 const bdRoutes = require("./routes/bd");
 const {
@@ -111,6 +120,26 @@ const authenticateToken = (request, response, next) => {
         next();
       }
     });
+  }
+};
+
+const CheckBanned = async (req, res, next) => {
+  let { userId } = req.query;
+  if (!userId) {
+    userId = req.body.userId;
+  }
+  console.log("userId in middleware", userId);
+  if (!userId) {
+    next();
+  } else {
+    let userDetails = await User.findOne({ userId });
+    let userRecord = await admin.auth().getUserByEmail(userDetails.email);
+    userRecord = userRecord.toJSON();
+    if (userRecord.disabled) {
+      res.status(403).send("your account is banned");
+    } else {
+      next();
+    }
   }
 };
 
@@ -265,10 +294,10 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.delete("/api/user", authenticationController.deleteUser);
-app.delete("/api/agent", authenticationController.deleteAgent);
-app.delete("/api/agency", authenticationController.deleteAgency);
-app.delete("/api/bd", authenticationController.deleteBd);
+app.delete("/api/user", CheckBanned, authenticationController.deleteUser);
+app.delete("/api/agent", CheckBanned, authenticationController.deleteAgent);
+app.delete("/api/agency", CheckBanned, authenticationController.deleteAgency);
+app.delete("/api/bd", CheckBanned, authenticationController.deleteBd);
 
 // app.get("/api/user", async (req, res) => {
 //   const { userId } = req.query
@@ -282,7 +311,7 @@ app.delete("/api/bd", authenticationController.deleteBd);
 //   }
 // })
 
-app.put("/api/user", async (req, res) => {
+app.put("/api/user", CheckBanned, async (req, res) => {
   const { userId } = req.body;
   try {
     const UserInfo = await User.findOneAndUpdate(
@@ -309,90 +338,123 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.post("/api/posts/", postsController.storePost);
+app.post("/api/posts/", CheckBanned, postsController.storePost);
 
-app.delete("/api/posts", postsController.deletePost);
+app.delete("/api/posts", CheckBanned, postsController.deletePost);
 
-app.put("/api/posts/share", postsController.sharePost);
+app.put("/api/posts/share", CheckBanned, postsController.sharePost);
 
-app.get("/api/hot", postsController.getHotPosts);
+app.get("/api/hot", CheckBanned, postsController.getHotPosts);
 
-app.get("/api/recent", postsController.getRecentPosts);
+app.get("/api/recent", CheckBanned, postsController.getRecentPosts);
 
-app.post("/api/follow", postsController.followUser);
+app.post("/api/follow", CheckBanned, postsController.followUser);
 
-app.get("/api/following", postsController.getPostsOfFollowingUsers);
+app.get(
+  "/api/following",
+  CheckBanned,
+  postsController.getPostsOfFollowingUsers
+);
 
-app.get("/api/tags/", postsController.getTagsAfterDate);
+app.get("/api/tags/", CheckBanned, postsController.getTagsAfterDate);
 
-app.post("/api/search-with-tags", postsController.getPostsContaingTags);
+app.post(
+  "/api/search-with-tags",
+  CheckBanned,
+  postsController.getPostsContaingTags
+);
 
-app.post("/api/comment", postsController.commentPost);
+app.post("/api/comment", CheckBanned, postsController.commentPost);
 
-app.post("/api/like", postsController.likePost);
+app.post("/api/like", CheckBanned, postsController.likePost);
 
-app.get("/api/users/following", postsController.getFollowingUsers);
+app.get("/api/users/following", CheckBanned, postsController.getFollowingUsers);
 
-app.get("/api/users/followers", postsController.getFollowersOfUser);
+app.get(
+  "/api/users/followers",
+  CheckBanned,
+  postsController.getFollowersOfUser
+);
 
-app.get("/api/users/doesFollow", postsController.doesFollow);
+app.get("/api/users/doesFollow", CheckBanned, postsController.doesFollow);
 
-app.get("/api/followers", postsController.getFollowersData);
+app.get("/api/followers", CheckBanned, postsController.getFollowersData);
 
-app.get("/api/following-users", postsController.getFollowingData);
+app.get("/api/following-users", CheckBanned, postsController.getFollowingData);
 
-app.get("/api/friends", postsController.getFriendsData);
+app.get("/api/friends", CheckBanned, postsController.getFriendsData);
 
-app.post("/api/create-transaction-history", gamesController.postData);
+app.post(
+  "/api/create-transaction-history",
+  CheckBanned,
+  gamesController.postData
+);
 
-app.get("/api/beans-history", gamesController.getBeansHistory);
+app.get("/api/beans-history", CheckBanned, gamesController.getBeansHistory);
 
-app.get("/api/diamonds-history", gamesController.getDiamondsHistory);
+app.get(
+  "/api/diamonds-history",
+  CheckBanned,
+  gamesController.getDiamondsHistory
+);
 
-app.get("/api/users", gamesController.getUsers);
+app.get("/api/users", CheckBanned, gamesController.getUsers);
 
-app.get("/api/convert", gamesController.convert); // ACHAL: create a TransactionHistory here
+app.get("/api/convert", CheckBanned, gamesController.convert); // ACHAL: create a TransactionHistory here
 
-app.put("/api/agent/convert", gamesController.convertUsertoAgent); //done
+app.put("/api/agent/convert", CheckBanned, gamesController.convertUsertoAgent); //done
 
-app.post("/api/agent", gamesController.postAgent);
+app.post("/api/agent", CheckBanned, gamesController.postAgent);
 
-app.get("/api/agent", gamesController.getAgentData);
+app.get("/api/agent", CheckBanned, gamesController.getAgentData);
 
-app.get("/api/users/all", gamesController.getAllUsers);
+app.get("/api/users/all", CheckBanned, gamesController.getAllUsers);
 
-app.get("/api/agents/all", gamesController.getAllAgents);
+app.get("/api/agents/all", CheckBanned, gamesController.getAllAgents);
 
-app.get("/api/agent/resellers", gamesController.getResellers);
+app.get("/api/agent/resellers", CheckBanned, gamesController.getResellers);
 
-app.post("/api/change-role", gamesController.ChangeUserRole);
+app.post("/api/change-role", CheckBanned, gamesController.ChangeUserRole);
 
-app.post("/api/agency-joining", gamesController.joinAgency);
+app.post("/api/agency-joining", CheckBanned, gamesController.joinAgency);
 
-app.post("/api/make-agency-owner", gamesController.makeAgencyOwner);
+app.post(
+  "/api/make-agency-owner",
+  CheckBanned,
+  gamesController.makeAgencyOwner
+);
 
-app.put("/api/send-gift", gamesController.sendGift);
+app.put("/api/send-gift", CheckBanned, gamesController.sendGift);
 
 app.get(
   "/api/agency/commissionHistory",
+  CheckBanned,
   gamesController.getAgencyCommissionHistory
 );
 
-app.put("/api/agent-recharge", gamesController.recharge);
+app.put("/api/agent-recharge", CheckBanned, gamesController.recharge);
 
-app.put("/api/agent-admin-recharge", gamesController.adminRecharge);
+app.put(
+  "/api/agent-admin-recharge",
+  CheckBanned,
+  gamesController.adminRecharge
+);
 
-app.get("/api/agencies/all", gamesController.getAllAgencies);
+app.get("/api/agencies/all", CheckBanned, gamesController.getAllAgencies);
 
-app.put("/api/make-agent", gamesController.makeAgent);
+app.put("/api/make-agent", CheckBanned, gamesController.makeAgent);
 
-app.get("/api/comments", postsController.getsCommentsOfPost);
+app.get("/api/comments", CheckBanned, postsController.getsCommentsOfPost);
 
-app.get("/api/agency", gamesController.getAgencyDataOfUser);
+app.get("/api/agency", CheckBanned, gamesController.getAgencyDataOfUser);
 
-app.put("/api/rates", gamesController.setComissionRate);
+app.put("/api/rates", CheckBanned, gamesController.setComissionRate);
 
-app.get("/api/agent-history", gamesController.getAgentTransactionHistory);
+app.get(
+  "/api/agent-history",
+  CheckBanned,
+  gamesController.getAgentTransactionHistory
+);
 // app.post("/api/spinner-betting", async (req, res) => {
 //   const { userId, wheelNo, amount } = req.body;
 //   var userExists = bettingInfoArray.some((item) => item.userId === userId);
@@ -406,61 +468,90 @@ app.get("/api/agent-history", gamesController.getAgentTransactionHistory);
 //   // res.send("betted successfully");
 // });
 // ACHAL: send winners's UsersData
-app.post("/api/top3-winner", gamesController.getBettingResults); // for 1 session
+app.post("/api/top3-winner", CheckBanned, gamesController.getBettingResults); // for 1 session
 
-app.get("/api/all-history", gamesController.getSpinnerHistory); // for all sessions
+app.get("/api/all-history", CheckBanned, gamesController.getSpinnerHistory); // for all sessions
 
-app.get("/api/agency/all", gamesController.getAllAgencies);
+app.get("/api/agency/all", CheckBanned, gamesController.getAllAgencies);
 
-app.get("/api/agency/participants", gamesController.getAgencyParticipants);
+app.get(
+  "/api/agency/participants",
+  CheckBanned,
+  gamesController.getAgencyParticipants
+);
 
-app.post("/api/agency/collect", gamesController.collectBeans);
+app.post("/api/agency/collect", CheckBanned, gamesController.collectBeans);
 
-app.get("/api/my-betting-history", gamesController.getUserAllBettingHistory); // for a specific user, his betting history
+app.get(
+  "/api/my-betting-history",
+  CheckBanned,
+  gamesController.getUserAllBettingHistory
+); // for a specific user, his betting history
 // ACHAL: send top-winner's UsersData as well
-app.get("/api/top-winner", gamesController.getTopWinners); // today's top winners
+app.get("/api/top-winner", CheckBanned, gamesController.getTopWinners); // today's top winners
 
-app.get("/api/gift-history", gamesController.getGiftHistory);
+app.get("/api/gift-history", CheckBanned, gamesController.getGiftHistory);
 // app.get("/api/agency/participants",gamesController.getAgencyParticipants)
-app.get("/api/bd/all", bdRoutes.getAllBD);
-app.get("/api/bd", bdRoutes.getBD);
-app.get("/api/bd/participants", bdRoutes.getParticipantAgencies);
-app.post("/api/bd", bdRoutes.createBD);
-app.put("/api/bd", bdRoutes.updateBD);
-app.put("/api/bd/add-beans", bdRoutes.addBeans); // ACHAL: create a TransactionHistory here
-app.post("/api/bd/add-agency", bdRoutes.addAgency);
-app.put("/api/bd/remove-agency", bdRoutes.removeAgency);
-app.delete("/api/agency/agent", gamesController.removeAgentfromAgency);
-app.delete("/api/bd/agency", gamesController.removeAgencyfromBd);
+app.get("/api/bd/all", CheckBanned, bdRoutes.getAllBD);
+app.get("/api/bd", CheckBanned, bdRoutes.getBD);
+app.get("/api/bd/participants", CheckBanned, bdRoutes.getParticipantAgencies);
+app.post("/api/bd", CheckBanned, bdRoutes.createBD);
+app.put("/api/bd", CheckBanned, bdRoutes.updateBD);
+app.put("/api/bd/add-beans", CheckBanned, bdRoutes.addBeans); // ACHAL: create a TransactionHistory here
+app.post("/api/bd/add-agency", CheckBanned, bdRoutes.addAgency);
+app.put("/api/bd/remove-agency", CheckBanned, bdRoutes.removeAgency);
+app.delete(
+  "/api/agency/agent",
+  CheckBanned,
+  gamesController.removeAgentfromAgency
+);
+app.delete("/api/bd/agency", CheckBanned, gamesController.removeAgencyfromBd);
 
-app.get("/api/creator/history", gamesController.getCreatorHistory);
+app.get("/api/creator/history", CheckBanned, gamesController.getCreatorHistory);
 app.get(
   "/api/creator/monthly-history",
+  CheckBanned,
   gamesController.getMonthlyCreatorHistory
 );
-app.get("/api/creator/weekly-history", gamesController.getWeeklyCreatorHistory);
+app.get(
+  "/api/creator/weekly-history",
+  CheckBanned,
+  gamesController.getWeeklyCreatorHistory
+);
 
-app.get("/api/rates", gamesController.getRates);
+app.get("/api/rates", CheckBanned, gamesController.getRates);
 
-app.get("/api/richLevel", gamesController.getUserRichLevel);
-app.get("/api/charmLevel", gamesController.getUserCharmLevel);
-app.get("/api/monthlyGift", gamesController.getMonthlyGift);
-app.get("/api/monthlyRecharge", gamesController.getMonthlyRecharge);
-app.get("/api/admin/userInfo", gamesController.getUserInfo);
-app.delete("/api/admin/removeFrame", gamesController.removeFrame);
-app.put("/api/admin/addFrame", gamesController.addFrame);
+app.get("/api/richLevel", CheckBanned, gamesController.getUserRichLevel);
+app.get("/api/charmLevel", CheckBanned, gamesController.getUserCharmLevel);
+app.get("/api/monthlyGift", CheckBanned, gamesController.getMonthlyGift);
+app.get(
+  "/api/monthlyRecharge",
+  CheckBanned,
+  gamesController.getMonthlyRecharge
+);
+app.get("/api/admin/userInfo", CheckBanned, gamesController.getUserInfo);
+app.delete("/api/admin/removeFrame", CheckBanned, gamesController.removeFrame);
+app.put("/api/admin/addFrame", CheckBanned, gamesController.addFrame);
 app.put(
   "/api/admin/changeDiamond",
   authenticateToken,
   gamesController.changeDiamonds
 );
 app.put("/api/admin/banUser", authenticateToken, gamesController.banUser);
-app.put("/api/admin/unbanUser", gamesController.unbanUser);
-app.put("/api/admin/accept", gamesController.acceptBeansWithDraw);
-app.put("/api/admin/reject", gamesController.rejectBeansWithDraw);
-app.post("/api/admin/sendWithDrawReq", gamesController.sendWithDrawalRequest);
-app.get("/api/admin/getUserReqs", gamesController.getWithDrawalRequests);
-app.post("/api/jackpot-bet", async (req, res) => {
+app.put("/api/admin/unbanUser", CheckBanned, gamesController.unbanUser);
+app.put("/api/admin/accept", CheckBanned, gamesController.acceptBeansWithDraw);
+app.put("/api/admin/reject", CheckBanned, gamesController.rejectBeansWithDraw);
+app.post(
+  "/api/admin/sendWithDrawReq",
+  CheckBanned,
+  gamesController.sendWithDrawalRequest
+);
+app.get(
+  "/api/admin/getUserReqs",
+  CheckBanned,
+  gamesController.getWithDrawalRequests
+);
+app.post("/api/jackpot-bet", CheckBanned, async (req, res) => {
   const { userId, lines, betAmount } = req.body;
   try {
     console.log("trigger rjvn");
@@ -494,7 +585,7 @@ app.post("/api/jackpot-bet", async (req, res) => {
     res.status(500).send(`internal server error ${e}`);
   }
 });
-app.get("/api/spin-jackpot", async (req, res) => {
+app.get("/api/spin-jackpot", CheckBanned, async (req, res) => {
   const { userId } = req.query;
   const jackpotUserInfo = jackpotInfo.find((item) => item.userId === userId);
   console.log("jackpotUserInfo", jackpotUserInfo);
@@ -704,10 +795,10 @@ app.get("/api/spin-jackpot", async (req, res) => {
 
   return { jackpotgameGrid, jackPotAmount };
 });
-app.put("/api/update-jackpot", gamesController.updateJackPot);
-app.post("/api/update-jackpot", gamesController.updateJackPot);
-app.get("/get-jackpot", gamesController.getJackPotAmount);
-app.get("/api/getDiamonds", gamesController.getDiamonds);
+app.put("/api/update-jackpot", CheckBanned, gamesController.updateJackPot);
+app.post("/api/update-jackpot", CheckBanned, gamesController.updateJackPot);
+app.get("/get-jackpot", CheckBanned, gamesController.getJackPotAmount);
+app.get("/api/getDiamonds", CheckBanned, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
   authenticateToken,
@@ -1921,7 +2012,7 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-startANewGame();
+// startANewGame();
 cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
@@ -1976,3 +2067,5 @@ cron.schedule("0 0 * * 1", async () => {
     console.log(e);
   }
 });
+// console.log("admin in app", admin);
+// exports.admin = admin;
