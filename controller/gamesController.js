@@ -619,6 +619,7 @@ class games {
           isGift: true,
           // mode: "income",
         });
+        console.log("Gifts in outcome", Gift);
         Gift = Gift.map((item) => {
           return {
             ...item._doc,
@@ -631,9 +632,11 @@ class games {
           game: { $ne: null },
           isGift: false,
         });
+        console.log("nonGift", nonGift);
         let result = [...Gift, ...nonGift];
-        res.send(result.slice(start, start + limit));
-      } else if (mode === "recharge") {
+        console.log("result in outcome", result);
+        res.send(result.slice(Number(start), Number(start + limit)));
+      } else {
         result = await TransactionHistory.find({
           sentTo: userId,
           game: null,
@@ -648,8 +651,7 @@ class games {
       //   limit,
       //   selectFields
       // );
-      console.log(result);
-      res.send(result);
+      // console.log(result);
     } catch (e) {
       res.status(500).send(`Internal server error ${e}`);
     }
@@ -2411,6 +2413,23 @@ class games {
         },
       ]);
       res.send(result);
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+
+  async transferToAgent(req, res) {
+    const { userId, agentId, beans } = req.query;
+    try {
+      let userInfo = await User.findOne({ userId });
+      if (userInfo.beansCount < beans) {
+        res.status(400).send("insufficient balance");
+      } else {
+        await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
+        await Agent.updateOne({ agentId }, { $inc: { diamondsCount: beans } });
+        res.send("beans transfered to agent successfully");
+      }
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);

@@ -440,6 +440,8 @@ app.put(
   gamesController.adminRecharge
 );
 
+app.put("/api/agent-transfer",gamesController.transferToAgent)
+
 app.get("/api/agencies/all", CheckBanned, gamesController.getAllAgencies);
 
 app.put("/api/make-agent", CheckBanned, gamesController.makeAgent);
@@ -2012,7 +2014,7 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-// startANewGame();
+startANewGame();
 cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
