@@ -193,6 +193,8 @@ class Authentication {
         let phoneNo1=phoneNo+"@gmail.com"
         
         const currUser = await User.findOne({ email: phoneNo1 });
+                // const currUser = await User.findOne({ phoneNumber: phoneNo });
+
         const payload = {
           phoneNo,
           userId: currUser.userId,

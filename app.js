@@ -208,20 +208,19 @@ app.post("/api/user", async (req, res) => {
     photo,
     phoneNumber,
   } = req.body;
-  // console.log("FEWYHGBREWSGBREHUGREGBREGUYBRREURBUREBUITHNBUI45UIN");
   try {
     let existingUserInfo;
-    if(phoneNumber && email){
+    if (phoneNumber && email) {
       existingUserInfo = await User.findOne({
         $or: [{ email }, { phoneNumber }],
       });
-    }
-    else if (phoneNumber) {
-      existingUserInfo = await User.findOne({phoneNumber});
+    } else if (phoneNumber) {
+      existingUserInfo = await User.findOne({ phoneNumber });
     } else {
-      existingUserInfo = await User.findOne({  email  });
-      console.log(existingUserInfo);
+      existingUserInfo = await User.findOne({ email });
     }
+    console.log("existingUserInfo", existingUserInfo);
+
     if (existingUserInfo) {
       res.status(400).send("email or phoneNumber is already taken");
       return;
@@ -1243,6 +1242,8 @@ io.on("connection", (socket) => {
     socket.to(userSheepRooms[userId]).emit("new-message", message);
   });
   socket.on("sheep-game-over", async (data) => {
+    console.log("called sheep-game-over", data);
+
     const { userId, diamonds } = data;
     let currRoomId = userSheepRooms[userId];
     let sheepGameRoomsIndex = sheepGameRooms.findIndex((gameroom) => {
@@ -1283,7 +1284,9 @@ io.on("connection", (socket) => {
     delete socketIds[disconnectedSocketId];
     let disconnectedUserRoom = userSheepRooms[disconnectedUserId];
     delete userSheepRooms[disconnectedUserId];
-    let disconnectedIndex = sheepGameRooms.findIndex((room) => room.roomId===disconnectedUserRoom);
+    let disconnectedIndex = sheepGameRooms.findIndex(
+      (room) => room.roomId === disconnectedUserRoom
+    );
     if (disconnectedIndex != -1) {
       if (sheepGameRooms[disconnectedIndex].player1 == disconnectedUserId) {
         sheepGameRooms[disconnectedIndex].player1 = null;
@@ -1918,7 +1921,7 @@ async function startANewGame() {
   setTimeout(startANewGame, 45000); // New Game Begins
 }
 
-startANewGame();
+// startANewGame();
 cron.schedule("0 0 1 * *", async () => {
   try {
     const allAgencyData = await AgencyData.find({});
