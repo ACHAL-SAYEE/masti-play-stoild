@@ -82,6 +82,11 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+const OtpSecretSchema = new mongoose.Schema({
+  phoneNumber: String,
+  otpSecret: String,
+});
+
 const TagSchema = new mongoose.Schema(
   {
     tag: String,
@@ -137,8 +142,15 @@ const agentSchema = new mongoose.Schema({
   agentId: String,
   resellerOf: { type: String, default: null },
   diamondsCount: Number,
+  beansCount: { type: Number, default: null },
   paymentMethods: [String],
   status: { type: String, default: null },
+});
+
+const agentTransferSchema = new mongoose.Schema({
+  sentBy: String,
+  sentTo: String,
+  beansAdded: Number,
 });
 
 const TransactionHistorySchema = new mongoose.Schema(
@@ -404,7 +416,7 @@ const agencyParticipant = mongoose.model(
   agencyParticipantsSchema
 );
 const AgencyData = mongoose.model("AgencyData", AgencyDataSchema);
-
+const OtpSecret=mongoose.model("OtpSecret",OtpSecretSchema)
 exports.User = User;
 exports.following = following;
 exports.Tag = Tag;
@@ -433,4 +445,5 @@ exports.UserRechargeMonthly = UserRechargeMonthly;
 exports.UserGiftMonthly = UserGiftMonthly;
 exports.SpinnerGameBetInfo = SpinnerGameBetInfo;
 exports.withDrawalRequest = withDrawalRequest;
-exports.JackPotLoss =JackPotLoss ;
+exports.JackPotLoss = JackPotLoss;
+exports.OtpSecret=OtpSecret;

@@ -2420,15 +2420,37 @@ class games {
   }
 
   async transferToAgent(req, res) {
-    const { userId, agentId, beans } = req.query;
+    const { userId, agentId, beans } = req.body;
     try {
       let userInfo = await User.findOne({ userId });
       if (userInfo.beansCount < beans) {
         res.status(400).send("insufficient balance");
+        return;
       } else {
         await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
-        await Agent.updateOne({ agentId }, { $inc: { diamondsCount: beans } });
+        await Agent.updateOne({ agentId }, { $inc: { beansCount: beans } });
+        await TransactionHistory.create({})
         res.send("beans transfered to agent successfully");
+      }
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async transferFromAgentToUser(req, res) {
+    const { userId, agentId, beans } = req.body;
+    try {
+      let agentInfo = await Agent.findOne({ agentId });
+      if (agentInfo.beansCount < beans) {
+        res.status(400).send("insufficient balance");
+        return;
+      } else {
+        await Agent.updateOne(
+          { agentId },
+          { $inc: { beansCount: -1 * beans } }
+        );
+        await User.updateOne({ userId }, { $inc: { beansCount: beans } });
+        res.send("beans transfered to user successfully");
       }
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);

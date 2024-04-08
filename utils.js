@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 function generateUniqueId() {
   const timestamp = new Date().getTime();
   console.log(timestamp);
@@ -27,7 +29,16 @@ function getcount(arr, value) {
   return count;
 }
 
+
+function generateRandomOtpSecret() {
+    const minLength = 8;
+    const maxLength = 14;
+    const length = Math.floor(Math.random() * (maxLength - minLength + 1)) + minLength;
+    
+    return crypto.randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
+}
 module.exports.generateUniqueId = generateUniqueId;
 module.exports.generateUserId = generateUserId;
 module.exports.getRandomInt = getRandomInt;
 module.exports.getcount = getcount;
+module.exports.generateRandomOtpSecret=generateRandomOtpSecret

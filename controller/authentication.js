@@ -4,6 +4,7 @@ const {
   Agent,
   AgencyData,
   agencyParticipant,
+  OtpSecret,
 } = require("../models/models");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -18,7 +19,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const { generateUserId } = require("../utils");
+const { generateUserId, generateRandomOtpSecret } = require("../utils");
 const { BdData, ParticipantAgencies } = require("../models/bd");
 
 class Authentication {
@@ -161,9 +162,26 @@ class Authentication {
       // if (storedData.toString().isEqual(otp)) {
       if (parseInt(otp, 10) == storedData) {
         //  && Date.now() - timestamp < 600000
-
+        let authenticatedUserInfo = await OtpSecret.findOne({
+          phoneNumber: phoneNo,
+        });
+        if (authenticatedUserInfo) {
+          res.status(200).json({
+            message: "OTP verification successful",
+            OtpSecret: authenticatedUserInfo.otpSecret,
+          });
+        } else {
+          let generatedOtpSecreat = generateRandomOtpSecret();
+          await OtpSecret.create({
+            phoneNumber: phoneNo,
+            otpSecret: generatedOtpSecreat,
+          });
+          res.status(200).json({
+            message: "OTP verification successful",
+            OtpSecret: generatedOtpSecreat,
+          });
+        }
         // 300000 milliseconds (5 minutes) is the validity window for the OTP
-        res.status(200).json({ message: "OTP verification successful" });
       } else {
         res.status(401).json({ message: "Invalid OTP or OTP expired" });
       }
@@ -174,7 +192,7 @@ class Authentication {
   async verifyAdminOtp(req, res) {
     console.log("Verifying otp");
     const { otp, phoneNo } = req.body;
-    console.log(otp,phoneNo)
+    console.log(otp, phoneNo);
     // const phone = req.headers.phone;
     // const otp = req.headers.otp;
     // const expectedOtp = '123456';
@@ -190,10 +208,10 @@ class Authentication {
       // if (storedData.toString().isEqual(otp)) {
       if (parseInt(otp, 10) == storedData) {
         //  && Date.now() - timestamp < 600000
-        let phoneNo1=phoneNo+"@gmail.com"
-        
+        let phoneNo1 = phoneNo + "@gmail.com";
+
         const currUser = await User.findOne({ email: phoneNo1 });
-                // const currUser = await User.findOne({ phoneNumber: phoneNo });
+        // const currUser = await User.findOne({ phoneNumber: phoneNo });
 
         const payload = {
           phoneNo,

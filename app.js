@@ -239,12 +239,23 @@ app.post("/api/user", async (req, res) => {
   } = req.body;
   try {
     let existingUserInfo;
+    // if (phoneNumber && email) {
+    //   existingUserInfo = await User.findOne({
+    //     $or: [{ email }, { phoneNumber }],
+    //   });
+    // } else if (phoneNumber) {
+    //   existingUserInfo = await User.findOne({ phoneNumber });
+    // } else {
+    //   existingUserInfo = await User.findOne({ email });
+    // }
     if (phoneNumber && email) {
       existingUserInfo = await User.findOne({
-        $or: [{ email }, { phoneNumber }],
+        $or: [{ email }, { email: `${phoneNumber}@gmail.com` }],
       });
     } else if (phoneNumber) {
-      existingUserInfo = await User.findOne({ phoneNumber });
+      existingUserInfo = await User.findOne({
+        email: `${phoneNumber}@gmail.com`,
+      });
     } else {
       existingUserInfo = await User.findOne({ email });
     }
@@ -439,8 +450,6 @@ app.put(
   CheckBanned,
   gamesController.adminRecharge
 );
-
-app.put("/api/agent-transfer",gamesController.transferToAgent)
 
 app.get("/api/agencies/all", CheckBanned, gamesController.getAllAgencies);
 
@@ -808,6 +817,9 @@ app.get(
 );
 app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
+app.put("/api/user-transfer-agent", gamesController.transferToAgent);
+app.put("/api/agent-transfer-user", gamesController.transferFromAgentToUser);
+
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
 const royalBattleCardcombinationsConstants = {
