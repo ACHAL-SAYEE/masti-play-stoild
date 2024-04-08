@@ -23,7 +23,6 @@ const { generateUserId, generateRandomOtpSecret } = require("../utils");
 const { BdData, ParticipantAgencies } = require("../models/bd");
 
 class Authentication {
-  
   async sendOtp(req, res) {
     const { phoneNo } = req.body;
     try {
@@ -182,6 +181,7 @@ class Authentication {
             OtpSecret: generatedOtpSecreat,
           });
         }
+        delete otpMap[phoneNo];
         // 300000 milliseconds (5 minutes) is the validity window for the OTP
       } else {
         res.status(401).json({ message: "Invalid OTP or OTP expired" });
