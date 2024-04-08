@@ -23,6 +23,7 @@ const { generateUserId, generateRandomOtpSecret } = require("../utils");
 const { BdData, ParticipantAgencies } = require("../models/bd");
 
 class Authentication {
+  
   async sendOtp(req, res) {
     const { phoneNo } = req.body;
     try {

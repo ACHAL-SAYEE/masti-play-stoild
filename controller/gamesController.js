@@ -22,6 +22,7 @@ const {
   SpinnerGameBetInfo,
   withDrawalRequest,
   JackPotLoss,
+  AgentTransfer,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const admin = require("firebase-admin");
@@ -571,7 +572,12 @@ class games {
         });
         res.send(result.slice(start, start + limit));
       } else if (mode == "agentTransfer") {
-        res.send([]);
+        let agentTransferHistory = await AgentTransfer.find({
+          $or: [{ sentBy: userId }, { sentTo: userId }],
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
+        res.send(agentTransferHistory);
       } else {
         let result = await TransactionHistory.find({
           $or: [
@@ -588,7 +594,9 @@ class games {
               isGift: false,
             },
           ],
-        });
+        })
+          .skip(Number(start))
+          .limit(Number(limit));
         res.send(result);
       }
     } catch (e) {
@@ -2429,7 +2437,11 @@ class games {
       } else {
         await User.updateOne({ userId }, { $inc: { beansCount: -1 * beans } });
         await Agent.updateOne({ agentId }, { $inc: { beansCount: beans } });
-        await TransactionHistory.create({})
+        await AgentTransfer.create({
+          sentBy: userId,
+          sentTo: agentId,
+          beans: beans,
+        });
         res.send("beans transfered to agent successfully");
       }
     } catch (e) {
@@ -2450,6 +2462,12 @@ class games {
           { $inc: { beansCount: -1 * beans } }
         );
         await User.updateOne({ userId }, { $inc: { beansCount: beans } });
+        await AgentTransfer.create({
+          sentBy: agentId,
+          sentTo: userId,
+          beans: beans,
+        });
+
         res.send("beans transfered to user successfully");
       }
     } catch (e) {

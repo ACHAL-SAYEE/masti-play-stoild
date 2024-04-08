@@ -151,7 +151,7 @@ const agentTransferSchema = new mongoose.Schema({
   sentBy: String,
   sentTo: String,
   beansAdded: Number,
-});
+},{timestamps:true});
 
 const TransactionHistorySchema = new mongoose.Schema(
   {
@@ -415,8 +415,10 @@ const agencyParticipant = mongoose.model(
   "agencyParticipant",
   agencyParticipantsSchema
 );
+const agentTransfer = mongoose.model("agentTransfer", agentTransferSchema);
+
 const AgencyData = mongoose.model("AgencyData", AgencyDataSchema);
-const OtpSecret=mongoose.model("OtpSecret",OtpSecretSchema)
+const OtpSecret = mongoose.model("OtpSecret", OtpSecretSchema);
 exports.User = User;
 exports.following = following;
 exports.Tag = Tag;
@@ -446,4 +448,5 @@ exports.UserGiftMonthly = UserGiftMonthly;
 exports.SpinnerGameBetInfo = SpinnerGameBetInfo;
 exports.withDrawalRequest = withDrawalRequest;
 exports.JackPotLoss = JackPotLoss;
-exports.OtpSecret=OtpSecret;
+exports.OtpSecret = OtpSecret;
+exports.AgentTransfer = agentTransfer;
