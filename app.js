@@ -1116,8 +1116,8 @@ async function endBetting() {
     console.log("nearestEntry", nearestEntry);
     //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
     let multiplyvalue = 0;
-    console.log("this is nearestentrywheelnumber")
-    console.log(nearestEntry.wheelNo)
+    console.log("this is nearestentrywheelnumber");
+    console.log(nearestEntry.wheelNo);
     if (nearestEntry !== undefined) {
       multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
     }
@@ -1142,18 +1142,17 @@ async function endBetting() {
         );
         await SpinnerGameWinnerHistory.create({
           userId: betItem.userId,
-         diamondsSpent: userspentInfo.amount,
+          diamondsSpent: userspentInfo.amount,
           diamondsEarned: betItem.amount * multiplyvalue,
-         wheelNo: betItem.wheelNo,
+          wheelNo: betItem.wheelNo,
         });
-	 
-//	await SpinnerGameWinnerHistory.updateOne(
-//		          { userId: betItem.userId },
-//		          {       $set: { diamondsSpent: userspentInfo.amount },
-	//			  $set: { wheelNo: betItem.wheelNo },
-		//		  $inc: { diamondsEarned: betItem.amount * multiplyvalue } }
-		      //  );
-	
+
+        //	await SpinnerGameWinnerHistory.updateOne(
+        //		          { userId: betItem.userId },
+        //		          {       $set: { diamondsSpent: userspentInfo.amount },
+        //			  $set: { wheelNo: betItem.wheelNo },
+        //		  $inc: { diamondsEarned: betItem.amount * multiplyvalue } }
+        //  );
 
         console.log("Updating wallet", betItem.amount * multiplyvalue);
         await User.updateOne(
@@ -1168,9 +1167,11 @@ async function endBetting() {
           game: "spinner-bet-game",
         });
 
-	console.log("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	console.log(multiplyvalue)
-	console.log(betItem.amount)
+        console.log(
+          "saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        );
+        console.log(multiplyvalue);
+        console.log(betItem.amount);
         await SpinnerGameBetInfo.findOneAndUpdate(
           {
             userId: betItem.userId,
@@ -1226,10 +1227,10 @@ async function endBetting() {
       }, []);
       resultArray.sort((a, b) => b.amount - a.amount);
       for (let i = 0; i < resultArray.length; i++) {
-	//console.log("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
-	//console.log(resultArray[i].amount)
-	//console.log(multiplyvalue)
-	//console.log(resultArray[i].amount * multiplyvalue)
+        //console.log("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+        //console.log(resultArray[i].amount)
+        //console.log(multiplyvalue)
+        //console.log(resultArray[i].amount * multiplyvalue)
         await TransactionHistory.create({
           sentby: null,
           sentTo: resultArray[i].userId,
@@ -1237,9 +1238,6 @@ async function endBetting() {
           diamondsAdded: resultArray[i].amount,
           game: "spinner-bet-game",
         });
-
-                 
-
       }
       // resultArray.forEach((result)=>{
 
@@ -1474,7 +1472,17 @@ io.on("connection", (socket) => {
         status: "rejected",
       });
     } else {
-      bettingInfoArray.push({ userId, wheelNo, amount });
+      let existingBet = bettingInfoArray.findIndex(
+        (item) => item.userId === userId && item.wheelNo === wheelNo
+      );
+      if (existingBet !== -1) {
+        bettingInfoArray[existingBet] = {
+          ...bettingInfoArray[existingBet],
+          amount: bettingInfoArray[existingBet].amount + amount,
+        };
+      } else {
+        bettingInfoArray.push({ userId, wheelNo, amount });
+      }
       console.log(
         `${userId} betted on the game ${gameName} at ${wheelNo} with ${amount}`
       );
