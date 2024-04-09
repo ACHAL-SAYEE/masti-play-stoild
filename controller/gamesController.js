@@ -607,6 +607,7 @@ class games {
   async getDiamondsHistory(req, res) {
     const { userId, start, limit, mode } = req.query;
     let result;
+
     try {
       if (mode === "income") {
         result = await TransactionHistory.find({
@@ -652,7 +653,10 @@ class games {
         })
           .skip(Number(start))
           .limit(Number(limit));
+	res.send(result);
+        return;
       }
+	
       // const result = await queryDiamondsTransactionHistory(
       //   query,
       //   start,

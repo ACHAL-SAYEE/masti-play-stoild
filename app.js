@@ -1116,6 +1116,8 @@ async function endBetting() {
     console.log("nearestEntry", nearestEntry);
     //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
     let multiplyvalue = 0;
+    console.log("this is nearestentrywheelnumber")
+    console.log(nearestEntry.wheelNo)
     if (nearestEntry !== undefined) {
       multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
     }
@@ -1140,10 +1142,18 @@ async function endBetting() {
         );
         await SpinnerGameWinnerHistory.create({
           userId: betItem.userId,
-          diamondsSpent: userspentInfo.amount,
+         diamondsSpent: userspentInfo.amount,
           diamondsEarned: betItem.amount * multiplyvalue,
-          wheelNo: betItem.wheelNo,
+         wheelNo: betItem.wheelNo,
         });
+	 
+//	await SpinnerGameWinnerHistory.updateOne(
+//		          { userId: betItem.userId },
+//		          {       $set: { diamondsSpent: userspentInfo.amount },
+	//			  $set: { wheelNo: betItem.wheelNo },
+		//		  $inc: { diamondsEarned: betItem.amount * multiplyvalue } }
+		      //  );
+	
 
         console.log("Updating wallet", betItem.amount * multiplyvalue);
         await User.updateOne(
@@ -1154,9 +1164,13 @@ async function endBetting() {
           sentby: betItem.userId,
           sentTo: null,
           // mode: "outcome",
-          diamondsAdded: -1 * betItem.amount * multiplyvalue,
+          diamondsAdded: -1 * userspentInfo.amount,
           game: "spinner-bet-game",
         });
+
+	console.log("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	console.log(multiplyvalue)
+	console.log(betItem.amount)
         await SpinnerGameBetInfo.findOneAndUpdate(
           {
             userId: betItem.userId,
@@ -1212,13 +1226,20 @@ async function endBetting() {
       }, []);
       resultArray.sort((a, b) => b.amount - a.amount);
       for (let i = 0; i < resultArray.length; i++) {
+	//console.log("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+	//console.log(resultArray[i].amount)
+	//console.log(multiplyvalue)
+	//console.log(resultArray[i].amount * multiplyvalue)
         await TransactionHistory.create({
           sentby: null,
           sentTo: resultArray[i].userId,
           // mode: "outcome",
-          diamondsAdded: resultArray[i].amount * multiplyvalue,
+          diamondsAdded: resultArray[i].amount,
           game: "spinner-bet-game",
         });
+
+                 
+
       }
       // resultArray.forEach((result)=>{
 
