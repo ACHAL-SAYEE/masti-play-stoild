@@ -124,23 +124,24 @@ const authenticateToken = (request, response, next) => {
 };
 
 const CheckBanned = async (req, res, next) => {
-  let { userId } = req.query;
-  if (!userId) {
-    userId = req.body.userId;
-  }
-  console.log("userId in middleware", userId);
-  if (!userId) {
-    next();
-  } else {
-    let userDetails = await User.findOne({ userId });
-    let userRecord = await admin.auth().getUserByEmail(userDetails.email);
-    userRecord = userRecord.toJSON();
-    if (userRecord.disabled) {
-      res.status(403).send("your account is banned");
-    } else {
-      next();
-    }
-  }
+  // let { userId } = req.query;
+  // if (!userId) {
+  //   userId = req.body.userId;
+  // }
+  // console.log("userId in middleware", userId);
+  // if (!userId) {
+  //   next(); 
+  // } else {
+  //   let userDetails = await User.findOne({ userId });
+  //   let userRecord = await admin.auth().getUserByEmail(userDetails.email);
+  //   userRecord = userRecord.toJSON();
+  //   if (userRecord.disabled) {
+  //     res.status(403).send("your account is banned");
+  //   } else {
+  //     next();
+  //   }
+  // }
+  next();
 };
 
 initializeDB();
