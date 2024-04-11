@@ -964,7 +964,7 @@ class games {
     const { start, limit } = req.query;
     try {
       let aggregationArray = [
-        { $match: { agentId: { $ne: null } } },
+        // { $match: { agentId: { $ne: null } } },
         {
           $lookup: {
             from: "agencydatas",
