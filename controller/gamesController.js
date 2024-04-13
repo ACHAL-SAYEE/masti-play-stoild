@@ -674,7 +674,7 @@ class games {
     console.log("email =", email);
     console.log("userId =", userId);
     try {
-      let result, ownedAgency, ownedBd;
+      let result, ownedAgency, ownedBd, participantAgencyData;
 
       if (email) {
         result = await User.findOne({ email: email }).select({
@@ -684,6 +684,14 @@ class games {
         if (result !== null) {
           ownedAgency = await AgencyData.findOne({ ownerId: result.userId });
           ownedBd = await BdData.findOne({ owner: result.userId });
+          if (ownedAgency === null) {
+            participantAgencyData = await agencyParticipant.findOne(
+              {
+                userId: result.userId,
+              },
+              { _id: 0, __v: 0, userId: 0 }
+            );
+          }
         }
       } else {
         result = await User.findOne({ userId: userId }).select({
@@ -692,6 +700,12 @@ class games {
         });
         ownedAgency = await AgencyData.findOne({ ownerId: userId });
         ownedBd = await BdData.findOne({ owner: userId });
+        if (ownedAgency === null) {
+          participantAgencyData = await agencyParticipant.findOne(
+            { userId },
+            { _id: 0, __v: 0, userId: 0 }
+          );
+        }
       }
       if (result === null) {
         res.status(400).send("user not found");
@@ -702,6 +716,7 @@ class games {
         ...result._doc,
         ownedAgencyBata: ownedAgency,
         ownedBdData: ownedBd,
+        participantAgencyData,
       });
     } catch (e) {
       console.log(e);
@@ -1326,7 +1341,14 @@ class games {
       //   { $inc: { beansRecieved: parseInt(DiamondsToAdd + bonusDetails) } },
       //   { upsert: true }
       // );
-
+      await UserGiftMonthly.findOneAndUpdate(
+        {
+          userId: sentBy,
+          month: startOfMonth,
+        },
+        { $inc: { diamondsSent:  diamondsSent * Quantity } },
+        { upsert: true }
+      );
       const agencyOfSentTo = await agencyParticipant.findOne({
         userId: sentTo,
       });
