@@ -653,10 +653,10 @@ class games {
         })
           .skip(Number(start))
           .limit(Number(limit));
-	res.send(result);
+        res.send(result);
         return;
       }
-	
+
       // const result = await queryDiamondsTransactionHistory(
       //   query,
       //   start,
@@ -871,10 +871,105 @@ class games {
     try {
       let Users;
       if (limit == undefined && start == undefined) {
-        Users = await User.find(
-          {},
-          { _id: 0, __v: 0, creatorBeans: 0, pinnedRooms: 0, isVerified: 0 }
-        );
+        // Users = await User.find(
+        //   {},
+        //   { _id: 0, __v: 0, creatorBeans: 0, pinnedRooms: 0, isVerified: 0 }
+        Users = await User.aggregate([
+          {
+            $lookup: {
+              from: "agencydatas",
+              localField: "userId",
+              foreignField: "ownerId",
+              as: "agencyOwner",
+            },
+          },
+          {
+            $unwind: { path: "$agencyOwner", preserveNullAndEmptyArrays: true },
+          },
+          {
+            $lookup: {
+              from: "agencyparticipants",
+              localField: "userId",
+              foreignField: "userId",
+              as: "agencyParticipant",
+            },
+          },
+          {
+            $unwind: {
+              path: "$agencyParticipant",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $addFields: {
+              agency: {
+                $cond: [
+                  { $ifNull: ["$agencyOwner", false] },
+                  "$agencyOwner.agencyId",
+                  "$agencyParticipant.agencyId",
+                ],
+                //{
+                // if: { $ifN: ["$agencyOwner", true] },
+                // then: "$agencyOwner.agencyId",
+                // else: "$agencyParticipant.agencyId",
+
+                //  },
+              },
+            },
+          },
+          {
+            $lookup: {
+              from: "bddatas",
+              localField: "userId",
+              foreignField: "owner",
+              as: "bdOwner",
+            },
+          },
+          {
+            $unwind: {
+              path: "$bdOwner",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $lookup: {
+              from: "participantagencies",
+              localField: "agency",
+              foreignField: "agencyId",
+              as: "bdParticipant",
+            },
+          },
+          {
+            $unwind: {
+              path: "$bdParticipant",
+              preserveNullAndEmptyArrays: true,
+            },
+          },
+          {
+            $project: {
+              _id: 0,
+              __v: 0,
+              creatorBeans: 0,
+              pinnedRooms: 0,
+              isVerified: 0,
+            },
+          },
+          // agencyparticipants
+        ]);
+        Users = Users.map((user) => {
+          let { agency, ...rest } = user;
+          let obj = rest;
+          if (obj.bdOwner) {
+            obj.bd = `${obj.bdOwner.id} as owner`;
+          } else if (obj.bdParticipant) {
+            obj.bd = `${obj.bdParticipant.bdId} as participant agency`;
+          }
+          delete obj.bdOwner;
+          delete obj.bdParticipant;
+          delete obj.agency;
+          return obj;
+        });
+        // );
       } else {
         Users = await User.find({}).skip(Number(start)).limit(Number(limit));
       }
