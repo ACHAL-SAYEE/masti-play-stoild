@@ -130,7 +130,7 @@ const CheckBanned = async (req, res, next) => {
   // }
   // console.log("userId in middleware", userId);
   // if (!userId) {
-  //   next(); 
+  //   next();
   // } else {
   //   let userDetails = await User.findOne({ userId });
   //   let userRecord = await admin.auth().getUserByEmail(userDetails.email);
@@ -990,7 +990,7 @@ function sendGameUpdate(event, socket = null, data = null) {
     ...gameProperties,
     ...(data ? data : {}),
   };
-  console.log(`Sending Game Update: ${event} | gameProperties:`, sendData);
+  // console.log(`Sending Game Update: ${event} | gameProperties:`, sendData);
   if (socket) {
     socket.emit(event, sendData);
   } else {
@@ -1095,11 +1095,12 @@ async function endBetting() {
       userids: data.userids,
       wheelNo: data.wheelNo,
       totalAmount: data.totalAmount,
-      betreturnvalue: bettingWheelValues[index] * data.totalAmount,
+      betreturnvalue: bettingWheelValues[data.wheelNo-1] * data.totalAmount,
     }));
 
     newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-    console.log(newtransformedData);
+    console.log("newtransformedData", newtransformedData);
+
     let nearestEntry;
     let minDifference;
     if (newtransformedData.length > 0) {
@@ -1108,7 +1109,7 @@ async function endBetting() {
 
     let i = 1;
     newtransformedData = ensureWheelNumbers(newtransformedData);
-
+    console.log("newtransformedData after ensuring", newtransformedData);
     while (minDifference < 0 && i <= newtransformedData.length - 1) {
       minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
       nearestEntry = newtransformedData[i];
@@ -1208,7 +1209,7 @@ async function endBetting() {
           item.wheelNo === nearestEntry.wheelNo &&
           nearestEntry.userids.includes(item.userId)
       );
-
+      console.log("betInfoFiltered1234", betInfoFiltered);
       resultArray = betInfoFiltered.reduce((acc, current) => {
         var existingUser = acc.findIndex(
           (item) => item.userId === current.userId
@@ -1226,7 +1227,10 @@ async function endBetting() {
 
         return acc;
       }, []);
+      console.log("resultArray before sort", resultArray);
+
       resultArray.sort((a, b) => b.amount - a.amount);
+
       for (let i = 0; i < resultArray.length; i++) {
         //console.log("saaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
         //console.log(resultArray[i].amount)
@@ -1236,19 +1240,23 @@ async function endBetting() {
           sentby: null,
           sentTo: resultArray[i].userId,
           // mode: "outcome",
-          diamondsAdded: resultArray[i].amount,
+          diamondsAdded: resultArray[i].amount * multiplyvalue,
           game: "spinner-bet-game",
         });
       }
       // resultArray.forEach((result)=>{
 
       // })
+      console.log("resultArray after sort", resultArray);
+
       let top3Entries = resultArray.slice(0, 3);
+      console.log("top3Entries before map", top3Entries);
+
       top3Entries = top3Entries.map((item) => ({
         userId: item.userId,
         winningAmount: item.amount,
       }));
-      console.log("top3Entries", top3Entries);
+      console.log("top3Entries after map", top3Entries);
       await Top3Winners.create({ Winners: top3Entries });
 
       // let UserBetAmount = bettingInfoArray.reduce((acc, current) => {

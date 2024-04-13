@@ -5,10 +5,13 @@ const { User, AgencyData } = require("../models/models");
 class bdController {
   async getAllBD(start, limit) {
     try {
+      let bdDataList;
       if (!start) {
-        throw "start is undefined.";
+        // throw "start is undefined.";
+        bdDataList = await BdData.find();
+      } else {
+        bdDataList = await BdData.find().skip(start).limit(limit).exec();
       }
-      const bdDataList = await BdData.find().skip(start).limit(limit).exec();
       console.log("bdDataList", bdDataList);
       const ownerDatas = await User.find({
         userId: { $in: bdDataList.map((bd) => bd.owner) },
