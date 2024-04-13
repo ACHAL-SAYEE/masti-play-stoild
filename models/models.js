@@ -147,11 +147,14 @@ const agentSchema = new mongoose.Schema({
   status: { type: String, default: null },
 });
 
-const agentTransferSchema = new mongoose.Schema({
-  sentBy: String,
-  sentTo: String,
-  beansAdded: Number,
-},{timestamps:true});
+const agentTransferSchema = new mongoose.Schema(
+  {
+    sentBy: String,
+    sentTo: String,
+    beansAdded: Number,
+  },
+  { timestamps: true }
+);
 
 const TransactionHistorySchema = new mongoose.Schema(
   {
@@ -325,7 +328,8 @@ const UserRechargeMonthlySchema = new mongoose.Schema({
 
 const UserGiftMonthlySchema = new mongoose.Schema({
   userId: String,
-  beansRecieved: Number,
+  beansRecieved: { type: Number, default: 0 },
+  diamondsSent: { type: Number, default: 0 },
   // charmLevel: Number,
   month: Date,
 });
