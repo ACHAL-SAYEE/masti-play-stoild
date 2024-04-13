@@ -714,7 +714,7 @@ class games {
       console.log(result);
       res.send({
         ...result._doc,
-        ownedAgencyBata: ownedAgency,
+        ownedAgencyData: ownedAgency,
         ownedBdData: ownedBd,
         participantAgencyData,
       });
