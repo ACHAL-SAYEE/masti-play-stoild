@@ -1436,7 +1436,6 @@ class games {
           );
           await monthlyAgencyHistory.findOneAndUpdate(
             {
-              bdId: bdOfsentTo.bdId,
               month: new Date(
                 currentDate.getFullYear(),
                 currentDate.getMonth() + 1,
