@@ -1279,6 +1279,7 @@ class games {
       } else {
         bonusRate = 0.15;
       }
+
       const DiamondsToAdd = 0.68 * diamondsSent * Quantity;
       const bonusDiamonds = bonusRate * diamondsSent * Quantity;
       await User.updateOne(
@@ -1306,18 +1307,22 @@ class games {
       });
       let level;
       if (ExistingGift === null) {
-        level = getCharmLevel(DiamondsToAdd);
+        level = getCharmLevel(diamondsSent * Quantity);
         await UserGift.create({
           userId: sentTo,
           beansRecieved: DiamondsToAdd,
+          diamondsRecieved: diamondsSent * Quantity,
           charmLevel: level,
         });
       } else {
-        level = getCharmLevel(DiamondsToAdd + ExistingGift.beansRecieved);
+        level = getCharmLevel(diamondsSent * Quantity + ExistingGift.diamondsRecieved);
         await UserGift.updateOne(
           { userId: sentTo },
           {
-            $inc: { beansRecieved: DiamondsToAdd },
+            $inc: {
+              beansRecieved: DiamondsToAdd,
+              diamondsRecieved: diamondsSent * Quantity,
+            },
             $set: { charmLevel: level },
           }
         );
@@ -1333,7 +1338,12 @@ class games {
           userId: sentTo,
           month: startOfMonth,
         },
-        { $inc: { beansRecieved: DiamondsToAdd } },
+        {
+          $inc: {
+            beansRecieved: DiamondsToAdd,
+            diamondsRecieved: diamondsSent * Quantity,
+          },
+        },
         { upsert: true }
       );
       // await UserGift.findOneAndUpdate(
@@ -1346,7 +1356,7 @@ class games {
           userId: sentBy,
           month: startOfMonth,
         },
-        { $inc: { diamondsSent:  diamondsSent * Quantity } },
+        { $inc: { diamondsSent: diamondsSent * Quantity } },
         { upsert: true }
       );
       const agencyOfSentTo = await agencyParticipant.findOne({

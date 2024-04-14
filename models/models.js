@@ -317,6 +317,7 @@ const UserRechargeSchema = new mongoose.Schema({
 const UserGiftSchema = new mongoose.Schema({
   userId: String,
   beansRecieved: { type: Number, default: 0 },
+  diamondsRecieved: { type: Number, default: 0 },
   charmLevel: Number,
 });
 const UserRechargeMonthlySchema = new mongoose.Schema({
@@ -330,6 +331,7 @@ const UserGiftMonthlySchema = new mongoose.Schema({
   userId: String,
   beansRecieved: { type: Number, default: 0 },
   diamondsSent: { type: Number, default: 0 },
+  diamondsRecieved: { type: Number, default: 0 },
   // charmLevel: Number,
   month: Date,
 });
