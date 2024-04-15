@@ -27,10 +27,10 @@ class Authentication {
     const { phoneNo } = req.body;
     try {
       const userExists = await User.findOne({ email: `${phoneNo}@gmail.com` });
-      if (userExists != null) {
-        res.status(400).send("phone number is already taken");
-        return;
-      }
+      // if (userExists != null) {
+      //   res.status(400).send("phone number is already taken");
+      //   return;
+      // }
       const req1 = unirest("GET", "https://www.fast2sms.com/dev/bulkV2");
       const otp = Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000;
       console.log(req.headers);
