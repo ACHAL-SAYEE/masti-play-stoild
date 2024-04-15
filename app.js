@@ -1095,7 +1095,7 @@ async function endBetting() {
       userids: data.userids,
       wheelNo: data.wheelNo,
       totalAmount: data.totalAmount,
-      betreturnvalue: bettingWheelValues[data.wheelNo-1] * data.totalAmount,
+      betreturnvalue: bettingWheelValues[data.wheelNo - 1] * data.totalAmount,
     }));
 
     newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
@@ -1133,12 +1133,9 @@ async function endBetting() {
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
         console.log(
-          `Creating a bettingGameData entry with userId: ${
-            betItem.userId
-          } | userspentInfo.amount: ${
-            userspentInfo.amount
-          } | betItem.amount * multiplyvalue: ${
-            betItem.amount * multiplyvalue
+          `Creating a bettingGameData entry with userId: ${betItem.userId
+          } | userspentInfo.amount: ${userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
@@ -1944,7 +1941,7 @@ io.on("connection", (socket) => {
       if (
         !(
           LudoplayerPositions[ludoPlayerIndex].HomeRowPosition[pin] +
-            diceNumber >
+          diceNumber >
           6
         )
       ) {
@@ -2055,9 +2052,10 @@ io.on("connection", (socket) => {
 
 async function startANewGame() {
   try {
-    setTimeout(gameStarts, 0, io); // Betting Starts
-    setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
+    // TODO: ACHAL - uncomment this to start the spinner game
+    // setTimeout(gameStarts, 0, io); // Betting Starts
+    // setTimeout(bettingEnds, 30000); // Betting Ends & send result
+    // setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
