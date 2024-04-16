@@ -1097,10 +1097,13 @@ async function endBetting() {
       totalAmount: data.totalAmount,
       betreturnvalue: bettingWheelValues[data.wheelNo - 1] * data.totalAmount,
     }));
+    console.log("newtransformedData", newtransformedData);
+
     newtransformedData = ensureWheelNumbers(newtransformedData);
+    console.log("newtransformedData after ensuring", newtransformedData);
 
     newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
-    console.log("newtransformedData", newtransformedData);
+    console.log("newtransformedData after sorting", newtransformedData);
 
     let nearestEntry;
     let minDifference;
@@ -1110,7 +1113,6 @@ async function endBetting() {
 
     let i = 1;
     // newtransformedData = ensureWheelNumbers(newtransformedData);
-    console.log("newtransformedData after ensuring", newtransformedData);
     // while (minDifference < 0 && i <= newtransformedData.length - 1) {
     //   minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
     //   nearestEntry = newtransformedData[i];
@@ -1135,9 +1137,12 @@ async function endBetting() {
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
         console.log(
-          `Creating a bettingGameData entry with userId: ${betItem.userId
-          } | userspentInfo.amount: ${userspentInfo.amount
-          } | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue
+          `Creating a bettingGameData entry with userId: ${
+            betItem.userId
+          } | userspentInfo.amount: ${
+            userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${
+            betItem.amount * multiplyvalue
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
@@ -1943,7 +1948,7 @@ io.on("connection", (socket) => {
       if (
         !(
           LudoplayerPositions[ludoPlayerIndex].HomeRowPosition[pin] +
-          diceNumber >
+            diceNumber >
           6
         )
       ) {
@@ -2055,9 +2060,9 @@ io.on("connection", (socket) => {
 async function startANewGame() {
   try {
     // TODO: ACHAL - uncomment this to start the spinner game
-    // setTimeout(gameStarts, 0, io); // Betting Starts
-    // setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    // setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
+    setTimeout(gameStarts, 0, io); // Betting Starts
+    setTimeout(bettingEnds, 30000); // Betting Ends & send result
+    setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
