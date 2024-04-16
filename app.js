@@ -1067,7 +1067,7 @@ async function endBetting() {
       0
     );
     const amountToconsider = totalbettAmount * 0.9;
-    const transformedData = bettingInfoArray.reduce((result, current) => {
+    let transformedData = bettingInfoArray.reduce((result, current) => {
       // Find the existing entry for the current wheelNo
       const existingEntry = result.findIndex(
         (entry) => entry.wheelNo === current.wheelNo
@@ -1097,6 +1097,7 @@ async function endBetting() {
       totalAmount: data.totalAmount,
       betreturnvalue: bettingWheelValues[data.wheelNo - 1] * data.totalAmount,
     }));
+    newtransformedData = ensureWheelNumbers(newtransformedData);
 
     newtransformedData.sort((a, b) => b.betreturnvalue - a.betreturnvalue);
     console.log("newtransformedData", newtransformedData);
@@ -1108,7 +1109,7 @@ async function endBetting() {
     }
 
     let i = 1;
-    newtransformedData = ensureWheelNumbers(newtransformedData);
+    // newtransformedData = ensureWheelNumbers(newtransformedData);
     console.log("newtransformedData after ensuring", newtransformedData);
     // while (minDifference < 0 && i <= newtransformedData.length - 1) {
     //   minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
