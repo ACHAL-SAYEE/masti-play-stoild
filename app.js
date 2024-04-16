@@ -2135,7 +2135,7 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-cron.schedule("0 0 1 * *", () => {
+cron.schedule("0 0 1 * *", async () => {
   try {
    await User.updateMany({}, { activeTime: 0, activeDays: 0 });
   } catch (e) {
