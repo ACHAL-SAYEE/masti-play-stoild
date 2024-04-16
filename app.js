@@ -813,9 +813,11 @@ app.get("/get-jackpot", CheckBanned, gamesController.getJackPotAmount);
 app.get("/api/getDiamonds", CheckBanned, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
-  authenticateToken,
+  // authenticateToken,
   gamesController.getAllCreators
 );
+app.get("/api/admin/bd/all",bdRoutes.getAllBDforAdmin);
+
 app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
 app.put("/api/user-transfer-agent", gamesController.transferToAgent);
@@ -2124,5 +2126,22 @@ cron.schedule("0 0 * * 1", async () => {
     console.log(e);
   }
 });
+
+cron.schedule("0 0 * * *", async () => {
+  try {
+    User.updateMany({}, { isTodayTimeComplete: false, todayActiveTime: 0 });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
+cron.schedule("0 0 1 * *", () => {
+  try {
+    User.updateMany({}, { activeTime: 0, activeDays: 0 });
+  } catch (e) {
+    console.log(e);
+  }
+});
+
 // console.log("admin in app", admin);
 // exports.admin = admin;

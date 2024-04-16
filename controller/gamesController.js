@@ -967,6 +967,7 @@ class games {
               creatorBeans: 0,
               pinnedRooms: 0,
               isVerified: 0,
+              isTodayTimeComplete: 0,
             },
           },
           // agencyparticipants
@@ -1280,7 +1281,7 @@ class games {
         bonusRate = 0.15;
       }
 
-      const DiamondsToAdd = 0.68 * diamondsSent * Quantity;
+      const DiamondsToAdd = 0.8 * diamondsSent * Quantity;
       const bonusDiamonds = bonusRate * diamondsSent * Quantity;
       await User.updateOne(
         { userId: sentBy },
@@ -1315,7 +1316,9 @@ class games {
           charmLevel: level,
         });
       } else {
-        level = getCharmLevel(diamondsSent * Quantity + ExistingGift.diamondsRecieved);
+        level = getCharmLevel(
+          diamondsSent * Quantity + ExistingGift.diamondsRecieved
+        );
         await UserGift.updateOne(
           { userId: sentTo },
           {
@@ -2547,6 +2550,8 @@ class games {
             "creatorData.__v": 0,
             "agencyData._id": 0,
             "agencyData.__v": 0,
+            "creatorData.isTodayTimeComplete": 0,
+            "creatorData.todayActiveTime": 0,
           },
         },
       ]);

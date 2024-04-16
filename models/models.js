@@ -80,6 +80,18 @@ const userSchema = new mongoose.Schema({
     type: Number,
     default: 0,
   },
+  todayActiveTime: {
+    type: Number,
+    default: 0,
+  },
+  activeDays: {
+    type: Number,
+    default: 0,
+  },
+  isTodayTimeComplete: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const OtpSecretSchema = new mongoose.Schema({
