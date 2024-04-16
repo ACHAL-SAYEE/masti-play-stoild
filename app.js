@@ -2129,7 +2129,7 @@ cron.schedule("0 0 * * 1", async () => {
 
 cron.schedule("0 0 * * *", async () => {
   try {
-    User.updateMany({}, { isTodayTimeComplete: false, todayActiveTime: 0 });
+   await User.updateMany({}, { isTodayTimeComplete: false, todayActiveTime: 0 });
   } catch (e) {
     console.log(e);
   }
@@ -2137,7 +2137,7 @@ cron.schedule("0 0 * * *", async () => {
 
 cron.schedule("0 0 1 * *", () => {
   try {
-    User.updateMany({}, { activeTime: 0, activeDays: 0 });
+   await User.updateMany({}, { activeTime: 0, activeDays: 0 });
   } catch (e) {
     console.log(e);
   }
