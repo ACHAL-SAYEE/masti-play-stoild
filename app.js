@@ -1110,11 +1110,12 @@ async function endBetting() {
     let i = 1;
     newtransformedData = ensureWheelNumbers(newtransformedData);
     console.log("newtransformedData after ensuring", newtransformedData);
-    while (minDifference < 0 && i <= newtransformedData.length - 1) {
-      minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
-      nearestEntry = newtransformedData[i];
-      i++;
-    }
+    // while (minDifference < 0 && i <= newtransformedData.length - 1) {
+    //   minDifference = amountToconsider - newtransformedData[i].betreturnvalue;
+    //   nearestEntry = newtransformedData[i];
+    //   i++;
+    // }
+    nearestEntry = newtransformedData[newtransformedData.length - 1];
     console.log("nearestEntry", nearestEntry);
     //nearestEntry contains wheelNo won and bettingGameparticipants conatins total players total bet in totalbettAmount
     let multiplyvalue = 0;
