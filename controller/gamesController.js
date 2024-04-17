@@ -881,6 +881,10 @@ class games {
     }
   }
 
+  // async getAllUsersFor(){
+
+  // }
+
   async getAllUsers(req, res) {
     const { limit, start } = req.query;
     try {
@@ -967,7 +971,7 @@ class games {
               creatorBeans: 0,
               pinnedRooms: 0,
               isVerified: 0,
-              isTodayTimeComplete: 0,
+              // isTodayTimeComplete: 0,
             },
           },
           // agencyparticipants
@@ -1078,21 +1082,35 @@ class games {
         // { $match: { agentId: { $ne: null } } },
         {
           $lookup: {
-            from: "agencydatas",
-            localField: "userId",
-            foreignField: "ownerId",
-            as: "ownedAgencyData",
+            from: "users",
+            localField: "ownerId",
+            foreignField: "userId",
+            as: "ownerData",
           },
         },
         {
-          $unwind: "$ownedAgencyData",
+          $unwind: "$ownerData",
+        },
+        {
+          $lookup: {
+            from: "agencyparticipants",
+            localField: "agencyId",
+            foreignField: "agencyId",
+            as: "agencyParticipants",
+          },
+        },
+        {
+          $addFields: {
+            Participants: { $size: "$agencyParticipants" },
+          },
         },
         {
           $project: {
             _id: 0,
             __v: 0,
-            "ownedAgencyData._id": 0,
-            "ownedAgencyData.__v": 0,
+            "ownerData._id": 0,
+            "ownerData.__v": 0,
+            // agencyParticipants: 0,
           },
         },
       ];
@@ -1104,7 +1122,7 @@ class games {
           { $limit: Number(limit) }
         );
       }
-      const Agencies = await User.aggregate(aggregationArray);
+      const Agencies = await AgencyData.aggregate(aggregationArray);
       res.send(Agencies);
     } catch (e) {
       console.log(e);
@@ -1987,6 +2005,12 @@ class games {
     const { agencyId, start, limit, searchId } = req.query;
 
     try {
+      // if (start === undefined) {
+      //   throw "start is not provided";
+      // }
+      // if(limit ===undefined){
+      //   throw "limit is not provided";
+      // }
       let condition;
       if (searchId) {
         console.log("ee");
@@ -1994,7 +2018,7 @@ class games {
       } else {
         condition = { agencyId };
       }
-      const participants = await agencyParticipant.aggregate([
+      let aggregationArray = [
         { $match: condition },
         {
           $lookup: {
@@ -2013,18 +2037,106 @@ class games {
         {
           $project: { _id: 0, __v: 0 },
         },
-        {
-          $skip: Number(start),
-        },
-        {
-          $limit: Number(limit),
-        },
-      ]);
+      ];
+      if (start != undefined && limit != undefined) {
+        aggregationArray.push(
+          {
+            $skip: Number(start),
+          },
+          {
+            $limit: Number(limit),
+          }
+        );
+      }
+      const participants = await agencyParticipant.aggregate(aggregationArray);
 
       res.send(participants);
     } catch (e) {
       console.log(e);
-      res.status(500).send("internal server error");
+      res.status(500).send(`internal server error ${e}`);
+    }
+  }
+
+  async getAgencyParticipantsforAdmin(req, res) {
+    const { agencyId, searchId } = req.query;
+
+    try {
+      let agencyPart = await agencyParticipant.find(
+        { agencyId },
+        { _id: 0, __v: 0, agencyId: 0 }
+      );
+      agencyPart = agencyPart.map((b) => b.userId);
+      let condition;
+      if (searchId) {
+        console.log("ee");
+        condition = { agencyId, userId: { $regex: `.*${searchId}.*` } };
+      } else {
+        condition = { agencyId };
+      }
+      console.log("agencyPart1234", agencyPart);
+      let Users = await User.aggregate([
+        {
+          $match: { userId: { $in: agencyPart } },
+        },
+        {
+          $lookup: {
+            from: "bddatas",
+            localField: "userId",
+            foreignField: "owner",
+            as: "bdOwner",
+          },
+        },
+        {
+          $unwind: {
+            path: "$bdOwner",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $lookup: {
+            from: "participantagencies",
+            localField: "agency",
+            foreignField: "agencyId",
+            as: "bdParticipant",
+          },
+        },
+        {
+          $unwind: {
+            path: "$bdParticipant",
+            preserveNullAndEmptyArrays: true,
+          },
+        },
+        {
+          $project: {
+            _id: 0,
+            __v: 0,
+            creatorBeans: 0,
+            pinnedRooms: 0,
+            isVerified: 0,
+            // isTodayTimeComplete: 0,
+          },
+        },
+        // agencyparticipants
+      ]);
+      Users = Users.map((user) => {
+        let { agency, ...rest } = user;
+        let obj = rest;
+        if (obj.bdOwner) {
+          obj.bd = `${obj.bdOwner.id} as owner`;
+        } else if (obj.bdParticipant) {
+          obj.bd = `${obj.bdParticipant.bdId} as participant agency`;
+        }
+        obj.Agency = `${agencyId} as participant`;
+        delete obj.bdOwner;
+        delete obj.bdParticipant;
+        return obj;
+      });
+      // );
+
+      res.send(Users);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error ${e}`);
     }
   }
 

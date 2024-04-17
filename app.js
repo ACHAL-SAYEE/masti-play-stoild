@@ -487,10 +487,12 @@ app.get("/api/all-history", CheckBanned, gamesController.getSpinnerHistory); // 
 app.get("/api/agency/all", CheckBanned, gamesController.getAllAgencies);
 
 app.get(
-  "/api/agency/participants",
-  CheckBanned,
-  gamesController.getAgencyParticipants
+  "/api/agencyParticipants",
+  // authenticateToken,
+  gamesController.getAgencyParticipantsforAdmin
 );
+
+app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
 app.post("/api/agency/collect", CheckBanned, gamesController.collectBeans);
 
@@ -816,7 +818,7 @@ app.get(
   // authenticateToken,
   gamesController.getAllCreators
 );
-app.get("/api/admin/bd/all",bdRoutes.getAllBDforAdmin);
+app.get("/api/admin/bd/all", bdRoutes.getAllBDforAdmin);
 
 app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
@@ -2129,7 +2131,10 @@ cron.schedule("0 0 * * 1", async () => {
 
 cron.schedule("0 0 * * *", async () => {
   try {
-   await User.updateMany({}, { isTodayTimeComplete: false, todayActiveTime: 0 });
+    await User.updateMany(
+      {},
+      { isTodayTimeComplete: false, todayActiveTime: 0 }
+    );
   } catch (e) {
     console.log(e);
   }
@@ -2137,7 +2142,7 @@ cron.schedule("0 0 * * *", async () => {
 
 cron.schedule("0 0 1 * *", async () => {
   try {
-   await User.updateMany({}, { activeTime: 0, activeDays: 0 });
+    await User.updateMany({}, { activeTime: 0, activeDays: 0 });
   } catch (e) {
     console.log(e);
   }
