@@ -73,6 +73,7 @@ app.use(
 const postsController = require("./controller/postsController");
 const { gamesController } = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
+const fixController=require("./controller/fixController")
 const bdRoutes = require("./routes/bd");
 const {
   User,
@@ -279,7 +280,12 @@ app.post("/api/user", async (req, res) => {
     //   }
     // }
     let newUserId;
-    const ExistingUsers = await User.find({});
+    // const ExistingUsers = await User.find({});
+    // const ExistingUsers = await User.find({}).sort({ userId: 1 });
+    const ExistingUsers = await User.find({
+      userId: { $regex: /^[0-9]{8}$/ },
+    }).sort({ userId: 1 });
+
     if (ExistingUsers.length === 0) {
       newUserId = 20240000;
     } else {
@@ -305,6 +311,8 @@ app.post("/api/user", async (req, res) => {
     res.status(500).send(`internal server error ${e}`);
   }
 });
+
+app.put("/api/fix/user",fixController.fixUsers)
 
 app.delete("/api/user", CheckBanned, authenticationController.deleteUser);
 app.delete("/api/agent", CheckBanned, authenticationController.deleteAgent);
