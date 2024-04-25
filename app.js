@@ -430,6 +430,8 @@ app.post("/api/agent", CheckBanned, gamesController.postAgent);
 app.get("/api/agent", CheckBanned, gamesController.getAgentData);
 
 app.get("/api/users/all", CheckBanned, gamesController.getAllUsers);
+app.get("/api/admin/users/all", authenticateToken, gamesController.getAllUsers);
+
 
 app.get("/api/agents/all", CheckBanned, gamesController.getAllAgents);
 
@@ -847,10 +849,10 @@ app.get("/get-jackpot", CheckBanned, gamesController.getJackPotAmount);
 app.get("/api/getDiamonds", CheckBanned, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
-  // authenticateToken,
+  authenticateToken,
   gamesController.getAllCreators
 );
-app.get("/api/admin/bd/all", bdRoutes.getAllBDforAdmin);
+app.get("/api/admin/bd/all", authenticateToken,bdRoutes.getAllBDforAdmin);
 
 app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
