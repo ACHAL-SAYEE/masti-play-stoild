@@ -20,6 +20,7 @@ const server = http.createServer(app);
 const io = socketIO(server, {
   cors: [{ origin: "http://localhost:5500" }],
 });
+let tokenSecreat="4233d702105f11041081e9aacd786076f8de2f4f33db08d5125e50397e31f890"
 // const io = socketIO(server
 
 // );
@@ -112,7 +113,7 @@ const authenticateToken = (request, response, next) => {
     response.status(401);
     response.send("Invalid JWT Token");
   } else {
-    jwt.verify(mastiToken, "MY_SECRET_TOKEN", async (error, payload) => {
+    jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
       if (error) {
         response.status(401);
         response.send("Invalid JWT Token");
@@ -499,6 +500,29 @@ app.get(
   // authenticateToken,
   gamesController.getAgencyParticipantsforAdmin
 );
+
+app.get("/api/user/role",async(request,response)=>{
+  // console.log("request.headers",request.headers)
+  let mastiToken
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    mastiToken = authHeader.split(" ")[1];
+  }
+  if (mastiToken === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
+      if (error) {
+        response.status(401);
+        response.send("Invalid JWT Token");
+      } else {
+        request.userId = payload.userId;
+        response.send(payload.role)
+      }
+    });
+  }
+})
 
 app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 

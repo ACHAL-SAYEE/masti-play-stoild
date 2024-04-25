@@ -10,7 +10,9 @@ class fix {
       ]);
 
       // Step 2: Iterate over duplicate emailIds and delete duplicate accounts
+      console.log("duplicateEmails",duplicateEmails)
       for (const { _id: email } of duplicateEmails) {
+        console.log(" _id: email ", {_id: email} )
         // Find duplicate accounts
         const duplicateAccounts = await User.find({ email });
 

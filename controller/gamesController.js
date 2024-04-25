@@ -2001,16 +2001,65 @@ class games {
     });
   }
 
+  // async getAgencyParticipants(req, res) {
+  //   const { agencyId, start, limit, searchId } = req.query;
+
+  //   try {
+  //     // if (start === undefined) {
+  //     //   throw "start is not provided";
+  //     // }
+  //     // if(limit ===undefined){
+  //     //   throw "limit is not provided";
+  //     // }
+  //     let condition;
+  //     if (searchId) {
+  //       console.log("ee");
+  //       condition = { agencyId, userId: { $regex: `.*${searchId}.*` } };
+  //     } else {
+  //       condition = { agencyId };
+  //     }
+  //     let aggregationArray = [
+  //       { $match: condition },
+  //       {
+  //         $lookup: {
+  //           from: "users",
+  //           localField: "userId",
+  //           foreignField: "userId",
+  //           as: "participentsData",
+  //         },
+  //       },
+  //       {
+  //         $unwind: "$participentsData",
+  //       },
+  //       {
+  //         $replaceRoot: { newRoot: "$participentsData" },
+  //       },
+  //       {
+  //         $project: { _id: 0, __v: 0 },
+  //       },
+  //     ];
+  //     if (start != undefined && limit != undefined) {
+  //       aggregationArray.push(
+  //         {
+  //           $skip: Number(start),
+  //         },
+  //         {
+  //           $limit: Number(limit),
+  //         }
+  //       );
+  //     }
+  //     const participants = await agencyParticipant.aggregate(aggregationArray);
+
+  //     res.send(participants);
+  //   } catch (e) {
+  //     console.log(e);
+  //     res.status(500).send(`internal server error ${e}`);
+  //   }
+  // }
   async getAgencyParticipants(req, res) {
     const { agencyId, start, limit, searchId } = req.query;
 
     try {
-      // if (start === undefined) {
-      //   throw "start is not provided";
-      // }
-      // if(limit ===undefined){
-      //   throw "limit is not provided";
-      // }
       let condition;
       if (searchId) {
         console.log("ee");
@@ -2018,7 +2067,7 @@ class games {
       } else {
         condition = { agencyId };
       }
-      let aggregationArray = [
+      const participants = await agencyParticipant.aggregate([
         { $match: condition },
         {
           $lookup: {
@@ -2037,23 +2086,18 @@ class games {
         {
           $project: { _id: 0, __v: 0 },
         },
-      ];
-      if (start != undefined && limit != undefined) {
-        aggregationArray.push(
-          {
-            $skip: Number(start),
-          },
-          {
-            $limit: Number(limit),
-          }
-        );
-      }
-      const participants = await agencyParticipant.aggregate(aggregationArray);
+        {
+          $skip: Number(start),
+        },
+        {
+          $limit: Number(limit),
+        },
+      ]);
 
       res.send(participants);
     } catch (e) {
       console.log(e);
-      res.status(500).send(`internal server error ${e}`);
+      res.status(500).send("internal server error");
     }
   }
 
@@ -2396,6 +2440,7 @@ class games {
   }
   async banUser(req, res) {
     const { userId, bannedPeriod } = req.body;
+    console.log("userId, bannedPeriod",userId, bannedPeriod)
     try {
       let userDetails = await User.findOne({ userId });
       let userRecord = await admin.auth().getUserByEmail(userDetails.email);

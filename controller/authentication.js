@@ -18,7 +18,8 @@ const transporter = nodemailer.createTransport({
     pass: "Achal12345678",
   },
 });
-
+let tokenSecreat =
+  "4233d702105f11041081e9aacd786076f8de2f4f33db08d5125e50397e31f890";
 const { generateUserId, generateRandomOtpSecret } = require("../utils");
 const { BdData, ParticipantAgencies } = require("../models/bd");
 
@@ -88,7 +89,7 @@ class Authentication {
         res.status(400).send("invalid phoneNo");
         return;
       } else {
-        if (userExists.role !== "admin") {
+        if (userExists.role !== "admin" && userExists.role !== "employee") {
           res
             .status(401)
             .send("unauthorised.please enter valid admin phone number");
@@ -125,7 +126,7 @@ class Authentication {
             return: res1.body.return,
             request_id: res1.body.request_id,
             message: res1.body.message,
-
+  
             // otp: otp.toString(),
           };
           if (userExists !== null) {
@@ -217,8 +218,9 @@ class Authentication {
         const payload = {
           phoneNo,
           userId: currUser.userId,
+          role: currUser.role,
         };
-        const jwtToken = jwt.sign(payload, "MY_SECRET_TOKEN", {
+        const jwtToken = jwt.sign(payload, tokenSecreat, {
           expiresIn: "30d",
         });
         // 300000 milliseconds (5 minutes) is the validity window for the OTP
@@ -329,7 +331,7 @@ class Authentication {
         const payload = {
           UserId: result.UserId,
         };
-        const jwtToken = jwt.sign(payload, "MY_SECRET_TOKEN");
+        const jwtToken = jwt.sign(payload, tokenSecreat);
         res.send({ jwtToken });
       } else {
         res.status(400);
