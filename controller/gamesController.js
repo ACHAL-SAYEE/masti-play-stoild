@@ -2707,8 +2707,8 @@ class games {
             "creatorData.__v": 0,
             "agencyData._id": 0,
             "agencyData.__v": 0,
-            "creatorData.isTodayTimeComplete": 0,
-            "creatorData.todayActiveTime": 0,
+            // "creatorData.isTodayTimeComplete": 0,
+            // "creatorData.todayActiveTime": 0,
           },
         },
       ]);
