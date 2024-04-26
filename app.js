@@ -859,7 +859,7 @@ app.get("/get-jackpot", CheckBanned, gamesController.getJackPotAmount);
 app.get("/api/getDiamonds", CheckBanned, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
-  authenticateToken,
+  // authenticateToken,
   gamesController.getAllCreators
 );
 app.get("/api/admin/bd/all", authenticateToken, bdRoutes.getAllBDforAdmin);
