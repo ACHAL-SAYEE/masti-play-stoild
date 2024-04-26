@@ -2711,6 +2711,8 @@ class games {
             // "creatorData.todayActiveTime": 0,
           },
         },
+        { $sort: { userId: 1 } }
+
       ]);
       res.send(result);
     } catch (e) {
