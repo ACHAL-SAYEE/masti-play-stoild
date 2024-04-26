@@ -20,7 +20,8 @@ const server = http.createServer(app);
 const io = socketIO(server, {
   cors: [{ origin: "http://localhost:5500" }],
 });
-let tokenSecreat="4233d702105f11041081e9aacd786076f8de2f4f33db08d5125e50397e31f890"
+let tokenSecreat =
+  "4233d702105f11041081e9aacd786076f8de2f4f33db08d5125e50397e31f890";
 // const io = socketIO(server
 
 // );
@@ -74,7 +75,7 @@ app.use(
 const postsController = require("./controller/postsController");
 const { gamesController } = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
-const fixController=require("./controller/fixController")
+const fixController = require("./controller/fixController");
 const bdRoutes = require("./routes/bd");
 const {
   User,
@@ -122,6 +123,15 @@ const authenticateToken = (request, response, next) => {
         next();
       }
     });
+  }
+};
+
+const authenticateRole = async (req, res, next) => {
+  let user = await User.findOne({ userId: req.userId });
+  if (user.role !== "admin") {
+    res.status(403).send("you are not admin");
+  } else {
+    next();
   }
 };
 
@@ -313,7 +323,7 @@ app.post("/api/user", async (req, res) => {
   }
 });
 
-app.put("/api/fix/user",fixController.fixUsers)
+app.put("/api/fix/user", fixController.fixUsers);
 
 app.delete("/api/user", CheckBanned, authenticationController.deleteUser);
 app.delete("/api/agent", CheckBanned, authenticationController.deleteAgent);
@@ -432,7 +442,6 @@ app.get("/api/agent", CheckBanned, gamesController.getAgentData);
 app.get("/api/users/all", CheckBanned, gamesController.getAllUsers);
 app.get("/api/admin/users/all", authenticateToken, gamesController.getAllUsers);
 
-
 app.get("/api/agents/all", CheckBanned, gamesController.getAllAgents);
 
 app.get("/api/agent/resellers", CheckBanned, gamesController.getResellers);
@@ -503,9 +512,9 @@ app.get(
   gamesController.getAgencyParticipantsforAdmin
 );
 
-app.get("/api/user/role",async(request,response)=>{
+app.get("/api/user/role", async (request, response) => {
   // console.log("request.headers",request.headers)
-  let mastiToken
+  let mastiToken;
   const authHeader = request.headers["authorization"];
   if (authHeader !== undefined) {
     mastiToken = authHeader.split(" ")[1];
@@ -520,11 +529,11 @@ app.get("/api/user/role",async(request,response)=>{
         response.send("Invalid JWT Token");
       } else {
         request.userId = payload.userId;
-        response.send(payload.role)
+        response.send(payload.role);
       }
     });
   }
-})
+});
 
 app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
@@ -583,10 +592,11 @@ app.put("/api/admin/addFrame", CheckBanned, gamesController.addFrame);
 app.put(
   "/api/admin/changeDiamond",
   authenticateToken,
+  authenticateRole,
   gamesController.changeDiamonds
 );
-app.put("/api/admin/banUser", authenticateToken, gamesController.banUser);
-app.put("/api/admin/unbanUser", CheckBanned, gamesController.unbanUser);
+app.put("/api/admin/banUser", authenticateToken,authenticateRole, gamesController.banUser);
+app.put("/api/admin/unbanUser", CheckBanned,authenticateRole, gamesController.unbanUser);
 app.put("/api/admin/accept", CheckBanned, gamesController.acceptBeansWithDraw);
 app.put("/api/admin/reject", CheckBanned, gamesController.rejectBeansWithDraw);
 app.post(
@@ -852,7 +862,7 @@ app.get(
   authenticateToken,
   gamesController.getAllCreators
 );
-app.get("/api/admin/bd/all", authenticateToken,bdRoutes.getAllBDforAdmin);
+app.get("/api/admin/bd/all", authenticateToken, bdRoutes.getAllBDforAdmin);
 
 app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
