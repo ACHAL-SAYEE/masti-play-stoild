@@ -92,6 +92,13 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+
+  // dailyActiveTime: {
+  //   type: Map,
+  //   of: Number,
+  //   default: {},
+  // },
+  dailyActiveTime: Object,
 });
 
 const OtpSecretSchema = new mongoose.Schema({

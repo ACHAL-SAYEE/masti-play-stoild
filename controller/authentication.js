@@ -126,7 +126,7 @@ class Authentication {
             return: res1.body.return,
             request_id: res1.body.request_id,
             message: res1.body.message,
-  
+
             // otp: otp.toString(),
           };
           if (userExists !== null) {
