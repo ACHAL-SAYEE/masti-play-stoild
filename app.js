@@ -441,7 +441,7 @@ app.get("/api/agent", CheckBanned, gamesController.getAgentData);
 
 app.get("/api/users/all", CheckBanned, gamesController.getAllUsers);
 app.get("/api/admin/users/all", authenticateToken, gamesController.getAllUsers);
-
+ 
 app.get("/api/agents/all", CheckBanned, gamesController.getAllAgents);
 
 app.get("/api/agent/resellers", CheckBanned, gamesController.getResellers);
