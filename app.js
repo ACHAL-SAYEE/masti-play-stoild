@@ -541,7 +541,7 @@ app.get(
   gamesController.getDiamondsHistory
 );
 
-app.get("/api/users", authenticateAppUser, gamesController.getUsers);
+app.get("/api/users", gamesController.getUsers);
 
 app.get("/api/convert", authenticateAppUser, gamesController.convert); // ACHAL: create a TransactionHistory here
 
