@@ -17,14 +17,20 @@ const admin = require("firebase-admin");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIO(server, {
-  cors: [{ origin: "http://localhost:5500" }],
-});
+// const io = socketIO(server, {
+//   cors: [{ origin: "http://localhost:5500" }],
+// });
 let tokenSecreat =
   "4233d702105f11041081e9aacd786076f8de2f4f33db08d5125e50397e31f890";
-// const io = socketIO(server
+const io1 = socketIO(server, {
+  path: "/audioRoom/socket.io",
+  cors: [{ origin: "http://localhost:5500" }],
+});
+const io2 = socketIO(server, {
+  path: "/app/socket.io",
+  cors: [{ origin: "http://localhost:5500" }],
+});
 
-// );
 // const firebase = require('firebase-admin');
 // const firebaseConfig = require('./firebaseConfig.json');
 
@@ -86,6 +92,7 @@ const {
   GameTransactionHistory,
   SpinnerGameBetInfo,
   TransactionHistory,
+  AppToken,
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
@@ -156,10 +163,69 @@ const CheckBanned = async (req, res, next) => {
   next();
 };
 
-initializeDB();
+const authenticateAppUser = async (request, response, next) => {
+  let mastiToken;
+  const authHeader = request.headers["authorization"];
+  if (authHeader !== undefined) {
+    mastiToken = authHeader.split(" ")[1];
+  }
+  if (mastiToken === undefined) {
+    response.status(401);
+    response.send("Invalid JWT Token");
+  } else {
+    jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
+      if (error) {
+        response.status(401);
+        response.send("Invalid JWT Token");
+      } else {
+        let appTokens = await AppToken.findOne({});
+        if (appTokens[payload.userId] !== mastiToken) {
+          response.status(401).send("token expired");
+        } else {
+          request.userId = payload.userId;
+          request.appToken = mastiToken;
+          next();
+        }
+      }
+    });
+  }
+};
 
-server.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+initializeDB().then(async () => {
+  let appToken = await AppToken.findOne({});
+  console.log("appToken", appToken);
+  if (appToken === null) {
+    await AppToken.create({ appToken: {} });
+  }
+});
+let appSockets = {};
+let userIdAppSockets = {};
+io2.on("connection", (socket) => {
+  // console.log("io2", io2.sockets.sockets);
+
+  socket.on("connected", (data) => {
+    let { userId } = data;
+
+    if (userIdAppSockets[userId]) {
+      let existingSocketId = userIdAppSockets[userId];
+      console.log(" io2.sockets.sockets", io2.sockets.sockets);
+      // io2.sockets.sockets[existingSocketId].emit("another-device-connected");
+      io2.sockets.sockets
+        .get(existingSocketId)
+        .emit("another-device-connected");
+      appSockets[existingSocketId] = undefined;
+      console.log("entered already exists");
+    }
+    // else {
+    appSockets[socket.id] = userId;
+    userIdAppSockets[userId] = socket.id;
+    // }
+  });
+  socket.on("disconnect", () => {
+    let disconnectedUser = appSockets[socket.id];
+    delete userIdAppSockets[disconnectedUser];
+    delete appSockets[socket.id];
+  });
 });
 
 app.post("/upload", (req, res, next) => {
@@ -316,7 +382,21 @@ app.post("/api/user", async (req, res) => {
       phoneNumber,
     });
     let x = await newUser.save();
-    res.status(200).send(x);
+    payload = {
+      userId: x.userId,
+      role: x.role,
+      email: x.email,
+    };
+    jwtToken = jwt.sign(payload, tokenSecreat, {
+      expiresIn: "30d",
+    });
+    // res.status(200).send(x);
+    res.send({ userData: x, token: jwtToken });
+    let appTokens = await AppToken.findOne({});
+    appTokens.appTokens[x.userId] = jwtToken;
+    appTokens.markModified("appTokens");
+
+    await appTokens.save();
   } catch (e) {
     console.log(e);
     res.status(500).send(`internal server error ${e}`);
@@ -325,10 +405,22 @@ app.post("/api/user", async (req, res) => {
 
 app.put("/api/fix/user", fixController.fixUsers);
 
-app.delete("/api/user", CheckBanned, authenticationController.deleteUser);
-app.delete("/api/agent", CheckBanned, authenticationController.deleteAgent);
-app.delete("/api/agency", CheckBanned, authenticationController.deleteAgency);
-app.delete("/api/bd", CheckBanned, authenticationController.deleteBd);
+app.delete(
+  "/api/user",
+  authenticateAppUser,
+  authenticationController.deleteUser
+);
+app.delete(
+  "/api/agent",
+  authenticateAppUser,
+  authenticationController.deleteAgent
+);
+app.delete(
+  "/api/agency",
+  authenticateAppUser,
+  authenticationController.deleteAgency
+);
+app.delete("/api/bd", authenticateAppUser, authenticationController.deleteBd);
 
 // app.get("/api/user", async (req, res) => {
 //   const { userId } = req.query
@@ -342,7 +434,7 @@ app.delete("/api/bd", CheckBanned, authenticationController.deleteBd);
 //   }
 // })
 
-app.put("/api/user", CheckBanned, async (req, res) => {
+app.put("/api/user", authenticateAppUser, async (req, res) => {
   const { userId } = req.body;
   try {
     const UserInfo = await User.findOneAndUpdate(
@@ -369,122 +461,170 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
-app.post("/api/posts/", CheckBanned, postsController.storePost);
+app.post("/api/posts/", authenticateAppUser, postsController.storePost);
 
-app.delete("/api/posts", CheckBanned, postsController.deletePost);
+app.delete("/api/posts", authenticateAppUser, postsController.deletePost);
 
-app.put("/api/posts/share", CheckBanned, postsController.sharePost);
+app.put("/api/posts/share", authenticateAppUser, postsController.sharePost);
 
-app.get("/api/hot", CheckBanned, postsController.getHotPosts);
+app.get("/api/hot", authenticateAppUser, postsController.getHotPosts);
 
-app.get("/api/recent", CheckBanned, postsController.getRecentPosts);
+app.get("/api/recent", authenticateAppUser, postsController.getRecentPosts);
 
-app.post("/api/follow", CheckBanned, postsController.followUser);
+app.post("/api/follow", authenticateAppUser, postsController.followUser);
 
 app.get(
   "/api/following",
-  CheckBanned,
+  authenticateAppUser,
   postsController.getPostsOfFollowingUsers
 );
 
-app.get("/api/tags/", CheckBanned, postsController.getTagsAfterDate);
+app.get("/api/tags/", authenticateAppUser, postsController.getTagsAfterDate);
 
 app.post(
   "/api/search-with-tags",
-  CheckBanned,
+  authenticateAppUser,
   postsController.getPostsContaingTags
 );
 
-app.post("/api/comment", CheckBanned, postsController.commentPost);
+app.post("/api/comment", authenticateAppUser, postsController.commentPost);
 
-app.post("/api/like", CheckBanned, postsController.likePost);
+app.post("/api/like", authenticateAppUser, postsController.likePost);
 
-app.get("/api/users/following", CheckBanned, postsController.getFollowingUsers);
+app.get(
+  "/api/users/following",
+  authenticateAppUser,
+  postsController.getFollowingUsers
+);
 
 app.get(
   "/api/users/followers",
-  CheckBanned,
+  authenticateAppUser,
   postsController.getFollowersOfUser
 );
 
-app.get("/api/users/doesFollow", CheckBanned, postsController.doesFollow);
+app.get(
+  "/api/users/doesFollow",
+  authenticateAppUser,
+  postsController.doesFollow
+);
 
-app.get("/api/followers", CheckBanned, postsController.getFollowersData);
+app.get(
+  "/api/followers",
+  authenticateAppUser,
+  postsController.getFollowersData
+);
 
-app.get("/api/following-users", CheckBanned, postsController.getFollowingData);
+app.get(
+  "/api/following-users",
+  authenticateAppUser,
+  postsController.getFollowingData
+);
 
-app.get("/api/friends", CheckBanned, postsController.getFriendsData);
+app.get("/api/friends", authenticateAppUser, postsController.getFriendsData);
 
 app.post(
   "/api/create-transaction-history",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.postData
 );
 
-app.get("/api/beans-history", CheckBanned, gamesController.getBeansHistory);
+app.get(
+  "/api/beans-history",
+  authenticateAppUser,
+  gamesController.getBeansHistory
+);
 
 app.get(
   "/api/diamonds-history",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getDiamondsHistory
 );
 
-app.get("/api/users", CheckBanned, gamesController.getUsers);
+app.get("/api/users", authenticateAppUser, gamesController.getUsers);
 
-app.get("/api/convert", CheckBanned, gamesController.convert); // ACHAL: create a TransactionHistory here
+app.get("/api/convert", authenticateAppUser, gamesController.convert); // ACHAL: create a TransactionHistory here
 
-app.put("/api/agent/convert", CheckBanned, gamesController.convertUsertoAgent); //done
+app.put(
+  "/api/agent/convert",
+  authenticateAppUser,
+  gamesController.convertUsertoAgent
+); //done
 
-app.post("/api/agent", CheckBanned, gamesController.postAgent);
+app.post("/api/agent", authenticateAppUser, gamesController.postAgent);
 
-app.get("/api/agent", CheckBanned, gamesController.getAgentData);
+app.get("/api/agent", authenticateAppUser, gamesController.getAgentData);
 
-app.get("/api/users/all", CheckBanned, gamesController.getAllUsers);
+app.get("/api/users/all", authenticateAppUser, gamesController.getAllUsers);
 app.get("/api/admin/users/all", authenticateToken, gamesController.getAllUsers);
- 
-app.get("/api/agents/all", CheckBanned, gamesController.getAllAgents);
 
-app.get("/api/agent/resellers", CheckBanned, gamesController.getResellers);
+app.get("/api/agents/all", authenticateAppUser, gamesController.getAllAgents);
 
-app.post("/api/change-role", CheckBanned, gamesController.ChangeUserRole);
+app.get(
+  "/api/agent/resellers",
+  authenticateAppUser,
+  gamesController.getResellers
+);
 
-app.post("/api/agency-joining", CheckBanned, gamesController.joinAgency);
+app.post(
+  "/api/change-role",
+  authenticateAppUser,
+  gamesController.ChangeUserRole
+);
+
+app.post(
+  "/api/agency-joining",
+  authenticateAppUser,
+  gamesController.joinAgency
+);
 
 app.post(
   "/api/make-agency-owner",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.makeAgencyOwner
 );
 
-app.put("/api/send-gift", CheckBanned, gamesController.sendGift);
+app.put("/api/send-gift", authenticateAppUser, gamesController.sendGift);
 
 app.get(
   "/api/agency/commissionHistory",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getAgencyCommissionHistory
 );
 
-app.put("/api/agent-recharge", CheckBanned, gamesController.recharge);
+app.put("/api/agent-recharge", authenticateAppUser, gamesController.recharge);
 
 app.put(
   "/api/agent-admin-recharge",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.adminRecharge
 );
 
-app.get("/api/agencies/all", CheckBanned, gamesController.getAllAgencies);
+app.get(
+  "/api/agencies/all",
+  authenticateAppUser,
+  gamesController.getAllAgencies
+);
 
-app.put("/api/make-agent", CheckBanned, gamesController.makeAgent);
+app.put("/api/make-agent", authenticateAppUser, gamesController.makeAgent);
 
-app.get("/api/comments", CheckBanned, postsController.getsCommentsOfPost);
+app.get(
+  "/api/comments",
+  authenticateAppUser,
+  postsController.getsCommentsOfPost
+);
 
-app.get("/api/agency", CheckBanned, gamesController.getAgencyDataOfUser);
+app.get(
+  "/api/agency",
+  authenticateAppUser,
+  gamesController.getAgencyDataOfUser
+);
 
-app.put("/api/rates", CheckBanned, gamesController.setComissionRate);
+app.put("/api/rates", authenticateAppUser, gamesController.setComissionRate);
 
 app.get(
   "/api/agent-history",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getAgentTransactionHistory
 );
 // app.post("/api/spinner-betting", async (req, res) => {
@@ -500,11 +640,19 @@ app.get(
 //   // res.send("betted successfully");
 // });
 // ACHAL: send winners's UsersData
-app.post("/api/top3-winner", CheckBanned, gamesController.getBettingResults); // for 1 session
+app.post(
+  "/api/top3-winner",
+  authenticateAppUser,
+  gamesController.getBettingResults
+); // for 1 session
 
-app.get("/api/all-history", CheckBanned, gamesController.getSpinnerHistory); // for all sessions
+app.get(
+  "/api/all-history",
+  authenticateAppUser,
+  gamesController.getSpinnerHistory
+); // for all sessions
 
-app.get("/api/agency/all", CheckBanned, gamesController.getAllAgencies);
+app.get("/api/agency/all", authenticateAppUser, gamesController.getAllAgencies);
 
 app.get(
   "/api/agencyParticipants",
@@ -537,79 +685,137 @@ app.get("/api/user/role", async (request, response) => {
 
 app.get("/api/agency/participants", gamesController.getAgencyParticipants);
 
-app.post("/api/agency/collect", CheckBanned, gamesController.collectBeans);
+app.post(
+  "/api/agency/collect",
+  authenticateAppUser,
+  gamesController.collectBeans
+);
 
 app.get(
   "/api/my-betting-history",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getUserAllBettingHistory
 ); // for a specific user, his betting history
 // ACHAL: send top-winner's UsersData as well
-app.get("/api/top-winner", CheckBanned, gamesController.getTopWinners); // today's top winners
+app.get("/api/top-winner", authenticateAppUser, gamesController.getTopWinners); // today's top winners
 
-app.get("/api/gift-history", CheckBanned, gamesController.getGiftHistory);
+app.get(
+  "/api/gift-history",
+  authenticateAppUser,
+  gamesController.getGiftHistory
+);
 // app.get("/api/agency/participants",gamesController.getAgencyParticipants)
-app.get("/api/bd/all", CheckBanned, bdRoutes.getAllBD);
-app.get("/api/bd", CheckBanned, bdRoutes.getBD);
-app.get("/api/bd/participants", CheckBanned, bdRoutes.getParticipantAgencies);
-app.post("/api/bd", CheckBanned, bdRoutes.createBD);
-app.put("/api/bd", CheckBanned, bdRoutes.updateBD);
-app.put("/api/bd/add-beans", CheckBanned, bdRoutes.addBeans); // ACHAL: create a TransactionHistory here
-app.post("/api/bd/add-agency", CheckBanned, bdRoutes.addAgency);
-app.put("/api/bd/remove-agency", CheckBanned, bdRoutes.removeAgency);
+app.get("/api/bd/all", authenticateAppUser, bdRoutes.getAllBD);
+app.get("/api/bd", authenticateAppUser, bdRoutes.getBD);
+app.get(
+  "/api/bd/participants",
+  authenticateAppUser,
+  bdRoutes.getParticipantAgencies
+);
+app.post("/api/bd", authenticateAppUser, bdRoutes.createBD);
+app.put("/api/bd", authenticateAppUser, bdRoutes.updateBD);
+app.put("/api/bd/add-beans", authenticateAppUser, bdRoutes.addBeans); // ACHAL: create a TransactionHistory here
+app.post("/api/bd/add-agency", authenticateAppUser, bdRoutes.addAgency);
+app.put("/api/bd/remove-agency", authenticateAppUser, bdRoutes.removeAgency);
 app.delete(
   "/api/agency/agent",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.removeAgentfromAgency
 );
-app.delete("/api/bd/agency", CheckBanned, gamesController.removeAgencyfromBd);
+app.delete(
+  "/api/bd/agency",
+  authenticateAppUser,
+  gamesController.removeAgencyfromBd
+);
 
-app.get("/api/creator/history", CheckBanned, gamesController.getCreatorHistory);
+app.get(
+  "/api/creator/history",
+  authenticateAppUser,
+  gamesController.getCreatorHistory
+);
 app.get(
   "/api/creator/monthly-history",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getMonthlyCreatorHistory
 );
 app.get(
   "/api/creator/weekly-history",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getWeeklyCreatorHistory
 );
 
-app.get("/api/rates", CheckBanned, gamesController.getRates);
+app.get("/api/rates", authenticateAppUser, gamesController.getRates);
 
-app.get("/api/richLevel", CheckBanned, gamesController.getUserRichLevel);
-app.get("/api/charmLevel", CheckBanned, gamesController.getUserCharmLevel);
-app.get("/api/monthlyGift", CheckBanned, gamesController.getMonthlyGift);
+app.get(
+  "/api/richLevel",
+  authenticateAppUser,
+  gamesController.getUserRichLevel
+);
+app.get(
+  "/api/charmLevel",
+  authenticateAppUser,
+  gamesController.getUserCharmLevel
+);
+app.get(
+  "/api/monthlyGift",
+  authenticateAppUser,
+  gamesController.getMonthlyGift
+);
 app.get(
   "/api/monthlyRecharge",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getMonthlyRecharge
 );
-app.get("/api/admin/userInfo", CheckBanned, gamesController.getUserInfo);
-app.delete("/api/admin/removeFrame", CheckBanned, gamesController.removeFrame);
-app.put("/api/admin/addFrame", CheckBanned, gamesController.addFrame);
+app.get(
+  "/api/admin/userInfo",
+  authenticateAppUser,
+  gamesController.getUserInfo
+);
+app.delete(
+  "/api/admin/removeFrame",
+  authenticateAppUser,
+  gamesController.removeFrame
+);
+app.put("/api/admin/addFrame", authenticateAppUser, gamesController.addFrame);
 app.put(
   "/api/admin/changeDiamond",
   authenticateToken,
   authenticateRole,
   gamesController.changeDiamonds
 );
-app.put("/api/admin/banUser", authenticateToken,authenticateRole, gamesController.banUser);
-app.put("/api/admin/unbanUser", CheckBanned,authenticateRole, gamesController.unbanUser);
-app.put("/api/admin/accept", CheckBanned, gamesController.acceptBeansWithDraw);
-app.put("/api/admin/reject", CheckBanned, gamesController.rejectBeansWithDraw);
+app.put(
+  "/api/admin/banUser",
+  authenticateToken,
+  authenticateRole,
+  gamesController.banUser
+);
+app.put(
+  "/api/admin/unbanUser",
+  CheckBanned,
+  authenticateRole,
+  gamesController.unbanUser
+);
+app.put(
+  "/api/admin/accept",
+  authenticateAppUser,
+  gamesController.acceptBeansWithDraw
+);
+app.put(
+  "/api/admin/reject",
+  authenticateAppUser,
+  gamesController.rejectBeansWithDraw
+);
 app.post(
   "/api/admin/sendWithDrawReq",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.sendWithDrawalRequest
 );
 app.get(
   "/api/admin/getUserReqs",
-  CheckBanned,
+  authenticateAppUser,
   gamesController.getWithDrawalRequests
 );
-app.post("/api/jackpot-bet", CheckBanned, async (req, res) => {
+app.post("/api/jackpot-bet", authenticateAppUser, async (req, res) => {
   const { userId, lines, betAmount } = req.body;
   try {
     console.log("trigger rjvn");
@@ -643,7 +849,7 @@ app.post("/api/jackpot-bet", CheckBanned, async (req, res) => {
     res.status(500).send(`internal server error ${e}`);
   }
 });
-app.get("/api/spin-jackpot", CheckBanned, async (req, res) => {
+app.get("/api/spin-jackpot", authenticateAppUser, async (req, res) => {
   const { userId } = req.query;
   const jackpotUserInfo = jackpotInfo.find((item) => item.userId === userId);
   console.log("jackpotUserInfo", jackpotUserInfo);
@@ -853,10 +1059,18 @@ app.get("/api/spin-jackpot", CheckBanned, async (req, res) => {
 
   return { jackpotgameGrid, jackPotAmount };
 });
-app.put("/api/update-jackpot", CheckBanned, gamesController.updateJackPot);
-app.post("/api/update-jackpot", CheckBanned, gamesController.updateJackPot);
-app.get("/get-jackpot", CheckBanned, gamesController.getJackPotAmount);
-app.get("/api/getDiamonds", CheckBanned, gamesController.getDiamonds);
+app.put(
+  "/api/update-jackpot",
+  authenticateAppUser,
+  gamesController.updateJackPot
+);
+app.post(
+  "/api/update-jackpot",
+  authenticateAppUser,
+  gamesController.updateJackPot
+);
+app.get("/get-jackpot", authenticateAppUser, gamesController.getJackPotAmount);
+app.get("/api/getDiamonds", authenticateAppUser, gamesController.getDiamonds);
 app.get(
   "/api/admin/creators",
   // authenticateToken,
@@ -868,6 +1082,16 @@ app.post("/api/admin/get-otp", authenticationController.getAdminOtp);
 // app.delete("/api/admin/dele")
 app.put("/api/user-transfer-agent", gamesController.transferToAgent);
 app.put("/api/agent-transfer-user", gamesController.transferFromAgentToUser);
+
+app.get("/api/checkToken", authenticateAppUser, async (req, res) => {
+  let appToken = await AppToken.findOne({});
+  let Tokens = appToken.appTokens;
+  if (Tokens[req.userId] !== req.appToken) {
+    res.status(400).send("new user loggedIn");
+  } else {
+    res.send("token valid");
+  }
+});
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -1042,7 +1266,7 @@ function sendGameUpdate(event, socket = null, data = null) {
   if (socket) {
     socket.emit(event, sendData);
   } else {
-    io.emit(event, sendData);
+    io1.emit(event, sendData);
   }
 }
 
@@ -1381,9 +1605,11 @@ function getBoardStartPosition(color) {
 const sheepGameRooms = [];
 const userSheepRooms = {};
 //emit some event on client side just after connecting .send userId for storing socketids of connected user
-io.on("connection", (socket) => {
-  // console.log("io",io);
+io1.on("connection", (socket) => {
+  // console.log("io1",io1);
   // console.log("socket",socket);
+  // console.log("io1.sockets",io1)
+  console.log("io1", io1.sockets.sockets);
 
   socket.on("join-sheepgame", (data) => {
     // console.log("data1234",data,typeof(data))
@@ -1983,7 +2209,7 @@ io.on("connection", (socket) => {
       }
     }
 
-    // if (ludoPlayers.) io.to(ludoroomId).emit;
+    // if (ludoPlayers.) io1.to(ludoroomId).emit;
   });
 
   socket.on("move", (data) => {
@@ -2054,7 +2280,7 @@ io.on("connection", (socket) => {
         };
       }
 
-      io.to(ludoroomId).emit("player-pin-killed", {
+      io1.to(ludoroomId).emit("player-pin-killed", {
         userId: LudoplayerPositions[matchedPinpPlayerIndex].userId,
       });
       socket.to(ludoroomId).emit("update-positions", {
@@ -2108,9 +2334,9 @@ io.on("connection", (socket) => {
 async function startANewGame() {
   try {
     // TODO: ACHAL - uncomment this to start the spinner game
-    setTimeout(gameStarts, 0, io); // Betting Starts
+    setTimeout(gameStarts, 0, io1); // Betting Starts
     setTimeout(bettingEnds, 30000); // Betting Ends & send result
-    setTimeout(gameEnds, 40000, io); // 10 sec spinner + 10 sec leaderboard
+    setTimeout(gameEnds, 40000, io1); // 10 sec spinner + 10 sec leaderboard
   } catch (e) {
     console.error("Error in Game:", e);
   }
@@ -2194,3 +2420,6 @@ cron.schedule("0 0 1 * *", async () => {
 
 // console.log("admin in app", admin);
 // exports.admin = admin;
+server.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});

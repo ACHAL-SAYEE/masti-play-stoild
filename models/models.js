@@ -286,8 +286,15 @@ const CreatorHistorySchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+const TokenSchema = new mongoose.Schema(
+  {
+    appTokens: { type: Object, default: {} },
+  },
+  { minimize: false }
+);
+const AppToken = mongoose.model("AppToken", TokenSchema);
 const CreatorHistory = mongoose.model("CreatorHistory", CreatorHistorySchema);
-
+ 
 const AgencyCommissionHistory = mongoose.model(
   "AgencyCommissionHistory",
   AgencyCommissionHistorySchema
@@ -473,3 +480,4 @@ exports.withDrawalRequest = withDrawalRequest;
 exports.JackPotLoss = JackPotLoss;
 exports.OtpSecret = OtpSecret;
 exports.AgentTransfer = agentTransfer;
+exports.AppToken = AppToken;
