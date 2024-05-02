@@ -533,6 +533,7 @@ class PostApis {
 
   async getFollowersData(req, res) {
     const { userId, limit, start } = req.query;
+    console.log("api hit")
     try {
       let FollowersData = await following.aggregate([
         { $match: { followingId: userId } },
