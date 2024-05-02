@@ -147,91 +147,49 @@ class Authentication {
   }
 
   async verifyOtp(req, res) {
-    try {
-      console.log("Verifying otp");
-      const { otp, phoneNo } = req.body;
-      // const phone = req.headers.phone;
-      // const otp = req.headers.otp;
-      // const expectedOtp = '123456';
-      console.log(`phone = ${phoneNo}`);
-      console.log(`otpMap = `, otpMap);
-      if (otpMap[phoneNo] != null) {
-        const storedData = otpMap[phoneNo]["otp"];
-        console.log(`storedData = ${storedData}`);
-        console.log(`typeof storedData = ${typeof storedData}`);
-        console.log(`otp = ${otp}`);
-        console.log(`typeof otp = ${typeof otp}`);
-        const { storedOtp, timestamp } = storedData;
-        // if (storedData.toString().isEqual(otp)) {
-        if (parseInt(otp, 10) == storedData) {
-          //  && Date.now() - timestamp < 600000
-          let phoneNo1 = phoneNo + "@gmail.com";
-
-          const currUser = await User.findOne({ email: phoneNo1 });
-          let userExists = false;
-          let payload;
-          let jwtToken;
-          if (currUser) {
-            userExists = true;
-            payload = {
-              userId: currUser.userId,
-              role: currUser.role,
-              email: phoneNo1,
-            };
-            jwtToken = jwt.sign(payload, tokenSecreat, {
-              expiresIn: "30d",
-            });
-            res.status(200).json({
-              message: "OTP verification successful",
-              userExists: true,
-              token: jwtToken,
-            });
-            const appTokens = await AppToken.findOne({});
-            appTokens.appTokens[currUser.userId] = jwtToken;
-            
-            // console.log("appTokens123", appTokens);
-            appTokens.markModified("appTokens");
-
-            await appTokens.save();
-          } else {
-            res.status(200).json({
-              message: "OTP verification successful",
-              userExists: false,
-              token: null,
-            });
-          }
-
-          // let authenticatedUserInfo = await OtpSecret.findOne({
-          //   phoneNumber: phoneNo,
-          // });
-          // if (authenticatedUserInfo) {
-          //   res.status(200).json({
-          //     message: "OTP verification successful",
-          //     OtpSecret: authenticatedUserInfo.otpSecret,
-          //   });
-          // } else {
-          // let generatedOtpSecreat = generateRandomOtpSecret();
-          // await OtpSecret.create({
-          //   phoneNumber: phoneNo,
-          //   otpSecret: generatedOtpSecreat,
-          // });
-
-          // res.status(200).json({
-          //   message: "OTP verification successful",
-          //   OtpSecret: generatedOtpSecreat,
-          // });
-          // }
-          delete otpMap[phoneNo];
-          // 300000 milliseconds (5 minutes) is the validity window for the OTP
+    console.log("Verifying otp");
+    const { otp, phoneNo } = req.body;
+    // const phone = req.headers.phone;
+    // const otp = req.headers.otp;
+    // const expectedOtp = '123456';
+    console.log(`phone = ${phoneNo}`);
+    console.log(`otpMap = `, otpMap);
+    if (otpMap[phoneNo] != null) {
+      const storedData = otpMap[phoneNo]["otp"];
+      console.log(`storedData = ${storedData}`);
+      console.log(`typeof storedData = ${typeof storedData}`);
+      console.log(`otp = ${otp}`);
+      console.log(`typeof otp = ${typeof otp}`);
+      const { storedOtp, timestamp } = storedData;
+      // if (storedData.toString().isEqual(otp)) {
+      if (parseInt(otp, 10) == storedData) {
+        //  && Date.now() - timestamp < 600000
+        let authenticatedUserInfo = await OtpSecret.findOne({
+          phoneNumber: phoneNo,
+        });
+        if (authenticatedUserInfo) {
+          res.status(200).json({
+            message: "OTP verification successful",
+            OtpSecret: authenticatedUserInfo.otpSecret,
+          });
         } else {
-          res.status(401).json({ message: "Invalid OTP or OTP expired" });
+          let generatedOtpSecreat = generateRandomOtpSecret();
+          await OtpSecret.create({
+            phoneNumber: phoneNo,
+            otpSecret: generatedOtpSecreat,
+          });
+          res.status(200).json({
+            message: "OTP verification successful",
+            OtpSecret: generatedOtpSecreat,
+          });
         }
+        delete otpMap[phoneNo];
+        // 300000 milliseconds (5 minutes) is the validity window for the OTP
       } else {
-        res.status(404).json({ message: "Phone number not found" });
+        res.status(401).json({ message: "Invalid OTP or OTP expired" });
       }
-    } catch (e) {
-      console.log(e);
-      res.status(500).send(`internal server error ${e}`);
+    } else {
+      res.status(404).json({ message: "Phone number not found" });
     }
   }
   async verifyAdminOtp(req, res) {

@@ -408,21 +408,7 @@ app.post("/api/user", async (req, res) => {
       phoneNumber,
     });
     let x = await newUser.save();
-    payload = {
-      userId: x.userId,
-      role: x.role,
-      email: x.email,
-    };
-    jwtToken = jwt.sign(payload, tokenSecreat, {
-      expiresIn: "30d",
-    });
-    // res.status(200).send(x);
-    res.send({ userData: x, token: jwtToken });
-    let appTokens = await AppToken.findOne({});
-    appTokens.appTokens[x.userId] = jwtToken;
-    appTokens.markModified("appTokens");
-
-    await appTokens.save();
+    res.status(200).send(x);
   } catch (e) {
     console.log(e);
     res.status(500).send(`internal server error ${e}`);
