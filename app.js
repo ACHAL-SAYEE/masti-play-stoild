@@ -163,33 +163,59 @@ const CheckBanned = async (req, res, next) => {
   next();
 };
 
-const authenticateAppUser = async (request, response, next) => {
-  let mastiToken;
-  const authHeader = request.headers["authorization"];
-  if (authHeader !== undefined) {
-    mastiToken = authHeader.split(" ")[1];
-  }
-  if (mastiToken === undefined) {
-    response.status(401);
-    response.send("Invalid JWT Token");
-  } else {
-    jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
-      if (error) {
-        response.status(401);
-        response.send("Invalid JWT Token");
-      } else {
-        let appTokens = await AppToken.findOne({});
-        if (appTokens[payload.userId] !== mastiToken) {
-          response.status(401).send("token expired");
-        } else {
-          request.userId = payload.userId;
-          request.appToken = mastiToken;
-          next();
-        }
-      }
-    });
-  }
-};
+// const authenticateAppUser = async (request, response, next) => {
+//   let mastiToken;
+//   const authHeader = request.headers["authorization"];
+//   if (authHeader !== undefined) {
+//     mastiToken = authHeader.split(" ")[1];
+//   }
+//   if (mastiToken === undefined) {
+//     response.status(401);
+//     response.send("Invalid JWT Token");
+//   } else {
+//     jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
+//       if (error) {
+//         response.status(401);
+//         response.send("Invalid JWT Token");
+//       } else {
+//         let appTokens = await AppToken.findOne({});
+//         if (appTokens[payload.userId] !== mastiToken) {
+//           response.status(401).send("token expired");
+//         } else {
+//           request.userId = payload.userId;
+//           request.appToken = mastiToken;
+//           next();
+//         }
+//       }
+//     });
+//   }
+// };
+// const authenticateAppUser = async (request, response, next) => {
+//   let mastiToken;
+//   const authHeader = request.headers["authorization"];
+//   if (authHeader !== undefined) {
+//     mastiToken = authHeader.split(" ")[1];
+//   }
+//   if (mastiToken === undefined) {
+//     response.status(401);
+//     response.send("Invalid JWT Token");
+//   } else {
+    
+//         let appTokens = await AppToken.findOne({});
+//         if (appTokens[payload.userId] !== mastiToken) {
+//           response.status(401).send("token expired");
+//         } else {
+//           request.userId = payload.userId;
+//           request.appToken = mastiToken;
+//           next();
+//         }
+//       }
+//     });
+//   }
+// };
+const authenticateAppUser=async(req,res,next)=>{
+  next();
+}
 
 initializeDB().then(async () => {
   let appToken = await AppToken.findOne({});
@@ -1091,6 +1117,18 @@ app.get("/api/checkToken", authenticateAppUser, async (req, res) => {
   } else {
     res.send("token valid");
   }
+});
+
+app.post("/api/token", async (req, res) => {
+  const { userId, token } = req.body;
+  const appTokens = await AppToken.findOne({});
+  appTokens.appTokens[userId] = token;
+  
+  // console.log("appTokens123", appTokens);
+  appTokens.markModified("appTokens");
+
+  await appTokens.save();
+  res.send("token saved successfully")
 });
 
 const socketIds = {};
