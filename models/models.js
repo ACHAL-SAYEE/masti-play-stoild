@@ -285,6 +285,12 @@ const CreatorHistorySchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+const LuckyWalletSchema = new mongoose.Schema({
+  wallet1: { type: Number, default: 0 },
+  wallet2: { type: Number, default: 0 },
+
+  wallet3: { type: Number, default: 0 },
+});
 
 const TokenSchema = new mongoose.Schema(
   {
@@ -294,7 +300,7 @@ const TokenSchema = new mongoose.Schema(
 );
 const AppToken = mongoose.model("AppToken", TokenSchema);
 const CreatorHistory = mongoose.model("CreatorHistory", CreatorHistorySchema);
- 
+
 const AgencyCommissionHistory = mongoose.model(
   "AgencyCommissionHistory",
   AgencyCommissionHistorySchema
@@ -368,7 +374,7 @@ const SpinnerGameBetInfo = mongoose.model(
   "SpinnerGameBetInfo",
   SpinnerGameBetInfoSchema
 );
-
+const LuckyWallet = mongoose.model("LuckyWallet", LuckyWalletSchema);
 const UserRecharge = mongoose.model("UserRecharge", UserRechargeSchema);
 const UserGift = mongoose.model("UserGift", UserGiftSchema);
 const UserRechargeMonthly = mongoose.model(
@@ -419,6 +425,14 @@ const JackPotLossSchema = new mongoose.Schema({
   userId: String,
   lossAmount: { type: Number, default: 0 },
 });
+const LuckyRequestTimesSchema = new mongoose.Schema({
+  userId: { type: String },
+  times: { type: Number, default: 0 },
+});
+const LuckyRequestTimes = mongoose.model(
+  "LuckyRequestTimes",
+  LuckyRequestTimesSchema
+);
 const JackPotLoss = mongoose.model("JackPotLoss", JackPotLossSchema);
 const withDrawalRequest = mongoose.model(
   "withDrawalRequest",
@@ -481,3 +495,5 @@ exports.JackPotLoss = JackPotLoss;
 exports.OtpSecret = OtpSecret;
 exports.AgentTransfer = agentTransfer;
 exports.AppToken = AppToken;
+exports.LuckyWallet = LuckyWallet;
+exports.LuckyRequestTimes = LuckyRequestTimes;

@@ -23,6 +23,8 @@ const {
   withDrawalRequest,
   JackPotLoss,
   AgentTransfer,
+  LuckyWallet,
+  LuckyRequestTimes,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const admin = require("firebase-admin");
@@ -2440,7 +2442,7 @@ class games {
   }
   async banUser(req, res) {
     const { userId, bannedPeriod } = req.body;
-    console.log("userId, bannedPeriod",userId, bannedPeriod)
+    console.log("userId, bannedPeriod", userId, bannedPeriod);
     try {
       let userDetails = await User.findOne({ userId });
       let userRecord = await admin.auth().getUserByEmail(userDetails.email);
@@ -2711,8 +2713,7 @@ class games {
             // "creatorData.todayActiveTime": 0,
           },
         },
-        { $sort: { userId: 1 } }
-
+        { $sort: { userId: 1 } },
       ]);
       res.send(result);
     } catch (e) {
@@ -2764,6 +2765,73 @@ class games {
 
         res.send("beans transfered to user successfully");
       }
+    } catch (e) {
+      res.status(500).send(`internal server error ${e}`);
+      console.log(e);
+    }
+  }
+  async sendLuckyGift(req, res) {
+    const { sentBy, sentTo, diamonds, stickerValue } = req.body;
+    try {
+      let existingAmount = await User.findOne({ userId: sentBy });
+      if (existingAmount.diamondsCount < diamonds) {
+        return res.status(400).send("insufficient beans balance");
+      }
+
+      existingAmount.diamondsCount -= diamonds;
+      await existingAmount.save();
+      await User.updateOne(
+        { userId: sentTo },
+        { $inc: { beansCount: 0.04 * diamonds } }
+      );
+      let wallet1 = 0.85 * diamonds;
+      let wallet2 = 0.05 * diamonds;
+      let wallet3 = 0.1 * diamonds;
+      let updatedLucky = await LuckyWallet.findOneAndUpdate(
+        {},
+        { $inc: { wallet1, wallet2, wallet3 } },
+        { new: true }
+      );
+      let LuckyTimes = await LuckyRequestTimes.findOne({ userId: sentBy });
+      let luckyTimes;
+
+      if (LuckyTimes === null) {
+        await LuckyRequestTimes.create({ userId: sentBy });
+        luckyTimes = 0;
+      } else {
+        luckyTimes = LuckyTimes.times;
+      }
+      console.log("luckyTimesluckyTimes",luckyTimes)
+      console.log("luckywallet",updatedLucky)
+
+      if (luckyTimes % 2 == 0) {
+        if (updatedLucky.wallet1 > 10 * stickerValue) {
+          await LuckyWallet.updateOne(
+            {},
+            { $inc: { wallet1: -1 * 10 * stickerValue } }
+          );
+        let yu=  await User.updateOne(
+            { userId: sentBy },
+            { $inc: { diamondsCount: 10 * stickerValue } }
+          );
+          console.log("yu",yu)
+          res.send("10 times recieved");
+
+        }
+        else{
+          res.send("no");
+        }
+
+      }
+      else{
+        res.send("no");
+
+      }
+
+      await LuckyRequestTimes.updateOne(
+        { userId: sentBy },
+        { $inc: { times: 1 } }
+      );
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
       console.log(e);

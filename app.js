@@ -93,6 +93,7 @@ const {
   SpinnerGameBetInfo,
   TransactionHistory,
   AppToken,
+  LuckyWallet,
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
@@ -223,6 +224,10 @@ initializeDB().then(async () => {
   console.log("appToken", appToken);
   if (appToken === null) {
     await AppToken.create({ appToken: {} });
+  }
+  let luckycollection=await LuckyWallet.findOne({})
+  if (luckycollection === null) {
+    await LuckyWallet.create({ });
   }
 });
 let appSockets = {};
@@ -1117,6 +1122,8 @@ app.post("/api/token", async (req, res) => {
   await appTokens.save();
   res.send("token saved successfully")
 });
+
+app.post("/api/luckyGift" ,gamesController.sendLuckyGift)
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
