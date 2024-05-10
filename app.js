@@ -194,8 +194,8 @@ const CheckBanned = async (req, res, next) => {
 const authenticateAppUser = async (request, response, next) => {
   let mastiToken;
   const authHeader = request.headers["authorization"];
-  const userId=request.headers["userid"]
-  console.log("request.headers",request.headers)
+  const userId = request.headers["userid"];
+  console.log("request.headers", request.headers);
   if (authHeader !== undefined) {
     mastiToken = authHeader.split(" ")[1];
   }
@@ -203,17 +203,15 @@ const authenticateAppUser = async (request, response, next) => {
     response.status(401);
     response.send("Invalid JWT Token");
   } else {
-    
-        let appTokens = await AppToken.findOne({});
-        if (appTokens.appTokens[userId] !== mastiToken) {
-          response.status(401).send("token expired");
-        } else {
-          request.userId = userId;
-          request.appToken = mastiToken;
-          next();
-        }
-      }
-  
+    let appTokens = await AppToken.findOne({});
+    if (appTokens.appTokens[userId] !== mastiToken) {
+      response.status(401).send("token expired");
+    } else {
+      request.userId = userId;
+      request.appToken = mastiToken;
+      next();
+    }
+  }
 };
 // const authenticateAppUser=async(req,res,next)=>{
 //   next();
@@ -225,9 +223,9 @@ initializeDB().then(async () => {
   if (appToken === null) {
     await AppToken.create({ appToken: {} });
   }
-  let luckycollection=await LuckyWallet.findOne({})
+  let luckycollection = await LuckyWallet.findOne({});
   if (luckycollection === null) {
-    await LuckyWallet.create({ });
+    await LuckyWallet.create({});
   }
 });
 let appSockets = {};
@@ -1115,15 +1113,15 @@ app.post("/api/token", async (req, res) => {
   const { userId, token } = req.body;
   const appTokens = await AppToken.findOne({});
   appTokens.appTokens[userId] = token;
-  
+
   // console.log("appTokens123", appTokens);
   appTokens.markModified("appTokens");
 
   await appTokens.save();
-  res.send("token saved successfully")
+  res.send("token saved successfully");
 });
 
-app.post("/api/luckyGift" ,gamesController.sendLuckyGift)
+app.post("/api/luckyGift", gamesController.sendLuckyGift);
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
