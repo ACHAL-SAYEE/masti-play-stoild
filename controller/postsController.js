@@ -57,7 +57,7 @@ class PostApis {
     const { postId } = req.query;
     try {
       await Post.deleteOne({
-        PostId: postId
+        PostId: postId,
       });
       res.send("post deleted successfully");
     } catch (e) {
@@ -141,7 +141,7 @@ class PostApis {
       console.log("updatedPosts", updatedPosts);
       res.status(200).send(updatedPosts);
     } catch (error) {
-      res.status(500).send({ message: "Internal Server Error." });
+      res.status(500).send({ message: `Internal Server Error.${error}` });
     }
   }
 
@@ -197,7 +197,7 @@ class PostApis {
       res.status(200).send(updatedPosts);
     } catch (error) {
       console.log(error);
-      res.status(500).send({ message: "Internal Server Error." });
+      res.status(500).send({ message: `Internal Server Error.${error}` });
     }
   }
   async followUser(req, res) {
@@ -533,7 +533,7 @@ class PostApis {
 
   async getFollowersData(req, res) {
     const { userId, limit, start } = req.query;
-    console.log("api hit")
+    console.log("api hit");
     try {
       let FollowersData = await following.aggregate([
         { $match: { followingId: userId } },
