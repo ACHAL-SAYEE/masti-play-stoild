@@ -23,7 +23,7 @@ const server = http.createServer(app);
 let tokenSecreat =
   "4233d702105f11041081e9aacd786076f8de2f4f33db08d5125e50397e31f890";
 const io1 = socketIO(server, {
-  path: "/audioRoom/socket.io",
+  // path: "/audioRoom/socket.io",
   cors: [{ origin: "http://localhost:5500" }],
 });
 const io2 = socketIO(server, {
