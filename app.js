@@ -257,6 +257,11 @@ io2.on("connection", (socket) => {
     delete appSockets[socket.id];
   });
 });
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 app.post("/upload", (req, res, next) => {
   const uuid = uuidv4();
@@ -473,9 +478,6 @@ app.post("/api/SignInWithGoggle", authenticationController.SignInWithGoggle);
 
 app.post("/api/login", authenticationController.login);
 
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
 
 app.post("/api/posts/", authenticateAppUser, postsController.storePost);
 
