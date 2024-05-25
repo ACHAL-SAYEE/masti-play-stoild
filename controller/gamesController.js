@@ -2771,22 +2771,25 @@ class games {
     }
   }
   async sendLuckyGift(req, res) {
-    const { sentBy, sentTo, diamonds, stickerValue } = req.body;
+    const { sentBy, sentTo, diamonds, stickerValue, quantity } = req.body;
     try {
       let existingAmount = await User.findOne({ userId: sentBy });
-      if (existingAmount.diamondsCount < diamonds) {
+      let diamondsSent = diamonds * quantity;
+      if (existingAmount.diamondsCount < diamondsSent) {
         return res.status(400).send("insufficient beans balance");
       }
+      // for (let sendTimes = 1; sendTimes <= quantity; sendTimes++) {
 
-      existingAmount.diamondsCount -= diamonds;
+      // }
+      existingAmount.diamondsCount -= diamondsSent;
       await existingAmount.save();
       await User.updateOne(
         { userId: sentTo },
-        { $inc: { beansCount: 0.04 * diamonds } }
+        { $inc: { beansCount: 0.04 * diamondsSent } }
       );
-      let wallet1 = 0.85 * diamonds;
-      let wallet2 = 0.05 * diamonds;
-      let wallet3 = 0.1 * diamonds;
+      let wallet1 = 0.85 * diamondsSent;
+      let wallet2 = 0.05 * diamondsSent;
+      let wallet3 = 0.1 * diamondsSent;
       let updatedLucky = await LuckyWallet.findOneAndUpdate(
         {},
         { $inc: { wallet1, wallet2, wallet3 } },
@@ -2801,36 +2804,160 @@ class games {
       } else {
         luckyTimes = LuckyTimes.times;
       }
-      console.log("luckyTimesluckyTimes",luckyTimes)
-      console.log("luckywallet",updatedLucky)
-
-      if (luckyTimes % 2 == 0) {
-        if (updatedLucky.wallet1 > 10 * stickerValue) {
+      // console.log("luckyTimesluckyTimes", luckyTimes);
+      console.log(
+        "luckywallet ",
+        updatedLucky.wallet1,
+        " luckyTimes ",
+        luckyTimes
+      );
+      if (quantity % 2 == 0) {
+        if (updatedLucky.wallet1 > 10 * stickerValue * (quantity / 2)) {
           await LuckyWallet.updateOne(
             {},
-            { $inc: { wallet1: -1 * 10 * stickerValue } }
+            { $inc: { wallet1: -1 * 10 * stickerValue * (quantity / 2) } }
           );
-        let yu=  await User.updateOne(
+          let yu = await User.updateOne(
             { userId: sentBy },
-            { $inc: { diamondsCount: 10 * stickerValue } }
+            { $inc: { diamondsCount: 10 * stickerValue * (quantity / 2) } }
           );
-          console.log("yu",yu)
-          res.send("10 times recieved");
+          // console.log("yu", yu);
+          res.send(`10 times recieved for ${quantity / 2} gifts`);
+        } else {
+          let possibleGifts = Math.floor(
+            updatedLucky.wallet1 / (10 * stickerValue)
+          );
+          if (possibleGifts == 0) return res.send("no");
 
+          if (possibleGifts % 2 == 0) {
+            await LuckyWallet.updateOne(
+              {},
+              {
+                $inc: { wallet1: -1 * 10 * stickerValue * (possibleGifts / 2) },
+              }
+            );
+            let yu = await User.updateOne(
+              { userId: sentBy },
+              {
+                $inc: {
+                  diamondsCount: 10 * stickerValue * (possibleGifts / 2),
+                },
+              }
+            );
+            // console.log("yu", yu);
+            res.send(`10 times recieved for ${possibleGifts} gifts`);
+          } else {
+            await LuckyWallet.updateOne(
+              {},
+              {
+                $inc: {
+                  wallet1:
+                    -1 * 10 * stickerValue * Math.ceil(possibleGifts / 2),
+                },
+              }
+            );
+            let yu = await User.updateOne(
+              { userId: sentBy },
+              {
+                $inc: {
+                  diamondsCount:
+                    10 * stickerValue * Math.ceil(possibleGifts / 2),
+                },
+              }
+            );
+            res.send(
+              `10 times recieved for ${Math.ceil(possibleGifts / 2)} gifts`
+            );
+          }
         }
-        else{
-          res.send("no");
+      } else {
+        let returnTimes;
+        if (luckyTimes % 2 == 0) returnTimes = Math.ceil(quantity / 2);
+        else returnTimes = Math.floor(quantity / 2);
+        if (updatedLucky.wallet1 > 10 * stickerValue * returnTimes) {
+          await LuckyWallet.updateOne(
+            {},
+            { $inc: { wallet1: -1 * 10 * stickerValue * returnTimes } }
+          );
+          let yu = await User.updateOne(
+            { userId: sentBy },
+            { $inc: { diamondsCount: 10 * stickerValue * returnTimes } }
+          );
+          // console.log("yu", yu);
+          res.send(`10 times recieved for ${returnTimes} gifts`);
+        } else {
+          console.log("entered here");
+          let possibleGifts = Math.floor(
+            updatedLucky.wallet1 / (10 * stickerValue)
+          );
+          console.log("possibleGifts ", possibleGifts);
+          if (possibleGifts == 0) return res.send("no");
+
+          if (possibleGifts % 2 == 0) {
+            await LuckyWallet.updateOne(
+              {},
+              {
+                $inc: { wallet1: -1 * 10 * stickerValue * (possibleGifts / 2) },
+              }
+            );
+            let yu = await User.updateOne(
+              { userId: sentBy },
+              {
+                $inc: {
+                  diamondsCount: 10 * stickerValue * (possibleGifts / 2),
+                },
+              }
+            );
+            // console.log("yu", yu);
+            res.send(`10 times recieved for ${possibleGifts} gifts`);
+          } else {
+            await LuckyWallet.updateOne(
+              {},
+              {
+                $inc: {
+                  wallet1:
+                    -1 * 10 * stickerValue * Math.floor(possibleGifts / 2),
+                },
+              }
+            );
+            let yu = await User.updateOne(
+              { userId: sentBy },
+              {
+                $inc: {
+                  diamondsCount:
+                    10 * stickerValue * Math.floor(possibleGifts / 2),
+                },
+              }
+            );
+            if (possibleGifts / 2 < 1)return res.send("no");
+            res.send(
+              `10 times recieved for ${Math.floor(possibleGifts / 2)} gifts`
+            );
+          }
         }
-
       }
-      else{
-        res.send("no");
-
-      }
+      // if (luckyTimes % 2 == 0) {
+      //   if (updatedLucky.wallet1 > 10 * stickerValue) {
+      //     await LuckyWallet.updateOne(
+      //       {},
+      //       { $inc: { wallet1: -1 * 10 * stickerValue } }
+      //     );
+      //     let yu = await User.updateOne(
+      //       { userId: sentBy },
+      //       { $inc: { diamondsCount: 10 * stickerValue } }
+      //     );
+      //     console.log("yu", yu);
+      //     res.send("10 times recieved");
+      //   } else {
+      //     res.send("no");
+      //   }
+      // } else {
+      //   res.send("no");
+      // }
 
       await LuckyRequestTimes.updateOne(
         { userId: sentBy },
-        { $inc: { times: 1 } }
+        { $inc: { times: quantity } }
       );
     } catch (e) {
       res.status(500).send(`internal server error ${e}`);
