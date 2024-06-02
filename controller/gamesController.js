@@ -1266,8 +1266,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-          currentDate.getDay() +
-          (currentDate.getDay() === 0 ? -6 : 1)
+        currentDate.getDay() +
+        (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -2929,7 +2929,7 @@ class games {
                 },
               }
             );
-            if (possibleGifts / 2 < 1)return res.send("no");
+            if (possibleGifts / 2 < 1) return res.send("no");
             res.send(
               `10 times recieved for ${Math.floor(possibleGifts / 2)} gifts`
             );
