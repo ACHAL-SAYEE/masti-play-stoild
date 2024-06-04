@@ -2246,7 +2246,10 @@ class games {
       todayEnd.setHours(23, 59, 59, 999);
       const TopWinners = await SpinnerGameWinnerHistory.aggregate([
         {
-          $match: { createdAt: { $gte: todayStart, $lt: todayEnd }, gameId },
+          $match: {
+            // createdAt: { $gte: todayStart, $lt: todayEnd },
+            gameId,
+          },
         },
         {
           $lookup: {
@@ -2258,7 +2261,7 @@ class games {
           },
         },
         { $unwind: "$userData" },
-        { $skip: Number(start) }, 
+        { $skip: Number(start) },
         { $limit: Number(limit) },
       ]);
 

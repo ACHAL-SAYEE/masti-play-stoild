@@ -716,7 +716,7 @@ app.get(
 // ACHAL: send top-winner's UsersData as well
 app.get(
   "/api/top-winner",
-  authenticateAppUser,
+  // authenticateAppUser,
   gamesController.getTopWinners
 ); // today's top winners
 
@@ -1365,6 +1365,7 @@ async function endBetting() {
 
     return acc;
   }, []);
+
   if (bettingInfoArray.length === 0) {
     return {
       totalBet: 0,
@@ -1455,10 +1456,15 @@ async function endBetting() {
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
+        let resultBetItem = bettingInfoArray.find(
+          (o) =>
+            o.userId === betItem.userId && o.wheelNo === nearestEntry.wheelNo
+        );
         await SpinnerGameWinnerHistory.create({
           userId: betItem.userId,
           diamondsSpent: userspentInfo.amount,
           diamondsEarned: betItem.amount * multiplyvalue,
+          resultBet: resultBetItem.amount,
           wheelNo: betItem.wheelNo,
           gameId: happyZooGameId,
         });
