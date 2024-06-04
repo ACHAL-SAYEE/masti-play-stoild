@@ -716,7 +716,7 @@ app.get(
 // ACHAL: send top-winner's UsersData as well
 app.get(
   "/api/top-winner",
-  // authenticateAppUser,
+  authenticateAppUser,
   gamesController.getTopWinners
 ); // today's top winners
 
