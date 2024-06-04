@@ -2220,7 +2220,7 @@ class games {
 
   async getUserAllBettingHistory(req, res) {
     const { userId, start, limit } = req.query;
-    console.log("req.query",req.query)
+    console.log("req.query", req.query);
     try {
       const bettingHistory = await SpinnerGameWinnerHistory.find({
         userId,
@@ -2235,9 +2235,9 @@ class games {
     }
   }
   async getTopWinners(req, res) {
-    const { start, limit } = req.query;
-    console.log(" req.query", req.query)
-    console.log(" start, limit", start, limit)
+    const { start, limit, gameId } = req.query;
+    console.log(" req.query", req.query);
+    console.log(" start, limit", start, limit);
     try {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
@@ -2246,7 +2246,7 @@ class games {
       todayEnd.setHours(23, 59, 59, 999);
       const TopWinners = await SpinnerGameWinnerHistory.aggregate([
         {
-          $match: { createdAt: { $gte: todayStart, $lt: todayEnd } },
+          $match: { createdAt: { $gte: todayStart, $lt: todayEnd }, gameId },
         },
         {
           $lookup: {
@@ -2258,7 +2258,7 @@ class games {
           },
         },
         { $unwind: "$userData" },
-        { $skip: Number(start) },
+        { $skip: Number(start) }, 
         { $limit: Number(limit) },
       ]);
 
@@ -2932,7 +2932,7 @@ class games {
                 },
               }
             );
-            if (possibleGifts / 2 < 1)return res.send("no");
+            if (possibleGifts / 2 < 1) return res.send("no");
             res.send(
               `10 times recieved for ${Math.floor(possibleGifts / 2)} gifts`
             );
