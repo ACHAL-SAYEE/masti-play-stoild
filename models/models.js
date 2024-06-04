@@ -249,6 +249,7 @@ const SpinnerGameWinnerHistorySchema = new mongoose.Schema(
     userId: String,
     diamondsEarned: { type: Number, default: 0 },
     diamondsSpent: { type: Number, default: 0 },
+    gameId: String,
   },
   { timestamps: true }
 );
@@ -310,7 +311,7 @@ const AgentTransactionHistory = mongoose.model(
   AgentTransactionHistorySchema
 );
 const bettingGameDataSchema = new mongoose.Schema(
-  { participants: Number, winners: Number, wheelNo: String },
+  { participants: Number, winners: Number, wheelNo: String, gameId: String },
   { timestamps: true }
 );
 

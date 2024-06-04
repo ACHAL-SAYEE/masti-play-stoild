@@ -478,7 +478,6 @@ app.post("/api/SignInWithGoggle", authenticationController.SignInWithGoggle);
 
 app.post("/api/login", authenticationController.login);
 
-
 app.post("/api/posts/", authenticateAppUser, postsController.storePost);
 
 app.delete("/api/posts", authenticateAppUser, postsController.deletePost);
@@ -666,7 +665,7 @@ app.post(
 
 app.get(
   "/api/all-history",
-  // authenticateAppUser,
+  authenticateAppUser,
   gamesController.getSpinnerHistory
 ); // for all sessions
 
@@ -711,13 +710,15 @@ app.post(
 
 app.get(
   "/api/my-betting-history",
-  // authenticateAppUser,
+  authenticateAppUser,
   gamesController.getUserAllBettingHistory
 ); // for a specific user, his betting history
 // ACHAL: send top-winner's UsersData as well
-app.get("/api/top-winner", 
-// authenticateAppUser,  
-gamesController.getTopWinners); // today's top winners
+app.get(
+  "/api/top-winner",
+  authenticateAppUser,
+  gamesController.getTopWinners
+); // today's top winners
 
 app.get(
   "/api/gift-history",
@@ -1125,7 +1126,7 @@ app.post("/api/token", async (req, res) => {
   res.send("token saved successfully");
 });
 
-app.post("/api/luckyGift", authenticateAppUser,gamesController.sendLuckyGift);
+app.post("/api/luckyGift", authenticateAppUser, gamesController.sendLuckyGift);
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -1303,8 +1304,10 @@ function sendGameUpdate(event, socket = null, data = null) {
     io1.emit(event, sendData);
   }
 }
-
+let happyZooGameId;
 async function gameStarts() {
+  happyZooGameId = generateUniqueId();
+
   bettingInfoArray = [];
   try {
     await Top3Winners.deleteMany({});
@@ -1457,6 +1460,7 @@ async function endBetting() {
           diamondsSpent: userspentInfo.amount,
           diamondsEarned: betItem.amount * multiplyvalue,
           wheelNo: betItem.wheelNo,
+          gameId: happyZooGameId,
         });
 
         //	await SpinnerGameWinnerHistory.updateOne(
@@ -1513,6 +1517,7 @@ async function endBetting() {
         participants: bettingGameparticipants,
         winners: nearestEntry.userids.length,
         wheelNo: nearestEntry.wheelNo,
+        gameId: happyZooGameId,
       });
       betInfoFiltered = bettingInfoArray.filter(
         (item) =>
@@ -1786,7 +1791,7 @@ io1.on("connection", (socket) => {
       { $inc: { diamondsCount: -1 * amount } },
       { new: true }
     );
- 
+
     if (!updatedUser) {
       sendGameUpdate("bet-status", socket, {
         diamonds: updatedUser.diamondsCount,
