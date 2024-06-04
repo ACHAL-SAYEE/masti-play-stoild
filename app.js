@@ -666,7 +666,7 @@ app.post(
 
 app.get(
   "/api/all-history",
-  authenticateAppUser,
+  // authenticateAppUser,
   gamesController.getSpinnerHistory
 ); // for all sessions
 
@@ -711,11 +711,13 @@ app.post(
 
 app.get(
   "/api/my-betting-history",
-  authenticateAppUser,
+  // authenticateAppUser,
   gamesController.getUserAllBettingHistory
 ); // for a specific user, his betting history
 // ACHAL: send top-winner's UsersData as well
-app.get("/api/top-winner", authenticateAppUser, gamesController.getTopWinners); // today's top winners
+app.get("/api/top-winner", 
+// authenticateAppUser,  
+gamesController.getTopWinners); // today's top winners
 
 app.get(
   "/api/gift-history",
@@ -1123,7 +1125,7 @@ app.post("/api/token", async (req, res) => {
   res.send("token saved successfully");
 });
 
-app.post("/api/luckyGift", gamesController.sendLuckyGift);
+app.post("/api/luckyGift", authenticateAppUser,gamesController.sendLuckyGift);
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
@@ -1784,7 +1786,7 @@ io1.on("connection", (socket) => {
       { $inc: { diamondsCount: -1 * amount } },
       { new: true }
     );
-
+ 
     if (!updatedUser) {
       sendGameUpdate("bet-status", socket, {
         diamonds: updatedUser.diamondsCount,
