@@ -2220,6 +2220,7 @@ class games {
 
   async getUserAllBettingHistory(req, res) {
     const { userId, start, limit } = req.query;
+    console.log("req.query",req.query)
     try {
       const bettingHistory = await SpinnerGameWinnerHistory.find({
         userId,
@@ -2235,6 +2236,8 @@ class games {
   }
   async getTopWinners(req, res) {
     const { start, limit } = req.query;
+    console.log(" req.query", req.query)
+    console.log(" start, limit", start, limit)
     try {
       const todayStart = new Date();
       todayStart.setHours(0, 0, 0, 0);
