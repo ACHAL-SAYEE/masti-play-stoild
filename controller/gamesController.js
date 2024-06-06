@@ -2832,7 +2832,7 @@ class games {
             { $inc: { diamondsCount: 10 * stickerValue * (quantity / 2) } }
           );
           // console.log("yu", yu);
-          res.send(`10 times recieved for ${quantity / 2} gifts`);
+          res.send(`${quantity / 2}`);
         } else {
           let possibleGifts = Math.floor(
             updatedLucky.wallet1 / (10 * stickerValue)
@@ -2855,7 +2855,7 @@ class games {
               }
             );
             // console.log("yu", yu);
-            res.send(`10 times recieved for ${possibleGifts} gifts`);
+            res.send(`${possibleGifts}`);
           } else {
             await LuckyWallet.updateOne(
               {},
@@ -2876,7 +2876,7 @@ class games {
               }
             );
             res.send(
-              `10 times recieved for ${Math.ceil(possibleGifts / 2)} gifts`
+              `${Math.ceil(possibleGifts / 2)}`
             );
           }
         }
@@ -2894,7 +2894,7 @@ class games {
             { $inc: { diamondsCount: 10 * stickerValue * returnTimes } }
           );
           // console.log("yu", yu);
-          res.send(`10 times recieved for ${returnTimes} gifts`);
+          res.send(`${returnTimes}`);
         } else {
           console.log("entered here");
           let possibleGifts = Math.floor(
@@ -2919,7 +2919,7 @@ class games {
               }
             );
             // console.log("yu", yu);
-            res.send(`10 times recieved for ${possibleGifts} gifts`);
+            res.send(`${possibleGifts}`);
           } else {
             await LuckyWallet.updateOne(
               {},
@@ -2941,7 +2941,7 @@ class games {
             );
             if (possibleGifts / 2 < 1) return res.send("no");
             res.send(
-              `10 times recieved for ${Math.floor(possibleGifts / 2)} gifts`
+              `${Math.floor(possibleGifts / 2)}`
             );
           }
         }
