@@ -13,7 +13,7 @@ const cors = require("cors");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { v4: uuidv4 } = require("uuid");
-const admin = require("firebase-admin");
+// const admin = require("firebase-admin");
 
 const app = express();
 const server = http.createServer(app);
@@ -79,7 +79,7 @@ app.use(
 // });
 
 const postsController = require("./controller/postsController");
-const { gamesController } = require("./controller/gamesController");
+const { gamesController, admin, adminApp } = require("./controller/gamesController");
 const authenticationController = require("./controller/authentication");
 const fixController = require("./controller/fixController");
 const bdRoutes = require("./routes/bd");
@@ -98,6 +98,7 @@ const {
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
+const { getAuth } = require("firebase-admin/auth");
 
 const multerStorage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -123,15 +124,27 @@ const authenticateToken = (request, response, next) => {
     response.status(401);
     response.send("Invalid JWT Token");
   } else {
-    jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
-      if (error) {
-        response.status(401);
-        response.send("Invalid JWT Token");
-      } else {
-        request.userId = payload.userId;
+    getAuth()
+      .verifyIdToken(mastiToken)
+      .then((decodedToken) => {
+        const uid = decodedToken.uid;
+        console.log(`uid = ${uid}`);
+        request.userId = uid;
         next();
-      }
-    });
+      })
+      .catch((err) => {
+        response.status(401);
+        response.send(`Invalid JWT Token: ${err}`);
+      });
+    // jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
+    //   if (error) {
+    //     response.status(401);
+    //     response.send("Invalid JWT Token");
+    //   } else {
+    //     request.userId = payload.userId;
+    //     next();
+    //   }
+    // });
   }
 };
 
@@ -196,7 +209,7 @@ const authenticateAppUser = async (request, response, next) => {
   let mastiToken;
   const authHeader = request.headers["authorization"];
   const userId = request.headers["userid"];
-  console.log("request.headers", request.headers);
+  // console.log("request.headers", request.headers);
   if (authHeader !== undefined) {
     mastiToken = authHeader.split(" ")[1];
   }
@@ -204,14 +217,27 @@ const authenticateAppUser = async (request, response, next) => {
     response.status(401);
     response.send("Invalid JWT Token");
   } else {
-    let appTokens = await AppToken.findOne({});
-    if (appTokens.appTokens[userId] !== mastiToken) {
-      response.status(401).send("token expired");
-    } else {
-      request.userId = userId;
-      request.appToken = mastiToken;
-      next();
-    }
+    getAuth()
+      .verifyIdToken(mastiToken)
+      .then((decodedToken) => {
+        const uid = decodedToken.uid;
+        console.log(`uid = ${uid}`);
+        request.userId = userId;
+        request.appToken = mastiToken;
+        next();
+      })
+      .catch((err) => {
+        response.status(401);
+        response.send(`Invalid JWT Token: ${err}`);
+      });
+    // let appTokens = await AppToken.findOne({});
+    // if (appTokens.appTokens[userId] !== mastiToken) {
+    //   response.status(401).send("token expired");
+    // } else {
+    //   request.userId = userId;
+    //   request.appToken = mastiToken;
+    //   next();
+    // }
   }
 };
 // const authenticateAppUser=async(req,res,next)=>{
@@ -1451,12 +1477,9 @@ async function endBetting() {
         betItem.wheelNo === nearestEntry.wheelNo
       ) {
         console.log(
-          `Creating a bettingGameData entry with userId: ${
-            betItem.userId
-          } | userspentInfo.amount: ${
-            userspentInfo.amount
-          } | betItem.amount * multiplyvalue: ${
-            betItem.amount * multiplyvalue
+          `Creating a bettingGameData entry with userId: ${betItem.userId
+          } | userspentInfo.amount: ${userspentInfo.amount
+          } | betItem.amount * multiplyvalue: ${betItem.amount * multiplyvalue
           } | betItem.wheelNo: ${betItem.wheelNo} | betItem: `,
           betItem
         );
@@ -2294,7 +2317,7 @@ io1.on("connection", (socket) => {
       if (
         !(
           LudoplayerPositions[ludoPlayerIndex].HomeRowPosition[pin] +
-            diceNumber >
+          diceNumber >
           6
         )
       ) {

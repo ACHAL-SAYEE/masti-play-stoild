@@ -37,7 +37,7 @@ const { generateUniqueId, generateUserId } = require("../utils");
 // const { admin } = require("../app");
 const firebaseConfig = require("../firebaseConfig.json");
 
-admin.initializeApp({
+adminApp = admin.initializeApp({
   credential: admin.credential.cert(firebaseConfig),
   databaseURL: "https://mastiplay-31ca8-default-rtdb.firebaseio.com",
 });
@@ -2978,6 +2978,7 @@ class games {
 
 const gamesController = new games();
 exports.gamesController = gamesController;
+exports.adminApp = adminApp;
 exports.admin = admin;
 // async getDiamondsHistory(req, res) {
 //   const { userId, start, limit, mode } = req.query;
