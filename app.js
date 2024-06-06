@@ -542,6 +542,12 @@ app.get(
 );
 
 app.get(
+  "/api/users/followingRooms",
+  authenticateAppUser,
+  postsController.getFollowingRooms
+);
+
+app.get(
   "/api/users/followers",
   authenticateAppUser,
   postsController.getFollowersOfUser

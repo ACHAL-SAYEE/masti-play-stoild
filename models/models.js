@@ -95,6 +95,7 @@ const userSchema = new mongoose.Schema(
     },
 
     dailyActiveTime: { type: Object, default: {} },
+    joinedRoomId: { type: String, default: null },
   },
   { minimize: false }
 );
@@ -514,4 +515,4 @@ exports.AgentTransfer = agentTransfer;
 exports.AppToken = AppToken;
 exports.LuckyWallet = LuckyWallet;
 exports.LuckyRequestTimes = LuckyRequestTimes;
-exports.SpinnerGameHistory=SpinnerGameHistory;
+exports.SpinnerGameHistory = SpinnerGameHistory;

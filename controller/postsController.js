@@ -480,6 +480,21 @@ class PostApis {
       res.status(500).send("internal server error");
     }
   }
+
+  async getFollowingRooms(req, res) {
+    const { userId, limit, start } = req.body;
+    try {
+      /// Find the users followed by user with userId
+      /// Find their userDatas and check the rooms they are in (see the joinedRoomId field in the user model)
+      /// If joinedRoomId != null then add it to the result
+      /// when result reaches the limit then return the result
+      res.send([]);
+    } catch (e) {
+      console.log(e);
+      res.status(500).send(`internal server error: ${e}`);
+    }
+  }
+
   async getFollowingUsers(req, res) {
     console.log("called following");
 
