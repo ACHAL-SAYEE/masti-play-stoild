@@ -94,6 +94,7 @@ const {
   TransactionHistory,
   AppToken,
   LuckyWallet,
+  SpinnerGameHistory,
 } = require("./models/models");
 const { send } = require("process");
 const { BdData } = require("./models/bd");
@@ -665,7 +666,7 @@ app.post(
 
 app.get(
   "/api/all-history",
-  authenticateAppUser,
+  // authenticateAppUser,
   gamesController.getSpinnerHistory
 ); // for all sessions
 
@@ -710,13 +711,13 @@ app.post(
 
 app.get(
   "/api/my-betting-history",
-  authenticateAppUser,
+  // authenticateAppUser,
   gamesController.getUserAllBettingHistory
 ); // for a specific user, his betting history
 // ACHAL: send top-winner's UsersData as well
 app.get(
   "/api/top-winner",
-  authenticateAppUser,
+  // authenticateAppUser,
   gamesController.getTopWinners
 ); // today's top winners
 
@@ -1365,7 +1366,7 @@ async function endBetting() {
 
     return acc;
   }, []);
-
+  console.log("UserBetAmount 12", UserBetAmount);
   if (bettingInfoArray.length === 0) {
     return {
       totalBet: 0,
@@ -1437,11 +1438,14 @@ async function endBetting() {
     if (nearestEntry !== undefined) {
       multiplyvalue = bettingWheelValues[nearestEntry.wheelNo - 1];
     }
+    let mybettingHistorywinAmount = {};
     bettingInfoArray.forEach(async (betItem) => {
       console.log("betItem:", betItem);
+
       const userspentInfo = UserBetAmount.find(
         (item) => item.userId === betItem.userId
       );
+
       if (
         nearestEntry.userids.includes(betItem.userId) &&
         betItem.wheelNo === nearestEntry.wheelNo
@@ -1468,7 +1472,8 @@ async function endBetting() {
           wheelNo: betItem.wheelNo,
           gameId: happyZooGameId,
         });
-
+        mybettingHistorywinAmount[betItem.userId] =
+          betItem.amount * multiplyvalue;
         //	await SpinnerGameWinnerHistory.updateOne(
         //		          { userId: betItem.userId },
         //		          {       $set: { diamondsSpent: userspentInfo.amount },
@@ -1515,6 +1520,28 @@ async function endBetting() {
           },
           { upsert: true }
         );
+      }
+      // if(mybettingHistory[betItem.userId])
+      // await
+    });
+    UserBetAmount.forEach(async (userAmount) => {
+      if (mybettingHistorywinAmount[userAmount.userId]) {
+        await SpinnerGameHistory.create({
+          userId: userAmount.userId,
+          diamondsSpent: userAmount.amount,
+          diamondsEarned: mybettingHistorywinAmount[userAmount.userId],
+          gameId: happyZooGameId,
+          wheelNo: nearestEntry.wheelNo,
+        });
+      } else {
+        await SpinnerGameHistory.create({
+          userId: userAmount.userId,
+          diamondsSpent: userAmount.amount,
+          diamondsEarned: 0,
+          gameId: happyZooGameId,
+          wheelNo: nearestEntry.wheelNo,
+
+        });
       }
     });
     let resultArray, betInfoFiltered;

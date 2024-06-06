@@ -25,6 +25,7 @@ const {
   AgentTransfer,
   LuckyWallet,
   LuckyRequestTimes,
+  SpinnerGameHistory,
 } = require("../models/models");
 const { ParticipantAgencies, BdData } = require("../models/bd");
 const admin = require("firebase-admin");
@@ -2222,13 +2223,16 @@ class games {
     const { userId, start, limit } = req.query;
     console.log("req.query", req.query);
     try {
-      const bettingHistory = await SpinnerGameWinnerHistory.find({
-        userId,
-      });
-      const userdata = await User.findOne({ userId })
+      const bettingHistory = await SpinnerGameHistory.find(
+        {
+          userId,
+        },
+        { _id: 0, __v: 0, updatedAt: 0, gameId: 0 }
+      )
         .skip(Number(start))
         .limit(Number(limit));
-      res.send({ bettingHistory, userdata });
+
+      res.send(bettingHistory);
     } catch (e) {
       console.log(e);
       res.status(500).send("internal server error");
