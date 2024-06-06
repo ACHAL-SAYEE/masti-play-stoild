@@ -249,10 +249,20 @@ const SpinnerGameWinnerHistorySchema = new mongoose.Schema(
     userId: String,
     diamondsEarned: { type: Number, default: 0 },
     diamondsSpent: { type: Number, default: 0 },
-    resultBet:{ type: Number, default: 0 },
+    resultBet: { type: Number, default: 0 },
     gameId: String,
   },
-  { timestamps: true } 
+  { timestamps: true }
+);
+const SpinnerGameHistorySchema = new mongoose.Schema(
+  {
+    wheelNo: Number,
+    userId: String,
+    diamondsEarned: { type: Number, default: 0 },
+    diamondsSpent: { type: Number, default: 0 },
+    gameId: String,
+  },
+  { timestamps: true }
 );
 
 const AgentTransactionHistorySchema = new mongoose.Schema(
@@ -393,6 +403,11 @@ const SpinnerGameWinnerHistory = mongoose.model(
   "SpinnerGameWinnerHistory",
   SpinnerGameWinnerHistorySchema
 );
+const SpinnerGameHistory = mongoose.model(
+  "SpinnerGameHistory",
+  SpinnerGameHistorySchema
+);
+
 const monthlyAgencyHistory = mongoose.model(
   "monthlyAgencyHistory",
   monthlyAgencyHistorySchema
@@ -499,3 +514,4 @@ exports.AgentTransfer = agentTransfer;
 exports.AppToken = AppToken;
 exports.LuckyWallet = LuckyWallet;
 exports.LuckyRequestTimes = LuckyRequestTimes;
+exports.SpinnerGameHistory=SpinnerGameHistory;
