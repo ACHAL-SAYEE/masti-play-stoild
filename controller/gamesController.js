@@ -2211,7 +2211,7 @@ class games {
     const { start, limit } = req.query;
     try {
       res.send(
-        await bettingGameData.find({}).skip(Number(start)).limit(Number(limit))
+        await bettingGameData.find({}).sort({createdAt:-1}).skip(Number(start)).limit(Number(limit))
       );
     } catch (e) {
       console.log(e);
