@@ -1267,8 +1267,8 @@ class games {
       const startOfWeek = new Date(currentDate);
       startOfWeek.setDate(
         currentDate.getDate() -
-        currentDate.getDay() +
-        (currentDate.getDay() === 0 ? -6 : 1)
+          currentDate.getDay() +
+          (currentDate.getDay() === 0 ? -6 : 1)
       );
 
       const bonusDetails = await TransactionHistory.aggregate([
@@ -2228,7 +2228,8 @@ class games {
           userId,
         },
         { _id: 0, __v: 0, updatedAt: 0, gameId: 0 }
-      ) .sort({ updatedAt: -1 }) 
+      )
+        .sort({ createdAt: -1 })
         .skip(Number(start))
         .limit(Number(limit));
 
@@ -2875,9 +2876,7 @@ class games {
                 },
               }
             );
-            res.send(
-              `${Math.ceil(possibleGifts / 2)}`
-            );
+            res.send(`${Math.ceil(possibleGifts / 2)}`);
           }
         }
       } else {
@@ -2940,9 +2939,7 @@ class games {
               }
             );
             if (possibleGifts / 2 < 1) return res.send("no");
-            res.send(
-              `${Math.floor(possibleGifts / 2)}`
-            );
+            res.send(`${Math.floor(possibleGifts / 2)}`);
           }
         }
       }
