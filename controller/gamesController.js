@@ -2228,7 +2228,7 @@ class games {
           userId,
         },
         { _id: 0, __v: 0, updatedAt: 0, gameId: 0 }
-      )
+      ) .sort({ updatedAt: -1 }) 
         .skip(Number(start))
         .limit(Number(limit));
 
