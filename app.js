@@ -1127,7 +1127,7 @@ app.post("/api/token", async (req, res) => {
   res.send("token saved successfully");
 });
 
-app.post("/api/luckyGift", authenticateAppUser, gamesController.sendLuckyGift);
+app.post("/api/luckyGift", gamesController.sendLuckyGift);
 
 const socketIds = {};
 const bettingWheelValues = [5, 5, 5, 5, 10, 15, 25, 45];
