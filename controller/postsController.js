@@ -482,13 +482,24 @@ class PostApis {
   }
 
   async getFollowingRooms(req, res) {
-    const { userId, limit, start } = req.body;
+    const { userId, limit, start } = req.query;
     try {
       /// Find the users followed by user with userId
+      console.log("userId=", userId);
+      const usersFollowedBy = (await following.find({ followerId: userId })).map((user) => user.followingId);
+      console.log("usersFollowedBy=", usersFollowedBy);
       /// Find their userDatas and check the rooms they are in (see the joinedRoomId field in the user model)
+      const allUsers = await User.aggregate([
+        { $match: { userId: { $in: usersFollowedBy } } },
+        { $unwind: "$joinedRoomId" },
+        { $skip: Number(start) },
+        { $limit: Number(limit) },
+        { $project: { _id: 0, __v: 0, userId: 0, email: 0, password: 0, followersCount: 0, followingCount: 0, friends: 0 } }
+      ]);
+      console.log("allUsers=", allUsers);
       /// If joinedRoomId != null then add it to the result
       /// when result reaches the limit then return the result
-      res.send([]);
+      res.send(allUsers);
     } catch (e) {
       console.log(e);
       res.status(500).send(`internal server error: ${e}`);
