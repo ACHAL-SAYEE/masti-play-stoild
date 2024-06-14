@@ -493,8 +493,7 @@ class PostApis {
         { $match: { userId: { $in: usersFollowedBy } } },
         { $unwind: "$joinedRoomId" },
         { $skip: Number(start) },
-        { $limit: Number(limit) },
-        { $project: { _id: 0, __v: 0, userId: 0, email: 0, password: 0, followersCount: 0, followingCount: 0, friends: 0 } }
+        { $limit: Number(limit) }
       ]);
       console.log("allUsers=", allUsers);
       /// If joinedRoomId != null then add it to the result
