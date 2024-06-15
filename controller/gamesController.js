@@ -2788,8 +2788,8 @@ class games {
   async sendLuckyGift(req, res) {
     const { sentBy, sentTo, diamonds, stickerValue, quantity } = req.body;
     let times;
-    if (stickerValue < 100) times = 10;
-    else times = 500;
+    if (stickerValue < 100) times = 500;
+    else times = 10;
     try {
       let existingAmount = await User.findOne({ userId: sentBy });
       let diamondsSent = diamonds * quantity;
