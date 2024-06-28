@@ -114,6 +114,7 @@ const upload = multer({
   storage: multerStorage,
 });
 
+
 const authenticateToken = (request, response, next) => {
   let mastiToken;
   const authHeader = request.headers["authorization"];
@@ -124,27 +125,15 @@ const authenticateToken = (request, response, next) => {
     response.status(401);
     response.send("Invalid JWT Token");
   } else {
-    getAuth()
-      .verifyIdToken(mastiToken)
-      .then((decodedToken) => {
-        const uid = decodedToken.uid;
-        console.log(`uid = ${uid}`);
-        request.userId = uid;
-        next();
-      })
-      .catch((err) => {
+    jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
+      if (error) {
         response.status(401);
-        response.send(`Invalid JWT Token: ${err}`);
-      });
-    // jwt.verify(mastiToken, tokenSecreat, async (error, payload) => {
-    //   if (error) {
-    //     response.status(401);
-    //     response.send("Invalid JWT Token");
-    //   } else {
-    //     request.userId = payload.userId;
-    //     next();
-    //   }
-    // });
+        response.send("Invalid JWT Token");
+      } else {
+        request.userId = payload.userId;
+        next();
+      }
+    });
   }
 };
 
