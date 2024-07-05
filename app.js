@@ -118,6 +118,7 @@ const upload = multer({
 const authenticateToken = (request, response, next) => {
   let mastiToken;
   const authHeader = request.headers["authorization"];
+  console.log("authHeader",authHeader)
   if (authHeader !== undefined) {
     mastiToken = authHeader.split(" ")[1];
   }
@@ -598,6 +599,8 @@ app.get("/api/users/all", authenticateAppUser, gamesController.getAllUsers);
 app.get("/api/admin/users/all", authenticateToken, gamesController.getAllUsers);
 
 app.get("/api/agents/all", authenticateAppUser, gamesController.getAllAgents);
+app.get("/api/admin/agents/all", authenticateToken, gamesController.getAllAgents);
+
 
 app.get(
   "/api/agent/resellers",
@@ -692,6 +695,7 @@ app.get(
 ); // for all sessions
 
 app.get("/api/agency/all", authenticateAppUser, gamesController.getAllAgencies);
+app.get("/api/admin/agency/all", authenticateToken, gamesController.getAllAgencies);
 
 app.get(
   "/api/agencyParticipants",
